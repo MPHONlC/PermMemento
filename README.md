@@ -24,8 +24,34 @@ PermMemento automates your mementos so you don't have to manually refresh them.
 | `/pmem ui` | Toggles the status display visibility. |
 | `/pmem lock` | Locks or unlocks UI movement. |
 
+> **Current Supported Mementos:**
 
+| Memento Name | Collection ID | Duration |
+| :--- | :--- | :--- |
+| **Almalexia's Enchanted Lantern** | 341 | 30s |
+| **Astral Aurora Projector** | 9862 | 180s |
+| **Blossom Bloom** | 10706 | 180s |
+| **Dwemervamidium Mirage** | 1183 | 36s |
+| **Dwarven Tonal Forks** | 1182 | 10s |
+| **Fargrave Occult Curio** | 10371 | 30s |
+| **Fetish of Anger** | 347 | 33s |
+| **Finvir's Trinket** | 336 | 13s |
+| **Floral Swirl Aura** | 758 | 180s |
+| **Inferno Cleats** | 9361 | 18s |
+| **Mariner's Nimbus Stone** | 10236 | 30s |
+| **Remnant of Meridia's Light** | 13092 | 69s |
+| **Soul Crystals of the Returned** | 10652 | 180s |
+| **Storm Atronach Aura** | 594 | 180s |
+| **Storm Atronach Transform** | 596 | 18s |
+| **Summoned Booknado** | 11480 | 18s |
+| **Surprising Snowglobe** | 13105 | 18s |
+| **Swarm of Crows** | 1384 | 18s |
+| **The Pie of Misrule** | 1167 | 30s |
+| **Token of Root Sunder** | 349 | 30s |
+| **Wild Hunt Leaf-Dance Aura** | 760 | 180s |
+| **Wild Hunt Transform** | 759 | 180s |
 
+> if the memento you want is not supported feel free to request.
 
 ## Support
 
