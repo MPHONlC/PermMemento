@@ -119,26 +119,26 @@ function PM:CreateUI()
 
         -- Determine Status Text
         local statusText = ""
-        local color = "|c00FF00" -- Green by default
+        local color = "|c5C9730" -- Green by default
 
         if IsUnitDead("player") then 
             statusText = "(Dead)"
-            color = "|cFFFF00FF"
+            color = "|c881EE4"
         elseif IsUnitInCombat("player") then 
             statusText = "(Combat)"
-            color = "|cFFFF0000"
+            color = "|cEF008C"
         elseif IsMounted("player") then 
             statusText = "(Mounted)"
-            color = "|cFFFF00"
+            color = "|cFFF000"
         elseif IsUnitSwimming("player") then 
             statusText = "(Swimming)"
-            color = "|cFF0000FF"
+            color = "|c0064D2"
         elseif GetUnitStealthState("player") ~= STEALTH_STATE_NONE then 
             statusText = "(Stealth)"
-            color = "|cFF808080"
+            color = "|c1EBEA5"
         elseif IsInteracting() or IsPlayerInteractingWithObject() then 
             statusText = "(Busy)"
-            color = "|cFF800080"
+            color = "|cF18F49"
         else
             -- Check Cooldown
             local remaining, _ = GetCollectibleCooldownAndDuration(self.settings.activeId)
