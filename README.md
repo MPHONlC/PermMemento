@@ -1,6 +1,9 @@
 # PermMemento
 Keep your chosen memento effects active permanently.
 
+[![ESOUI](https://img.shields.io/badge/Download-ESOUI-orange.svg?style=for-the-badge)](https://www.esoui.com/downloads/fileinfo.php?id=4116)
+[![Bethesda](https://img.shields.io/badge/Download-Bethesda.net-black.svg?style=for-the-badge)](https://mods.bethesda.net/en/elderscrollsonline/details/2aa223e9-ba88-45f7-90d3-0a47002c720c/Permanent_Memento)
+
 ## Description
 PermMemento automates your mementos so you don't have to manually refresh them.
 
