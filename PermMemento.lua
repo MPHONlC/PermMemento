@@ -3,22 +3,13 @@
 -----------------------------------------------------------
 local PM = {
     name = "PermMemento",
-    version = "0.7.5",
-    
-    -- Default settings
+    version = "0.6.0",
     defaults = {
         activeId = nil,
         paused = false,
         logEnabled = true,
         performanceMode = true,
-        -- UI Position Defaults
-        ui = {
-            left = 50,
-            top = 50,
-            locked = false,
-            hidden = false,
-        },
-        sync = {            
+        sync = {            -- Settings for the Sync module
             delay = 0,
             random = false,
             ignoreInCombat = true,
@@ -26,20 +17,21 @@ local PM = {
     }
 }
 
--- MEMENTO TABLE (Full List)
+-- MEMENTO TABLE
+-- Durations here are only used if the Game API fails to return a cooldown.
 PM.mementoData = {
     [341]   = {id = 341,   aid = 26829,  dur = 30000,  name = "Almalexia's Lantern"},
     [9862]  = {id = 9862,  aid = 162813, dur = 180000, name = "Astral Aurora"},
-    [10706] = {id = 10706, aid = 176334, dur = 180000, name = "Blossom Bloom"},
-    [1182]  = {id = 1182,  aid = 92867,  dur = 10000,  name = "Dwarven Tonal Forks"},
-    [1183]  = {id = 1183,  aid = 92868,  dur = 36000,  name = "Dwemervamidium Mirage"},
-    [10371] = {id = 10371, aid = 170722, dur = 30000,  name = "Fargrave Occult Curio"},
-    [347]   = {id = 347,   aid = 41950,  dur = 33000,  name = "Fetish of Anger"},
+    [10706] = {id = 10706, aid = 176334, dur = 180000, name = "Blossom of the Rose"},
+    [1182]  = {id = 1182,  aid = 92867,  dur = 10000,  name = "Dwarven Dynamo"},
+    [1183]  = {id = 1183,  aid = 92868,  dur = 36000,  name = "Dwemer Puzzle Box"},
+    [10371] = {id = 10371, aid = 170722, dur = 30000,  name = "Fargrave Guardian"},
+    [347]   = {id = 347,   aid = 41950,  dur = 33000,  name = "Fetish of Zenithar"},
     [336]   = {id = 336,   aid = 21226,  dur = 13000,  name = "Finvir's Trinket"},
     [758]   = {id = 758,   aid = 86978,  dur = 180000, name = "Floral Swirl"},
     [9361]  = {id = 9361,  aid = 153672, dur = 18000,  name = "Infernal Flames"},
     [10236] = {id = 10236, aid = 166513, dur = 30000,  name = "Mariner's Pipe"},
-    [10652] = {id = 10652, aid = 175730, dur = 180000, name = "Soul Crystals of the Returned"},
+    [10652] = {id = 10652, aid = 175730, dur = 180000, name = "Soul Crystals of the Returned"}, --
     [594]   = {id = 594,   aid = 85344,  dur = 180000, name = "Storm Atronach Aura"},
     [596]   = {id = 596,   aid = 85349,  dur = 18000,  name = "Storm Atronach Transformation"},
     [11480] = {id = 11480, aid = 195745, dur = 18000,  name = "Tornado of Tomes"},
@@ -58,109 +50,6 @@ function PM:Log(msg)
 end
 
 -----------------------------------------------------------
--- UI Construction (Horizontal, Movable, Live Timer)
------------------------------------------------------------
-function PM:CreateUI()
-    -- 1. Create TopLevelWindow
-    local ui = WINDOW_MANAGER:CreateControl("PermMementoUI", GuiRoot, CT_TOPLEVELCONTROL)
-    ui:SetClampedToScreen(true)
-    ui:SetMouseEnabled(true)
-    ui:SetMovable(not self.settings.ui.locked)
-    ui:SetHidden(self.settings.ui.hidden)
-    ui:SetHandler("OnMoveStop", function(control)
-        self.settings.ui.left = control:GetLeft()
-        self.settings.ui.top = control:GetTop()
-    end)
-
-    -- Restore Position
-    ui:ClearAnchors()
-    ui:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.settings.ui.left, self.settings.ui.top)
-    
-    -- 2. Background
-    local bg = WINDOW_MANAGER:CreateControl("PermMementoBG", ui, CT_BACKDROP)
-    bg:SetAnchor(TOPLEFT, ui, TOPLEFT, 0, 0)
-    bg:SetAnchor(BOTTOMRIGHT, ui, BOTTOMRIGHT, 0, 0)
-    bg:SetCenterColor(0, 0, 0, 0.6)
-    bg:SetEdgeColor(0.6, 0.6, 0.6, 0.8)
-    bg:SetEdgeTexture(nil, 1, 1, 1, 0)
-    
-    -- 3. Label (Horizontal Text)
-    local label = WINDOW_MANAGER:CreateControl("PermMementoLabel", ui, CT_LABEL)
-    label:SetFont("ZoFontGameSmall")
-    label:SetColor(1, 1, 1, 1)
-    label:SetText("[PM] Ready")
-    label:SetAnchor(CENTER, ui, CENTER, 0, 0)
-    
-    -- Auto-resize logic
-    local function UpdateSize()
-        local width = label:GetTextWidth() + 20 
-        local height = label:GetTextHeight() + 10
-        ui:SetDimensions(width, height)
-    end
-
-    -- 4. Live Update Handler (Timer & Status)
-    ui:SetHandler("OnUpdate", function()
-        -- Only update if we have an active memento
-        if not self.settings.activeId or not self.mementoData[self.settings.activeId] then
-            label:SetText("[PM] Inactive")
-            UpdateSize()
-            return
-        end
-
-        if self.settings.paused then
-            label:SetText(string.format("[PM] %s |cFF0000(Paused)|r", self.mementoData[self.settings.activeId].name))
-            UpdateSize()
-            return
-        end
-
-        -- Determine Status Text
-        local statusText = ""
-        local color = "|c00FF00" -- Green by default
-
-        if IsUnitDead("player") then 
-            statusText = "(Dead)"
-            color = "|cFF0000"
-        elseif IsUnitInCombat("player") then 
-            statusText = "(Combat)"
-            color = "|cFF0000"
-        elseif IsMounted("player") then 
-            statusText = "(Mounted)"
-            color = "|cFFFF00"
-        elseif IsUnitSwimming("player") then 
-            statusText = "(Swimming)"
-            color = "|cFFFF00"
-        elseif GetUnitStealthState("player") ~= STEALTH_STATE_NONE then 
-            statusText = "(Stealth)"
-            color = "|cFFFF00"
-        elseif IsInteracting() or IsPlayerInteractingWithObject() then 
-            statusText = "(Busy)"
-            color = "|cFFFF00"
-        else
-            -- Check Cooldown
-            local remaining, _ = GetCollectibleCooldownAndDuration(self.settings.activeId)
-            if remaining > 0 then
-                statusText = string.format("(%.1fs)", remaining / 1000)
-                color = "|cFFA500" -- Orange
-            else
-                statusText = "(Ready)"
-                color = "|c00FF00" -- Green
-            end
-        end
-
-        label:SetText(string.format("[PM] %s %s%s|r", self.mementoData[self.settings.activeId].name, color, statusText))
-        UpdateSize()
-    end)
-    
-    self.uiWindow = ui
-    self.uiLabel = label
-    
-    -- 5. Scene Management (Visibility)
-    local fragment = ZO_HUDFadeSceneFragment:New(ui)
-    SCENE_MANAGER:GetScene("hud"):AddFragment(fragment)
-    SCENE_MANAGER:GetScene("hudui"):AddFragment(fragment)
-end
-
------------------------------------------------------------
 -- Safety Checks
 -----------------------------------------------------------
 function PM:IsBusy()
@@ -170,13 +59,11 @@ function PM:IsBusy()
         return true
     end
 
-    -- Interaction Checks
     if IsInteracting() then return true end
-    if GetInteractionType() ~= INTERACTION_NONE then return true end
-    if IsPlayerInteractingWithObject() then return true end
 
-    -- Combat Check
-    if IsUnitInCombat("player") then return true end
+    if GetInteractionType() ~= INTERACTION_NONE then return true end
+
+    if IsPlayerInteractingWithObject() then return true end
 
     return false
 end
@@ -200,17 +87,27 @@ function PM:Loop()
         return
     end
 
-    -- 2. COOLDOWN CHECK
+    -- 2. COMBAT CHECK
+    if IsUnitInCombat("player") and self.settings.performanceMode then
+        local _, duration = GetCollectibleCooldownAndDuration(self.settings.activeId)
+        if duration > 1000 then 
+            zo_callLater(function() self:Loop() end, 3000)
+            return 
+        end
+    end
+
+    -- 3. COOLDOWN CHECK
     local remaining, _ = GetCollectibleCooldownAndDuration(self.settings.activeId)
     if remaining > 1000 then
+        -- If still on cooldown, wait for 500ms buffer
         zo_callLater(function() self:Loop() end, remaining + 500)
         return
     end
 
-    -- 3. FIRE MEMENTO
+    -- 4. FIRE MEMENTO
     UseCollectible(self.settings.activeId)
     
-    -- 4. SCHEDULE NEXT LOOP
+    -- 5. SCHEDULE NEXT LOOP
     zo_callLater(function() 
         if not self.settings.activeId then return end
         
@@ -218,8 +115,10 @@ function PM:Loop()
         local nextDelay = 0
 
         if cooldown > 0 then
+            -- Success: use returned cooldown.
             nextDelay = cooldown + 500
         else
+            -- Fallback: If API returns 0, use hardcoded table.
             nextDelay = data.dur + 1000
         end
 
@@ -236,6 +135,7 @@ function PM:HookGameUI()
             self.settings.paused = false
             self:Log("Auto-loop started: " .. self.mementoData[collectibleId].name)
             
+            -- Start loop using the memento's duration as the first delay
             zo_callLater(function() self:Loop() end, self.mementoData[collectibleId].dur)
         end
     end)
@@ -249,11 +149,12 @@ local Sync = {}
 function Sync:initialize()
   SLASH_COMMANDS["/pmsync"] = function(argString)
     if not argString or string.len(argString) < 1 then
-      PM:Log("Usage: /pmsync <searchterm>")
+      PM:Log("Usage: /pmsync <searchterm> (e.g., /pmsync crow)")
       return
     end
     
     local search = string.lower(argString)
+    -- Search for the memento link to share in chat
     for i = 1, GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO) do
       local id = GetCollectibleIdFromType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO, i)
       if id and string.find(string.lower(GetCollectibleName(id)), search, 1, true) then
@@ -268,6 +169,7 @@ function Sync:initialize()
     if not IsCollectibleUsable(id) then return end
     if IsUnitInCombat("player") and PM.settings.sync.ignoreInCombat then return end
     
+    -- If valid, set it as our active loop and fire
     if PM.mementoData[id] then
         PM.settings.activeId = id
         PM.settings.paused = false
@@ -275,6 +177,7 @@ function Sync:initialize()
         UseCollectible(id)
         zo_callLater(function() PM:Loop() end, PM.mementoData[id].dur)
     else
+        -- Just fire it once if we don't support looping it
         UseCollectible(id)
     end
   end
@@ -282,6 +185,7 @@ function Sync:initialize()
   local function onSyncChatMessage(eventCode, channelType, fromName, text)
     if channelType ~= CHAT_CHANNEL_PARTY then return end
     
+    -- Parse "PM <Link>" or "PM <ID>"
     local id
     for collectibleId in string.gmatch(text, "^PM |H1:collectible:(%d+)|h|h$") do
       id = tonumber(collectibleId)
@@ -294,6 +198,7 @@ function Sync:initialize()
     
     if not id or not IsCollectibleUnlocked(id) then return end
     
+    -- Check if it's the player themselves
     local pName = GetUnitDisplayName("player")
     if fromName == pName then return end
 
@@ -319,13 +224,11 @@ end
 function PM:Init(eventCode, addOnName)
     if addOnName ~= self.name then return end
     
-    -- 1. SAVED VARS
-    self.settings = ZO_SavedVars:NewAccountWide("PermMementoSaved", 1, GetWorldName(), self.defaults)
-    
-    self:CreateUI()
+    self.settings = ZO_SavedVars:NewAccountWide("PermMemento_SavedVars", 1, nil, self.defaults)
     self:HookGameUI()
     Sync:initialize()
     
+    -- Commands
     SLASH_COMMANDS["/pmem"] = function(extra)
         local cmd = extra:lower()
         
@@ -333,22 +236,7 @@ function PM:Init(eventCode, addOnName)
             self.settings.activeId = nil
             self:Log("Auto-loop disabled.")
         
-        elseif cmd == "ui" then
-             self.settings.ui.hidden = not self.settings.ui.hidden
-             self.uiWindow:SetHidden(self.settings.ui.hidden)
-             self:Log("UI " .. (self.settings.ui.hidden and "Hidden" or "Shown"))
-
-        elseif cmd == "lock" then
-            self.settings.ui.locked = not self.settings.ui.locked
-            self.uiWindow:SetMovable(not self.settings.ui.locked)
-            self:Log("UI " .. (self.settings.ui.locked and "Locked" or "Unlocked"))
-
         elseif cmd == "list" or cmd == "" then
-            d("--------------------------------")
-            d("[PM] Commands:")
-            d("/pmem stop - Stop looping")
-            d("/pmem ui - Toggle UI display")
-            d("/pmem lock - Lock/Unlock UI movement")
             d("--------------------------------")
             d("[PM] Supported Mementos:")
             local sorted = {}
@@ -358,6 +246,8 @@ function PM:Init(eventCode, addOnName)
             for _, info in ipairs(sorted) do
                 d(string.format("- %s (ID: %d)", info.name, info.id))
             end
+            d("--------------------------------")
+            d("Usage: /pmem stop | /pmem list | /pmsync <name>")
 
         elseif cmd == "current" then
              if self.settings.activeId then
@@ -374,14 +264,4 @@ function PM:Init(eventCode, addOnName)
     end
 end
 
--- 2. ZONE CHANGE
--- Resumes the loop after teleporting or reloading UI
-function PM:OnPlayerActivated()
-    if self.settings.activeId and not self.settings.paused then
-        -- Wait a moment for the world to load fully
-        zo_callLater(function() self:Loop() end, 3000)
-    end
-end
-
 EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_ADD_ON_LOADED, function(...) PM:Init(...) end)
-EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_PLAYER_ACTIVATED, function() PM:OnPlayerActivated() end)
