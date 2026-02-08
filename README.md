@@ -13,6 +13,14 @@ Keep your chosen memento effects active permanently.
 ## Description
 PermMemento automates your mementos so you don't have to manually refresh them.
 
+<div align="center">
+
+| Screenshot 1 | Screenshot 2 |
+| :---: | :---: |
+| <img src="https://ugcmods.bethesda.net/image/eyJidWNrZXQiOiJ1Z2Ntb2RzLmJldGhlc2RhLm5ldCIsImtleSI6InB1YmxpYy9jb250ZW50L0VTTy81ODY1NTEvQ0xBU1NJRklDQVRJT05fU0NSRUVOU0hPVF9JTUFHRS9CY0N6cG9iZHJJQ3dGdXhzTWw1VzFRPT0vZXNvNjRfQTJMbmNrd3ZiVC5wbmciLCJlZGl0cyI6eyJyZXNpemUiOnsid2lkdGgiOjYwMH19LCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIn0=" width="400"> | <img src="https://ugcmods.bethesda.net/image/eyJidWNrZXQiOiJ1Z2Ntb2RzLmJldGhlc2RhLm5ldCIsImtleSI6InB1YmxpYy9jb250ZW50L0VTTy81ODY1NTEvQ0xBU1NJRklDQVRJT05fU0NSRUVOU0hPVF9JTUFHRS91MjlHdjRxVG1XVzJVOFp5Snc5YmtBPT0vU2NyZWVuc2hvdCBGcm9tIDIwMjYtMDItMDggMTMtNTYtMzcucG5nIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjo2MDB9fSwib3V0cHV0Rm9ybWF0Ijoid2VicCJ9" width="400"> |
+
+</div>
+
 ## Key Features
 * **Permanent Mementos:** Makes memento effects like Finvir's Trinket or Almalexia’s Lantern or Wild Hunt Transform remain permanent, waits until you are out of combat/idle to avoid interrupting gameplay.
 * **Group Sync:** Share your active memento with your party using chat slash commands.
