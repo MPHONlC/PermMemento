@@ -9,12 +9,26 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 * **Group Sync:** Share your active memento with your party using chat slash commands.
 * **Status UI:** A simple, draggable UI label shows current memento and its cooldowns and player state.
 
-## Usage (PC & Console):
-* **COLLECTIBLES > MEMENTOS IN-GAME UI** - Activate any supported memento via in-game collectibles menu to start looping (no need for slash commands).
+## Usage (PC & Console)
+
+> [!TIP]
+> **AUTO-LOOP:** Simply activate any supported memento via your in-game **Collectibles > Mementos** menu. The addon will detect it and begin the loop automatically no slash commands required!
+
+### Slash Commands
+
 | Command | Description |
 | :--- | :--- |
-| `/pmem <name>` | Fallback command to force start looping a memento (e.g., /pmem almalexia) [supports partial names]. |
+| `/pmem <name>` | Fallback command to force start looping a memento (e.g., `/pmem almalexia`). Supports partial names. |
 | `/pmem stop` | Stops the current loop. |
-| `/pmsync <name>` | Sends a sync request to your party |
-| `/pmem ui` | Toggles the status display. |
-| `/pmem lock` | Locks/unlocks UI movement. |
+| `/pmsync <name>` | Sends a sync request to your party. |
+| `/pmem ui` | Toggles the status display visibility. |
+| `/pmem lock` | Locks or unlocks UI movement. |
+
+
+
+
+## Support
+
+If this project has been useful to you, consider supporting its development:
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/aph0nlc)
