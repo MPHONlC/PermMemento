@@ -43,7 +43,7 @@ PermMemento automates your mementos so you don't have to manually refresh them.
 
 > **Current Supported Mementos:**
 
-| Memento Name | Collection ID | Duration |
+| Memento Name | Collectible ID | Duration |
 | :--- | :--- | :--- |
 | **Almalexia's Enchanted Lantern** | 341 | 30s |
 | **Astral Aurora Projector** | 9862 | 180s |
