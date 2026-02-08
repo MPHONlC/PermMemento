@@ -2,7 +2,7 @@
 Keep your chosen memento effects active permanently.
 
 ## Description
-PermMemento automates your mementos so you don't have to manually refresh them. It distinguishes between **Mobile** mementos (auras that fire instantly) and **Stationary** mementos (animations that wait for idle state).
+PermMemento automates your mementos so you don't have to manually refresh them.
 
 ## Key Features
 * **Permanent Mementos:** Makes memento effects like Finvir's Trinket or Almalexia’s Lantern or Wild Hunt Transform remain permanent, waits until you are out of combat/idle to avoid interrupting gameplay.
