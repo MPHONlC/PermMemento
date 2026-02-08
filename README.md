@@ -1,8 +1,14 @@
-# PermMemento
-Keep your chosen memento effects active permanently.
+<div align="center">
+
+# Permanent Memento
 
 [![ESOUI](https://img.shields.io/badge/Download-ESOUI-orange.svg?style=for-the-badge)](https://www.esoui.com/downloads/fileinfo.php?id=4116)
-[![Bethesda](https://img.shields.io/badge/Download-Bethesda.net-black.svg?style=for-the-badge)](https://mods.bethesda.net/en/elderscrollsonline/details/2aa223e9-ba88-45f7-90d3-0a47002c720c/Permanent_Memento)
+[![Bethesda Mods](https://img.shields.io/badge/Console-Bethesda.net-black.svg?style=for-the-badge&logo=bethesda&logoColor=white)](https://mods.bethesda.net/en/elderscrollsonline/details/2aa223e9-ba88-45f7-90d3-0a47002c720c/Permanent_Memento)
+
+</div>
+<div align="center">
+Keep your chosen memento effects active permanently.
+</div>
 
 ## Description
 PermMemento automates your mementos so you don't have to manually refresh them.
@@ -55,6 +61,17 @@ PermMemento automates your mementos so you don't have to manually refresh them.
 | **Wild Hunt Transform** | 759 | 180s |
 
 > if the memento you want is not supported feel free to request.
+
+<div align="center">
+
+> ### 🐞 **BUG REPORTS (PC & CONSOLE)**
+> If you encounter any issues, please submit a report here:
+> * [ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs)
+> * [GitHub Issue Tracker](https://github.com/MPHONlC/PermMemento/issues)
+
+</div>
+
+
 
 ## Support
 
