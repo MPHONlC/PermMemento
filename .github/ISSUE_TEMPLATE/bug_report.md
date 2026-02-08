@@ -1,6 +1,6 @@
 ---
 name: 🐛 Bug Report
-about: I had a bug while parsing
+about: Create a report to help improve PermMemento
 title: '[BUG] '
 labels: bug
 
