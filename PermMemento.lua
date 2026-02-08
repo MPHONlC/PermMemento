@@ -3,7 +3,7 @@
 -----------------------------------------------------------
 local PM = {
     name = "PermMemento",
-    version = "0.7.5",
+    version = "0.7.6",
     
     -- Default settings
     defaults = {
@@ -315,6 +315,12 @@ end
 function PM:Init(eventCode, addOnName)
     if addOnName ~= self.name then return end
     
+    -- UNREGISTER LOAD EVENT
+    EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_ADD_ON_LOADED)
+
+    -- REGISTER PLAYER ACTIVATED
+    EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_ACTIVATED, function() self:OnPlayerActivated() end)
+    
     -- 1. SAVED VARS
     self.settings = ZO_SavedVars:NewAccountWide("PermMementoSaved", 1, GetWorldName(), self.defaults)
     
@@ -405,4 +411,3 @@ function PM:OnPlayerActivated()
 end
 
 EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_ADD_ON_LOADED, function(...) PM:Init(...) end)
-EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_PLAYER_ACTIVATED, function() PM:OnPlayerActivated() end)
