@@ -357,7 +357,7 @@ function PM:BuildMenu()
     for _, t in ipairs(sortedSync) do table.insert(PM.syncNames, t.name); table.insert(PM.syncIDs, t.id) end
     local LAM = LibAddonMenu2 or _G["LibAddonMenu"]
     if not LAM then return end
-    local panelData = { type = "panel", name = "Permanent Memento", displayName = "|c9CD04CPermanent Memento|r", author = "@APHONlC", version = self.version, registerForRefresh = true }
+    local panelData = { type = "panel", name = "Permanent Memento", displayName = "|c9CD04CPermanent Memento|r", author = "|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r", version = self.version, registerForRefresh = true }
     local optionsData = {}
     local function AddOption(opt) table.insert(optionsData, opt) end
 
