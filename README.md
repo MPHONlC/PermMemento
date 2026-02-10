@@ -10,6 +10,9 @@
 Keep your chosen memento effects active permanently.
 </div>
 
+## Dependencies
+* [LibAddonMenu-2.0](https://www.esoui.com/downloads/info7-LibAddonMenu-2.0.html)
+
 ## Description
 PermMemento automates your mementos so you don't have to manually refresh them. supports Randomization, UI Scaling, and Console Gamepad Mode!
 
