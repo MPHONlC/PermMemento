@@ -4,11 +4,12 @@
 ; Modified and extended by @APHONlC
 
 ## Title: |c9CD04CPermanent Memento|r
-## Version: 0.7.6
-## AddOnVersion: 260208076
+## Version: 0.7.7
+## AddOnVersion: 260210077
 ## Author: |ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r
 ## APIVersion: 101048 101049
 ## SavedVariables: PermMementoSaved
+## DependsOn: LibAddonMenu-2.0>=34
 ## Description: |cfa9c1bAuto-loop mementos.|r |cCCFF00Usage: /pmem <name> - /pmem stop - /pmsync <name> - /pmem ui - /pmem lock |r
 
 ; Main files
