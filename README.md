@@ -80,6 +80,14 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 
 <div align="center">
 
+> ### ⚠️ **CONSOLE TESTING NOTES** ⚠️
+> This addon was developed and tested on **PC / Steam Deck** (using Force Console Flow for gamepad testing).
+> The **Group Sync** feature has not yet been fully tested on actual Console hardware. If you are on Xbox/PlayStation, please report if this feature works for you!
+
+</div>
+
+<div align="center">
+
 > ### 🐞 **BUG REPORTS (PC & CONSOLE)**
 > If you encounter any issues, please submit a report here:
 > * [ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs)
