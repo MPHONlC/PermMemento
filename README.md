@@ -11,7 +11,7 @@ Keep your chosen memento effects active permanently.
 </div>
 
 ## Description
-PermMemento automates your mementos so you don't have to manually refresh them.
+PermMemento automates your mementos so you don't have to manually refresh them. supports Randomization, UI Scaling, and Console Gamepad Mode!
 
 <p align="center">
   <img src="https://ugcmods.bethesda.net/image/eyJidWNrZXQiOiJ1Z2Ntb2RzLmJldGhlc2RhLm5ldCIsImtleSI6InB1YmxpYy9jb250ZW50L0VTTy81ODY1NTEvQ0xBU1NJRklDQVRJT05fU0NSRUVOU0hPVF9JTUFHRS9CY0N6cG9iZHJJQ3dGdXhzTWw1VzFRPT0vZXNvNjRfQTJMbmNrd3ZiVC5wbmciLCJlZGl0cyI6eyJyZXNpemUiOnsid2lkdGgiOjYwMH19LCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIn0=" alt="Permanent Memento UI 1" />
@@ -20,14 +20,15 @@ PermMemento automates your mementos so you don't have to manually refresh them.
 </p>
 
 ## Key Features
-* **Permanent Mementos:** Makes memento effects like Finvir's Trinket or Almalexia’s Lantern or Wild Hunt Transform remain permanent, waits until you are out of combat/idle to avoid interrupting gameplay.
-* **Group Sync:** Share your active memento with your party using chat slash commands.
-* **Status UI:** A simple, draggable UI label shows current memento and its cooldowns and player state.
+* **Permanent Mementos:** Makes memento effects like Finvir's Trinket or Almalexia’s Lantern or Wild Hunt Transform remain permanent, Pauses when in combat, crafting, or in menus to avoid interruptions.
+* **Group Sync:** Share your active memento with your party.
+* **Status UI:** A simple, draggable UI label shows current memento and player state.
+* **SETTINGS MENU:** Use the Addon Settings menu to select, randomize, or configure settings.
 
 ## Usage (PC & Console)
 
 > [!TIP]
-> **AUTO-LOOP:** Simply activate any supported memento via your in-game **Collectibles > Mementos** menu. The addon will detect it and begin the loop automatically no slash commands required!
+> **AUTO-LOOP:** Simply activate any supported memento via your in-game **Collectibles > Mementos** menu. The addon will detect it and begin the loop automatically.
 
 ### Slash Commands
 
