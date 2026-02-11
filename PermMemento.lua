@@ -3,28 +3,30 @@
 -----------------------------------------------------------
 local PM = {
     name = "PermMemento",
-    version = "0.7.7",
+    version = "0.7.8",
     -- Default settings
     defaults = {
-        activeId = nil, paused = false, logEnabled = true, csaEnabled = true,
+        activeId = nil, paused = false, logEnabled = not IsConsoleUI(), csaEnabled = true,
         randomOnLogin = false, randomOnZone = false, loopInCombat = false, performanceMode = true,
-        lastVersion = "0.7.7", versionHistory = {},
-         -- Delays (3000ms)
+        useAccountSettings = true, showInHUD = true,
+        lastVersion = "0.7.8", versionHistory = {},
+         -- Delays
         delayMove=3000, delaySprint=3000, delayBlock=3000, delayCast=3000,
         delaySwim=3000, delaySneak=3000, delayMount=3000, delayIdle=3000,
-        delayTeleport=3000, delayResurrect=3000, delayInMenu=3000,
+        delayTeleport=3000, delayResurrect=5000, delayInMenu=3000,
         -- CSA Durations (6000ms)
         csaDurations = {
             activation=6000, stop=6000, sync=6000, ui=6000, random=6000, error=6000
         },
         -- UI Defaults
         ui = { left=1627, top=32, locked=false, hidden=false, scale=(IsConsoleUI() and 0.7 or 1.0) },
+        uiMenu = { left=-1, top=-1, scale=(IsConsoleUI() and 1.2 or 1.0) },
         sync = { delay=0, random=false, ignoreInCombat=true }
     },
-    charDefaults = { useAccountSettings = true },
     isLooping = false, loopToken = 0, lastPos = {x=0,y=0,z=0,t=0}, isMoving = false,
     activeNames = {}, activeIDs = {}, syncNames = {}, syncIDs = {},
-    selectedSyncId = nil, pendingId = nil, menuBuilt = false, Sync = {}
+    selectedSyncId = nil, pendingId = nil, menuBuilt = false, Sync = {},
+    charListValues = {}, charListNames = {}, selectedCharCopy = nil, selectedCharDelete = nil
 }
 
 -- MEMENTO TABLE
@@ -57,23 +59,22 @@ function PM:UpdateSettingsReference()
     if self.charSaved and self.charSaved.useAccountSettings then self.settings = self.acctSaved else self.settings = self.charSaved end
     if not self.settings then return end
     
-    if not self.settings.ui then self.settings.ui = {left=self.defaults.ui.left, top=self.defaults.ui.top, locked=false, hidden=false, scale=self.defaults.ui.scale} end
-    if not self.settings.sync then self.settings.sync = {delay=0, random=false, ignoreInCombat=true} end
-    if not self.settings.csaDurations then self.settings.csaDurations = {activation=6000, stop=6000, sync=6000, ui=6000, random=6000, error=6000} end
-    if self.settings.ui.scale == nil then self.settings.ui.scale = 1.0 end
+    if type(self.settings.ui) ~= "table" then self.settings.ui = ZO_DeepTableCopy(self.defaults.ui) end
+    if type(self.settings.uiMenu) ~= "table" then self.settings.uiMenu = ZO_DeepTableCopy(self.defaults.uiMenu) end
+    if type(self.settings.sync) ~= "table" then self.settings.sync = ZO_DeepTableCopy(self.defaults.sync) end
+    if type(self.settings.csaDurations) ~= "table" then self.settings.csaDurations = ZO_DeepTableCopy(self.defaults.csaDurations) end
+    if self.settings.ui.scale == nil then self.settings.ui.scale = (IsConsoleUI() and 0.7 or 1.0) end
+    if self.settings.uiMenu.scale == nil then self.settings.uiMenu.scale = (IsConsoleUI() and 1.2 or 1.0) end
+    if self.settings.showInHUD == nil then self.settings.showInHUD = true end
     
     -- Delays
     if self.settings.loopDelay then self.settings.delayIdle = self.settings.loopDelay; self.settings.loopDelay = nil end
     
-    if self.uiWindow then
-        self.uiWindow:ClearAnchors()
-        if self.settings.ui.left == self.defaults.ui.left then self.uiWindow:SetAnchor(LEFT, ZO_Compass, RIGHT, 25, 0)
-        else self.uiWindow:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.settings.ui.left, self.settings.ui.top) end
-        self.uiWindow:SetMovable(not self.settings.ui.locked); self.uiWindow:SetHidden(self.settings.ui.hidden); self.uiWindow:SetScale(self.settings.ui.scale)
-    end
+    self:UpdateUIAnchor()
+    self:UpdateUIScenes()
     
     self.settings.lastVersion = self.version
-    if not self.settings.versionHistory then self.settings.versionHistory = {} end
+    if type(self.settings.versionHistory) ~= "table" then self.settings.versionHistory = {} end
     if #self.settings.versionHistory == 0 or self.settings.versionHistory[1] ~= self.version then
         table.insert(self.settings.versionHistory, 1, self.version)
     end
@@ -119,7 +120,7 @@ function PM:UpdateMovementState()
 end
 
 function PM:GetActionState()
-    if IsResurrecting and IsResurrecting() then return true, "|cFF0000(Resurrecting)|r", (self.settings.delayResurrect or 3000) end
+    if IsResurrecting and IsResurrecting() then return true, "|cFF0000(Resurrecting)|r", (self.settings.delayResurrect or 5000) end
     
     local blocking = false
     if IsBlockActive and IsBlockActive() then blocking = true elseif IsUnitBlocking and IsUnitBlocking("player") then blocking = true end
@@ -132,18 +133,108 @@ function PM:GetActionState()
     return false, "", 0
 end
 
+function PM:UpdateUIAnchor()
+    if not self.uiWindow or not self.settings then return end
+    self.uiWindow:ClearAnchors()
+    self.uiWindow:SetMovable(not self.settings.ui.locked)
+    
+    if self.settings.ui.hidden then
+        self.uiWindow:SetHidden(true)
+    end
+    
+    if self.settings.showInHUD then
+        self.uiWindow:SetScale(self.settings.ui.scale or (IsConsoleUI() and 0.7 or 1.0))
+        -- HUD Mode
+        if self.settings.ui.left == self.defaults.ui.left and self.settings.ui.top == self.defaults.ui.top then
+            self.uiWindow:SetAnchor(LEFT, ZO_Compass, RIGHT, 25, 0)
+        else 
+            self.uiWindow:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.settings.ui.left, self.settings.ui.top) 
+        end
+    else
+        self.uiWindow:SetScale(self.settings.uiMenu.scale or (IsConsoleUI() and 1.2 or 1.0))
+        -- Menu Mode
+        if self.settings.uiMenu.left == -1 and self.settings.uiMenu.top == -1 then
+            if IsConsoleUI() then
+                if ZO_GamepadGenericHeader then
+                    self.uiWindow:SetAnchor(TOPLEFT, ZO_GamepadGenericHeader, TOPLEFT, 1010, 1176)
+                else
+                    self.uiWindow:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, 1010, 1176)
+                end
+            else
+                if ZO_CollectionsBook_TopLevelSearchBox then
+                    self.uiWindow:SetAnchor(LEFT, ZO_CollectionsBook_TopLevelSearchBox, RIGHT, 20, 0)
+                else
+                    self.uiWindow:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, 100, 100)
+                end
+            end
+        else
+            self.uiWindow:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.settings.uiMenu.left, self.settings.uiMenu.top)
+        end
+    end
+end
+
+function PM:UpdateUIScenes()
+    if not self.hudFragment or not self.menuFragment then return end
+    
+    local hudScenes = {"hud", "hudui", "gamepad_hud", "interact"}
+    local menuScenes = {"collectionsBook", "gamepad_collections_book", "gamepadCollectionsBook"}
+    
+    for _, name in ipairs(hudScenes) do
+        local scene = SCENE_MANAGER:GetScene(name)
+        if scene and scene:HasFragment(self.hudFragment) then scene:RemoveFragment(self.hudFragment) end
+    end
+    for _, name in ipairs(menuScenes) do
+        local scene = SCENE_MANAGER:GetScene(name)
+        if scene and scene:HasFragment(self.menuFragment) then scene:RemoveFragment(self.menuFragment) end
+    end
+    
+    if self.settings.showInHUD then
+        for _, name in ipairs(hudScenes) do
+            local scene = SCENE_MANAGER:GetScene(name)
+            if scene then scene:AddFragment(self.hudFragment) end
+        end
+    else
+        for _, name in ipairs(menuScenes) do
+            local scene = SCENE_MANAGER:GetScene(name)
+            if scene then scene:AddFragment(self.menuFragment) end
+        end
+    end
+    
+    if self.settings.ui.hidden then
+        self.uiWindow:SetHidden(true)
+    else
+        local currentScene = SCENE_MANAGER:GetCurrentScene()
+        if currentScene then
+            if self.settings.showInHUD and currentScene:HasFragment(self.hudFragment) then
+                self.uiWindow:SetHidden(false)
+            elseif not self.settings.showInHUD and currentScene:HasFragment(self.menuFragment) then
+                self.uiWindow:SetHidden(false)
+            else
+                self.uiWindow:SetHidden(true)
+            end
+        else
+            self.uiWindow:SetHidden(true)
+        end
+    end
+    
+    self:UpdateUIAnchor()
+end
+
 function PM:CreateUI()
     local ui = WINDOW_MANAGER:CreateControl("PermMementoUI", GuiRoot, CT_TOPLEVELCONTROL)
     ui:SetClampedToScreen(true); ui:SetMouseEnabled(true)
-    if self.settings and self.settings.ui then
-        ui:SetMovable(not self.settings.ui.locked); ui:SetHidden(self.settings.ui.hidden); ui:SetScale(self.settings.ui.scale or 1.0)
-        if self.settings.ui.left == self.defaults.ui.left and self.settings.ui.top == self.defaults.ui.top then
-            ui:SetAnchor(LEFT, ZO_Compass, RIGHT, 25, 0)
-        else ui:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.settings.ui.left, self.settings.ui.top) end
-    else ui:SetAnchor(LEFT, ZO_Compass, RIGHT, 25, 0) end
+    ui:SetDrawTier(DT_OVERLAY); ui:SetDrawLayer(DL_OVERLAY); ui:SetDrawLevel(100)
+    ui:SetHidden(true)
+    self.uiWindow = ui
+    self:UpdateUIAnchor()
 
     ui:SetHandler("OnMoveStop", function(control) 
-        if PM.settings and PM.settings.ui then PM.settings.ui.left = control:GetLeft(); PM.settings.ui.top = control:GetTop() end 
+        if not PM.settings then return end 
+        if PM.settings.showInHUD then
+            PM.settings.ui.left = control:GetLeft(); PM.settings.ui.top = control:GetTop()
+        else
+            PM.settings.uiMenu.left = control:GetLeft(); PM.settings.uiMenu.top = control:GetTop()
+        end
     end)
     
     local bg = WINDOW_MANAGER:CreateControl("PermMementoBG", ui, CT_BACKDROP)
@@ -161,7 +252,6 @@ function PM:CreateUI()
         if not PM.settings then return end 
         if PM.settings.performanceMode and (time - lastUpdate < 0.25) then return end
         lastUpdate = time
-        if PM.settings.ui and PM.settings.ui.hidden and not control:IsHidden() then control:SetHidden(true) end
         
         if not PM.settings.activeId or not PM.mementoData[PM.settings.activeId] then label:SetText("[PM] Inactive"); UpdateSize(); return end
         if PM.settings.paused then label:SetText(string.format("[PM] %s |cFF0000(Paused)|r", PM.mementoData[PM.settings.activeId].name)); UpdateSize(); return end
@@ -180,14 +270,13 @@ function PM:CreateUI()
         label:SetText(string.format("[PM] %s %s%s", PM.mementoData[PM.settings.activeId].name, stateInfo, cooldownText))
         UpdateSize()
     end)
-    self.uiWindow = ui; self.uiLabel = label
+    self.uiLabel = label
     
-    local fragment = ZO_HUDFadeSceneFragment:New(ui)
-    local scenes = {"hud", "hudui", "gamepad_hud", "interact"}
-    for _, name in ipairs(scenes) do
-        local scene = SCENE_MANAGER:GetScene(name)
-        if scene then scene:AddFragment(fragment) end
-    end
+    -- Scene Management
+    self.hudFragment = ZO_HUDFadeSceneFragment:New(ui)
+    self.menuFragment = ZO_FadeSceneFragment:New(ui)
+    
+    self:UpdateUIScenes()
 end
 
 function PM:IsBusy()
@@ -278,7 +367,6 @@ function PM.Sync:Initialize()
     if string.lower(argString) == "stop" then
          local function TryChat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
          if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
-         PM:Log("Sent Group Sync Command.", true, "sync")
          if PM.settings then PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1 end
          return
     end
@@ -313,18 +401,30 @@ function PM.Sync:Initialize()
 
   local function onSyncChatMessage(eventCode, channelType, fromName, text)
     if channelType ~= CHAT_CHANNEL_PARTY then return end
+    local cleanName = zo_strformat("<<1>>", fromName)
+    
     if string.match(text, "^PM STOP") then
+        if cleanName == GetUnitDisplayName("player") then
+            PM:Log("Sent Group Stop Command.", true, "sync")
+            return
+        end
         if PM.settings then 
             PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1
-            PM:Log("Group Stop received from " .. fromName, true, "stop") 
+            PM:Log("Group Stop received from " .. cleanName, true, "stop") 
         end
         return
     end
+    
     local id
     for collectibleId in string.gmatch(text, "^PM |H1:collectible:(%d+)|h|h$") do id = tonumber(collectibleId) end
     if not id then for collectibleId in string.gmatch(text, "^PM (%d+)$") do id = tonumber(collectibleId) end end
     if not id or not IsCollectibleUnlocked(id) then return end
-    if fromName == GetUnitDisplayName("player") then return end
+    
+    if cleanName == GetUnitDisplayName("player") then 
+        PM:Log("Sent Group Sync Command.", true, "sync")
+        return 
+    end
+    
     if not PM.settings then return end 
     local delay = PM.settings.sync.delay or 0
     if PM.settings.sync.random then delay = math.random(0, delay) end
@@ -334,11 +434,48 @@ function PM.Sync:Initialize()
   EVENT_MANAGER:RegisterForEvent(PM.name .. "_Sync", EVENT_CHAT_MESSAGE_CHANNEL, onSyncChatMessage)
 end
 
+function PM:GetCharacterList(skipCurrent)
+    local names, ids = {}, {}
+    local sv = _G["PermMementoSaved"]; local acct = GetDisplayName(); local currentId = GetCurrentCharacterId()
+    if sv and sv["Default"] and sv["Default"][acct] then
+        for id, data in pairs(sv["Default"][acct]) do
+            if id ~= "$AccountWide" and type(data) == "table" and data["Character"] then
+                if not skipCurrent or id ~= currentId then
+                    local cName = data["$LastCharacterName"] or zo_strformat("<<1>>", GetCharacterNameById(id))
+                    if not cName or cName == "" then cName = "Unknown ID: " .. id end
+                    table.insert(names, cName); table.insert(ids, id)
+                end
+            end
+        end
+    end
+    if #names == 0 then return {"None"}, {""} end
+    return names, ids
+end
+
+function PM:CopyCharacterSettings(sourceId)
+    if not sourceId or sourceId == "" then PM:Log("No character selected to copy.", true, "error"); return end
+    local acct = GetDisplayName()
+    local src = _G["PermMementoSaved"]["Default"][acct][sourceId]["Character"]
+    if src then
+        _G["PermMementoSaved"]["Default"][acct][GetCurrentCharacterId()]["Character"] = ZO_DeepTableCopy(src)
+        ReloadUI("ingame")
+    end
+end
+
+function PM:DeleteCharacterSettings(targetId)
+    if not targetId or targetId == "" then PM:Log("No character selected for deletion.", true, "error"); return end
+    if targetId == GetCurrentCharacterId() then PM:Log("Cannot delete current character's data while logged in.", true, "error"); return end
+    local acct = GetDisplayName()
+    _G["PermMementoSaved"]["Default"][acct][targetId] = nil
+    ReloadUI("ingame")
+end
+
 function PM:BuildMenu()
     if PM.menuBuilt then return end
     PM.menuBuilt = true
     PM.activeNames, PM.activeIDs = {"None"}, {0}
     PM.syncNames, PM.syncIDs = {"None"}, {0}
+    
     local sortedActive = {}
     for id, data in pairs(self.mementoData) do
         if IsCollectibleUnlocked(id) then table.insert(sortedActive, {name=data.name, id=id, dur=data.dur, stat=data.stationary}) end
@@ -348,6 +485,7 @@ function PM:BuildMenu()
         local durSec = t.dur / 1000; local infoText = string.format("%s (%ds)%s", t.name, durSec, t.stat and " (Stationary)" or "")
         table.insert(PM.activeNames, infoText); table.insert(PM.activeIDs, t.id)
     end
+    
     local sortedSync = {}
     for i = 1, GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO) do
         local id = GetCollectibleIdFromType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO, i)
@@ -355,6 +493,9 @@ function PM:BuildMenu()
     end
     table.sort(sortedSync, function(a,b) return a.name < b.name end)
     for _, t in ipairs(sortedSync) do table.insert(PM.syncNames, t.name); table.insert(PM.syncIDs, t.id) end
+    
+    PM.charListNames, PM.charListValues = PM:GetCharacterList(true)
+    
     local LAM = LibAddonMenu2 or _G["LibAddonMenu"]
     if not LAM then return end
     local panelData = { type = "panel", name = "Permanent Memento", displayName = "|c9CD04CPermanent Memento|r", author = "|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r", version = self.version, registerForRefresh = true }
@@ -362,6 +503,7 @@ function PM:BuildMenu()
     local function AddOption(opt) table.insert(optionsData, opt) end
 
     AddOption({ type = "header", name = "General Settings" })
+    AddOption({ type = "checkbox", name = "Use Account-Wide Settings", tooltip = "If ON, settings are shared across all characters. If OFF, settings are unique to this character.", getFunc = function() return PM.charSaved.useAccountSettings end, setFunc = function(value) PM.charSaved.useAccountSettings = value; PM:UpdateSettingsReference(); ReloadUI("ingame") end })
     AddOption({
         type = "dropdown", name = "Select Active Memento", tooltip = "Select a memento. Click 'Apply' to start.", choices = PM.activeNames, choicesValues = PM.activeIDs,
         getFunc = function() if PM.pendingId == nil then return PM.settings.activeId or 0 end return PM.pendingId end,
@@ -409,88 +551,103 @@ function PM:BuildMenu()
         type = "checkbox", name = "Performance Mode", tooltip = "Reduces UI update frequency to save resources.",
         getFunc = function() return PM.settings.performanceMode end, setFunc = function(value) PM.settings.performanceMode = value end,
     })
+    
+    AddOption({ type = "header", name = "UI Visibility Settings" })
     AddOption({
-        type = "checkbox", name = "Lock UI Position", tooltip = "Prevents the on-screen status text UI from being moved.",
-        getFunc = function() return PM.settings.ui.locked end, setFunc = function(value) PM.settings.ui.locked = value; if PM.uiWindow then PM.uiWindow:SetMovable(not value) end end,
-    })
-    AddOption({
-        type = "checkbox", name = "Toggle UI Visibility", tooltip = "Shows or hides the status text UI.",
+        type = "checkbox", name = "UI Visibility", tooltip = "Shows or hides the status text completely.",
         getFunc = function() return not PM.settings.ui.hidden end, 
         setFunc = function(value) 
             PM.settings.ui.hidden = not value
-            if PM.uiWindow then PM.uiWindow:SetHidden(PM.settings.ui.hidden) end
+            PM:UpdateUIScenes()
             PM:Log("UI Visibility: " .. (PM.settings.ui.hidden and "HIDDEN" or "VISIBLE"), true, "ui")
         end,
     })
     AddOption({
-        type = "slider", name = "UI Scale", tooltip = "Adjusts the size of the status text UI.", min = 0.5, max = 2.0, step = 0.1, decimals = 1,
-        getFunc = function() return PM.settings.ui.scale or 1.0 end, setFunc = function(value) PM.settings.ui.scale = value; if PM.uiWindow then PM.uiWindow:SetScale(value) end end,
+        type = "checkbox", name = "UI Mode", tooltip = "ON: Shows during normal gameplay (HUD).\nOFF: Shows ONLY inside the Collectibles menu.",
+        getFunc = function() return PM.settings.showInHUD end, 
+        setFunc = function(value) 
+            PM.settings.showInHUD = value
+            PM:UpdateUIScenes()
+            PM:Log("UI Mode: " .. (value and "HUD Only" or "Menu Only"), true, "ui")
+        end,
+        disabled = function() return PM.settings.ui.hidden end
     })
+    AddOption({
+        type = "checkbox", name = "Lock UI Position", tooltip = "Prevents the on-screen status text UI from being moved.",
+        getFunc = function() return PM.settings.ui.locked end, 
+        setFunc = function(value) 
+            PM.settings.ui.locked = value; 
+            if PM.uiWindow then PM.uiWindow:SetMovable(not value) end 
+        end,
+    })
+    AddOption({
+        type = "slider", name = "HUD UI Scale", tooltip = "Adjusts the size of the status text UI in HUD mode.", min = 0.5, max = 2.0, step = 0.1, decimals = 1,
+        getFunc = function() return PM.settings.ui.scale or (IsConsoleUI() and 0.7 or 1.0) end, 
+        setFunc = function(value) PM.settings.ui.scale = value; PM:UpdateUIAnchor() end,
+    })
+    AddOption({
+        type = "slider", name = "Menu UI Scale", tooltip = "Adjusts the size of the status text UI in Menu mode.", min = 0.5, max = 2.0, step = 0.1, decimals = 1,
+        getFunc = function() return PM.settings.uiMenu.scale or (IsConsoleUI() and 1.2 or 1.0) end, 
+        setFunc = function(value) PM.settings.uiMenu.scale = value; PM:UpdateUIAnchor() end,
+    })
+    
+    AddOption({ type = "header", name = "Character Data Management" })
+    AddOption({ type = "dropdown", name = "Copy Settings From...", tooltip = "Select a character to copy settings FROM to your CURRENT character.", choices = PM.charListNames, choicesValues = PM.charListValues, getFunc = function() return "" end, setFunc = function(value) PM.selectedCharCopy = value end })
+    AddOption({ type = "button", name = "Copy Settings & Reload", tooltip = "Overwrites current character settings with the selected character's data and reloads the UI.", func = function() PM:CopyCharacterSettings(PM.selectedCharCopy) end })
+    AddOption({ type = "dropdown", name = "|cFF0000DELETE Data For...|r", tooltip = "|cFF0000Select an obsolete character to delete their saved data.|r", choices = PM.charListNames, choicesValues = PM.charListValues, getFunc = function() return "" end, setFunc = function(value) PM.selectedCharDelete = value end })
+    AddOption({ type = "button", name = "|cFF0000DELETE Data & Reload|r", tooltip = "|cFF0000WARNING: PERMANENTLY deletes saved data for the selected character and reloads the UI.|r", func = function() PM:DeleteCharacterSettings(PM.selectedCharDelete) end })
 
     AddOption({ type = "header", name = "Announcement Durations (Seconds)" })
     AddOption({ type = "slider", name = "Activation Duration", tooltip = "Duration for 'Started' messages.", min=1, max=6, step=0.5, getFunc=function() return PM.settings.csaDurations.activation/1000 end, setFunc=function(v) PM.settings.csaDurations.activation = v*1000 end })
     AddOption({ type = "slider", name = "Stop Duration", tooltip = "Duration for 'Stopped' messages.", min=1, max=6, step=0.5, getFunc=function() return PM.settings.csaDurations.stop/1000 end, setFunc=function(v) PM.settings.csaDurations.stop = v*1000 end })
-    AddOption({ type = "slider", name = "Sync Duration", tooltip = "Duration for Sync related messages.", min=1, max=6, step=0.5, getFunc=function() return PM.settings.csaDurations.sync/1000 end, setFunc=function(v) PM.settings.csaDurations.sync = v*1000 end })
+    
+    if not IsConsoleUI() then
+        AddOption({ type = "slider", name = "Sync Duration", tooltip = "Duration for Sync related messages.", min=1, max=6, step=0.5, getFunc=function() return PM.settings.csaDurations.sync/1000 end, setFunc=function(v) PM.settings.csaDurations.sync = v*1000 end })
+    end
+    
     AddOption({ type = "slider", name = "UI Toggle Duration", tooltip = "Duration for UI Hidden/Visible messages.", min=1, max=6, step=0.5, getFunc=function() return PM.settings.csaDurations.ui/1000 end, setFunc=function(v) PM.settings.csaDurations.ui = v*1000 end })
     AddOption({ type = "slider", name = "Random/Zone Duration", tooltip = "Duration for Randomizer messages.", min=1, max=6, step=0.5, getFunc=function() return PM.settings.csaDurations.random/1000 end, setFunc=function(v) PM.settings.csaDurations.random = v*1000 end })
 
-    AddOption({ type = "header", name = "Sync Settings" })
-    AddOption({
-        type = "dropdown", name = "Send Sync Request", tooltip = "Broadcasts a memento to your group to sync up animations.", choices = PM.syncNames, choicesValues = PM.syncIDs,
-        getFunc = function() return 0 end, 
-        setFunc = function(value) 
-            if IsConsoleUI() then PM.selectedSyncId = value
-            else
+    if not IsConsoleUI() then
+        AddOption({ type = "header", name = "Sync Settings" })
+        AddOption({
+            type = "dropdown", name = "Send Sync Request", tooltip = "Broadcasts a memento to your group to sync up animations.", choices = PM.syncNames, choicesValues = PM.syncIDs,
+            getFunc = function() return 0 end, 
+            setFunc = function(value) 
                 if value and value ~= 0 then
                     local link = GetCollectibleLink(value, LINK_STYLE_BRACKETS)
                     local function TryChat() StartChatInput(string.format("PM %s", link), CHAT_CHANNEL_PARTY) end
                     if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry(string.format("PM %s", link)) end
-                    PM:Log("Sent Group Sync Command.", true, "sync")
                 end
-            end
-        end,
-    })
-    if IsConsoleUI() then
+            end,
+        })
         AddOption({
-            type = "button", name = "Apply Sync Request", tooltip = "Sends the sync request selected in the dropdown above.",
+            type = "button", name = "Send Random Sync Request", tooltip = "Picks a random unlocked memento and broadcasts it to group.",
             func = function()
-                if PM.selectedSyncId and PM.selectedSyncId ~= 0 then
-                    local link = GetCollectibleLink(PM.selectedSyncId, LINK_STYLE_BRACKETS)
+                local randId = PM:GetRandomAny(); if randId then
+                    local link = GetCollectibleLink(randId, LINK_STYLE_BRACKETS)
                     local function TryChat() StartChatInput(string.format("PM %s", link), CHAT_CHANNEL_PARTY) end
                     if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry(string.format("PM %s", link)) end
-                    PM:Log("Sent Group Sync Command.", true, "sync")
                 end
             end
         })
-    end
-    AddOption({
-        type = "button", name = "Send Random Sync Request", tooltip = "Picks a random unlocked memento and broadcasts it to group.",
-        func = function()
-            local randId = PM:GetRandomAny(); if randId then
-                local link = GetCollectibleLink(randId, LINK_STYLE_BRACKETS)
-                local function TryChat() StartChatInput(string.format("PM %s", link), CHAT_CHANNEL_PARTY) end
-                if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry(string.format("PM %s", link)) end
-                PM:Log("Sent Group Sync Command.", true, "sync")
+        AddOption({
+            type = "button", name = "Send Group Stop Command", tooltip = "Sends a STOP command to your group, halting their loops.",
+            func = function()
+                local function TryChat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
+                if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
             end
-        end
-    })
-    AddOption({
-        type = "button", name = "Send Group Stop Command", tooltip = "Sends a STOP command to your group, halting their loops.",
-        func = function()
-            local function TryChat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
-            if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
-            PM:Log("Sent Group Sync Command.", true, "sync")
-        end
-    })
-    AddOption({
-        type = "checkbox", name = "Randomize Sync Delay", tooltip = "Adds random variation to the sync start time.",
-        getFunc = function() return PM.settings.sync.random end, setFunc = function(value) PM.settings.sync.random = value end,
-    })
-    AddOption({
-        type = "slider", name = "Sync Delay (ms)", tooltip = "Fixed delay before starting a synced memento.", min = 0, max = 5000, step = 100,
-        getFunc = function() return PM.settings.sync.delay end, setFunc = function(value) PM.settings.sync.delay = value end,
-        disabled = function() return PM.settings.sync.random end
-    })
+        })
+        AddOption({
+            type = "checkbox", name = "Randomize Sync Delay", tooltip = "Adds random variation to the sync start time.",
+            getFunc = function() return PM.settings.sync.random end, setFunc = function(value) PM.settings.sync.random = value end,
+        })
+        AddOption({
+            type = "slider", name = "Sync Delay (ms)", tooltip = "Fixed delay before starting a synced memento.", min = 0, max = 5000, step = 100,
+            getFunc = function() return PM.settings.sync.delay end, setFunc = function(value) PM.settings.sync.delay = value end,
+            disabled = function() return PM.settings.sync.random end
+        })
+    end
 
     AddOption({ type = "header", name = "Delays" })
     AddOption({ type = "slider", name = "Idle Loop Delay", tooltip = "Base delay between loops when not busy.", min = 500, max = 10000, step = 100, getFunc = function() return PM.settings.delayIdle end, setFunc = function(value) PM.settings.delayIdle = value end })
@@ -507,7 +664,7 @@ function PM:BuildMenu()
     AddOption({ type = "header", name = "Commands" })
     if not IsConsoleUI() then
         AddOption({
-            type = "button", name = "|cFF0000Force Console Mode|r", tooltip = "Simulates Console flow on PC.",
+            type = "button", name = "|cFF0000FORCE CONSOLE MODE|r", tooltip = "|cFF0000WARNING: SIMULATES CONSOLE FLOW ON PC. REQUIRES RELOAD TO APPLY.\nIF STUCK, USE COMMAND:\n/script SetCVar(\"ForceConsoleFlow.2\", \"0\")\nTHEN TYPE /reloadui|r",
             func = function() local current = GetCVar("ForceConsoleFlow.2"); local newVal = (current == "1") and "0" or "1"; SetCVar("ForceConsoleFlow.2", newVal); ReloadUI("ingame") end,
         })
     end
@@ -516,31 +673,57 @@ function PM:BuildMenu()
         func = function() PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1; PM.pendingId = 0; PM.settings.randomOnZone = false; PM.settings.randomOnLogin = false; PM:Log("Auto-loop Stopped", true, "stop") end,
     })
     AddOption({
-        type = "button", name = "Reset UI Position", tooltip = "Resets the status text UI position (Compass).",
-        func = function() PM.settings.ui.left = PM.defaults.ui.left; PM.settings.ui.top = PM.defaults.ui.top; PM.uiWindow:ClearAnchors(); PM.uiWindow:SetAnchor(LEFT, ZO_Compass, RIGHT, 25, 0); PM:Log("UI Position Reset.", true, "ui") end,
+        type = "button", name = "Reset UI Position", tooltip = "Resets the status text UI position (Compass / Menu).",
+        func = function() 
+            PM.settings.ui.left = PM.defaults.ui.left; 
+            PM.settings.ui.top = PM.defaults.ui.top; 
+            PM.settings.uiMenu.left = PM.defaults.uiMenu.left;
+            PM.settings.uiMenu.top = PM.defaults.uiMenu.top;
+            PM:UpdateUIAnchor(); 
+            PM:Log("UI Position Reset.", true, "ui") 
+        end,
     })
     AddOption({
         type = "button", name = "Reload UI", tooltip = "Reloads the User Interface.", func = function() ReloadUI("ingame") end,
     })
     AddOption({
-        type = "button", name = "|cFF0000Reset to Defaults|r", tooltip = "|cFF0000Resets all settings to default values.|r",
+        type = "button", name = "|cFF0000RESET TO DEFAULTS|r", tooltip = "|cFF0000RESETS ALL SETTINGS TO DEFAULT VALUES.|r",
         func = function() 
             local d = PM.defaults
-            PM.settings.activeId = nil; PM.settings.paused = false; PM.settings.logEnabled = d.logEnabled; PM.settings.csaEnabled = d.csaEnabled
-            PM.settings.randomOnLogin = d.randomOnLogin; PM.settings.randomOnZone = d.randomOnZone; PM.settings.loopInCombat = d.loopInCombat; PM.settings.performanceMode = d.performanceMode
-            PM.settings.delayMove=d.delayMove; PM.settings.delaySprint=d.delaySprint; PM.settings.delayBlock=d.delayBlock; PM.settings.delayCast=d.delayCast
-            PM.settings.delaySwim=d.delaySwim; PM.settings.delaySneak=d.delaySneak; PM.settings.delayMount=d.delayMount; PM.settings.delayIdle=d.delayIdle
-            PM.settings.delayTeleport=d.delayTeleport; PM.settings.delayResurrect=d.delayResurrect; PM.settings.delayInMenu=d.delayInMenu
-            PM.settings.sync.delay=d.sync.delay; PM.settings.sync.random=d.sync.random; PM.settings.sync.ignoreInCombat=d.sync.ignoreInCombat
-            PM.settings.ui.left=d.ui.left; PM.settings.ui.top=d.ui.top; PM.settings.ui.locked=d.ui.locked; PM.settings.ui.hidden=d.ui.hidden; PM.settings.ui.scale=(IsConsoleUI() and 0.7 or 1.0)
-            PM.settings.csaDurations = {activation=6000, stop=6000, sync=6000, ui=6000, random=6000, error=6000}
+            PM.settings.activeId = d.activeId
+            PM.settings.paused = d.paused
+            PM.settings.logEnabled = d.logEnabled
+            PM.settings.csaEnabled = d.csaEnabled
+            PM.settings.randomOnLogin = d.randomOnLogin
+            PM.settings.randomOnZone = d.randomOnZone
+            PM.settings.loopInCombat = d.loopInCombat
+            PM.settings.performanceMode = d.performanceMode
+            PM.settings.showInHUD = d.showInHUD
+            
+            PM.settings.delayMove = d.delayMove
+            PM.settings.delaySprint = d.delaySprint
+            PM.settings.delayBlock = d.delayBlock
+            PM.settings.delayCast = d.delayCast
+            PM.settings.delaySwim = d.delaySwim
+            PM.settings.delaySneak = d.delaySneak
+            PM.settings.delayMount = d.delayMount
+            PM.settings.delayIdle = d.delayIdle
+            PM.settings.delayTeleport = d.delayTeleport
+            PM.settings.delayResurrect = d.delayResurrect
+            PM.settings.delayInMenu = d.delayInMenu
+            
+            PM.settings.sync = ZO_DeepTableCopy(d.sync)
+            PM.settings.ui = ZO_DeepTableCopy(d.ui)
+            PM.settings.uiMenu = ZO_DeepTableCopy(d.uiMenu)
+            PM.settings.csaDurations = ZO_DeepTableCopy(d.csaDurations)
+            
             ReloadUI("ingame") 
         end,
     })
     
     AddOption({
         type = "description", title = "Commands Info",
-        text = "|c00FF00/pmem <name>|r - Start memento\n|c00FF00/pmem stop|r - Stop loop\n|c00FF00/pmem ui|r - Toggle UI\n|c00FF00/pmem lock|r - Lock UI\n|c00FF00/pmsync <name>|r - Sync memento\n|c00FF00/pmsync stop|r - Stop group\n\n|cFF0000WARNING:|r Force Console Mode requires reload. To revert if stuck:\n|cFFFF00/script SetCVar(\"ForceConsoleFlow.2\", \"0\")|r",
+        text = "|c00FF00/pmem <name>|r - Start memento\n|c00FF00/pmem stop|r - Stop loop\n|c00FF00/pmem ui|r - Toggle UI Visibility\n|c00FF00/pmem lock|r - Lock UI\n|c00FF00/pmsync <name>|r - Sync memento\n|c00FF00/pmsync stop|r - Stop group\n\n|cFF0000WARNING:|r Force Console Mode requires reload. To revert if stuck:\n|cFFFF00/script SetCVar(\"ForceConsoleFlow.2\", \"0\")|r",
     })
 
     LAM:RegisterAddonPanel("PermMementoOptions", panelData)
@@ -554,7 +737,7 @@ function PM:Init(eventCode, addOnName)
     local world = GetWorldName() or "Default"
     self.acctSaved = ZO_SavedVars:NewAccountWide("PermMementoSaved", 1, world, self.defaults)
     self.charSaved = ZO_SavedVars:NewCharacterIdSettings("PermMementoSaved", 1, "Character", self.defaults)
-    if self.charSaved.useAccountSettings == nil then self.charSaved.useAccountSettings = self.charDefaults.useAccountSettings end
+    if self.charSaved.useAccountSettings == nil then self.charSaved.useAccountSettings = self.defaults.useAccountSettings end
     self:UpdateSettingsReference()
     if not self.loopToken then self.loopToken = 0 end
     self:CreateUI(); self:HookGameUI(); PM.Sync:Initialize()
@@ -565,11 +748,13 @@ function PM:Init(eventCode, addOnName)
         if cmd == "stop" or cmd == "off" then
             self.settings.activeId = nil; self.loopToken = (self.loopToken or 0) + 1; self:Log("Auto-loop Stopped", true, "stop"); self.pendingId = 0
         elseif cmd == "ui" then
-             self.settings.ui.hidden = not self.settings.ui.hidden; self.uiWindow:SetHidden(self.settings.ui.hidden); self:Log("UI Visibility: " .. (self.settings.ui.hidden and "HIDDEN" or "VISIBLE"), true, "ui")
+             self.settings.ui.hidden = not self.settings.ui.hidden; PM:UpdateUIScenes(); self:Log("UI Visibility: " .. (self.settings.ui.hidden and "HIDDEN" or "VISIBLE"), true, "ui")
         elseif cmd == "lock" then
             self.settings.ui.locked = not self.settings.ui.locked; self.uiWindow:SetMovable(not self.settings.ui.locked); self:Log("UI " .. (self.settings.ui.locked and "Locked" or "Unlocked"), true, "ui")
         elseif cmd == "uireset" then
-            self.settings.ui.left = self.defaults.ui.left; self.settings.ui.top = self.defaults.ui.top; self.uiWindow:ClearAnchors(); self.uiWindow:SetAnchor(LEFT, ZO_Compass, RIGHT, 25, 0); self:Log("UI Position Reset.", true, "ui")
+            self.settings.ui.left = self.defaults.ui.left; self.settings.ui.top = self.defaults.ui.top; 
+            self.settings.uiMenu.left = self.defaults.uiMenu.left; self.settings.uiMenu.top = self.defaults.uiMenu.top; 
+            self:UpdateUIAnchor(); self:Log("UI Position Reset.", true, "ui")
         elseif cmd == "current" then
              if self.settings.activeId then d("[PM] Active: " .. (self.mementoData[self.settings.activeId].name or "Unknown")) else d("[PM] Inactive") end
         else
