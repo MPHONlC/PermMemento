@@ -24,7 +24,7 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 
 ## Key Features
 * **Permanent Mementos:** Makes memento effects like Finvir's Trinket, Almalexia’s Lantern, or Wild Hunt Transform remain permanent. Pauses when in combat, crafting, or in menus to avoid interruptions.
-* **Group Sync:** Share your active memento with your party.
+* **Group Sync:** Share your active memento with your party. Supports ANY memento in the game, as long as you have it unlocked/owned!
 * **UI Scaling:** Adjust the size of the status text with a slider.
 * **Randomizer:** Can now pick a random memento on login, zone change, or via a new menu button.
 * **Smart Delays:** Added specific delay settings for Resurrecting, Teleporting, and being in Menus/Crafting to prevent bugs.
@@ -77,6 +77,11 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 | [**Wild Hunt Transform**](https://en.uesp.net/wiki/Online:Wild_Hunt_Transform) | 759 | 180s |
 
 > if the memento you want is not supported feel free to request.
+
+
+> ⚠️ **Console Flow Mode Warning:** If you use the "Force Console Mode" toggle on PC to test and get stuck, type the following into your chat box to revert it:
+> `/script SetCVar("ForceConsoleFlow.2", "0")`
+> Then type `/reloadui`
 
 <div align="center">
 
