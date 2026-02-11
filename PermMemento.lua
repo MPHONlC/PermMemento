@@ -13,7 +13,7 @@ local PM = {
          -- Delays
         delayMove=3000, delaySprint=3000, delayBlock=3000, delayCast=3000,
         delaySwim=3000, delaySneak=3000, delayMount=3000, delayIdle=3000,
-        delayTeleport=3000, delayResurrect=5000, delayInMenu=3000,
+        delayTeleport=3000, delayResurrect=5000, delayInMenu=3000, delayCombat=0,
         -- CSA Durations (6000ms)
         csaDurations = {
             activation=6000, stop=6000, sync=6000, ui=6000, random=6000, error=6000
@@ -32,13 +32,13 @@ local PM = {
 -- MEMENTO TABLE
 PM.mementoData = {
     [336]   = {id = 336,   aid = 21226,  dur = 13000,  name = "Finvir's Trinket"},
-    [341]   = {id = 341,   aid = 26829,  dur = 30000,  name = "Almalexia's Enchanted Lantern"},
+    [341]   = {id = 341,   aid = 26829,  dur = 22000,  name = "Almalexia's Enchanted Lantern"},
     [349]   = {id = 349,   aid = 42008,  dur = 30000,  name = "Token of Root Sunder"},
     [594]   = {id = 594,   aid = 85344,  dur = 180000, name = "Storm Atronach Aura"},
     [758]   = {id = 758,   aid = 86978,  dur = 180000, name = "Floral Swirl Aura"},
     [759]   = {id = 759,   aid = 86977,  dur = 180000, name = "Wild Hunt Transform"},
     [760]   = {id = 760,   aid = 86976,  dur = 180000, name = "Wild Hunt Leaf-Dance Aura"},
-    [1183]  = {id = 1183,  aid = 92868,  dur = 36000,  name = "Dwemervamidium Mirage"},
+    [1183]  = {id = 1183,  aid = 92868,  dur = 180000, name = "Dwemervamidium Mirage"},
     [9361]  = {id = 9361,  aid = 153672, dur = 18000,  name = "Inferno Cleats"},
     [9862]  = {id = 9862,  aid = 162813, dur = 180000, name = "Astral Aurora Projector "},
     [10652] = {id = 10652, aid = 175730, dur = 180000, name = "Soul Crystals of the Returned"},
@@ -46,7 +46,7 @@ PM.mementoData = {
     [13092] = {id = 13092, aid = 229843, dur = 69000,  name = "Remnant of Meridia's Light"},
     [347]   = {id = 347,   aid = 41950,  dur = 33000,  name = "Fetish of Anger"},
     [596]   = {id = 596,   aid = 85349,  dur = 18000,  name = "Storm Atronach Transform"},
-    [1167]  = {id = 1167,  aid = 91365,  dur = 30000,  name = "The Pie of Misrule"},
+    [1167]  = {id = 1167,  aid = 91365,  dur = 6000,   name = "The Pie of Misrule"},
     [1182]  = {id = 1182,  aid = 92867,  dur = 10000,  name = "Dwarven Tonal Forks"},
     [1384]  = {id = 1384,  aid = 97274,  dur = 18000,  name = "Swarm of Crows"},
     [10236] = {id = 10236, aid = 166513, dur = 30000,  name = "Mariner's Nimbus Stone"},
@@ -69,6 +69,7 @@ function PM:UpdateSettingsReference()
     
     -- Delays
     if self.settings.loopDelay then self.settings.delayIdle = self.settings.loopDelay; self.settings.loopDelay = nil end
+    if self.settings.delayCombat == nil then self.settings.delayCombat = self.defaults.delayCombat end
     
     self:UpdateUIAnchor()
     self:UpdateUIScenes()
@@ -121,6 +122,7 @@ end
 
 function PM:GetActionState()
     if IsResurrecting and IsResurrecting() then return true, "|cFF0000(Resurrecting)|r", (self.settings.delayResurrect or 5000) end
+    if IsUnitReincarnating and IsUnitReincarnating("player") then return true, "|cFF0000(Reviving)|r", (self.settings.delayResurrect or 5000) end
     
     local blocking = false
     if IsBlockActive and IsBlockActive() then blocking = true elseif IsUnitBlocking and IsUnitBlocking("player") then blocking = true end
@@ -144,7 +146,6 @@ function PM:UpdateUIAnchor()
     
     if self.settings.showInHUD then
         self.uiWindow:SetScale(self.settings.ui.scale or (IsConsoleUI() and 0.7 or 1.0))
-        -- HUD Mode
         if self.settings.ui.left == self.defaults.ui.left and self.settings.ui.top == self.defaults.ui.top then
             self.uiWindow:SetAnchor(LEFT, ZO_Compass, RIGHT, 25, 0)
         else 
@@ -152,7 +153,6 @@ function PM:UpdateUIAnchor()
         end
     else
         self.uiWindow:SetScale(self.settings.uiMenu.scale or (IsConsoleUI() and 1.2 or 1.0))
-        -- Menu Mode
         if self.settings.uiMenu.left == -1 and self.settings.uiMenu.top == -1 then
             if IsConsoleUI() then
                 if ZO_GamepadGenericHeader then
@@ -271,7 +271,6 @@ function PM:CreateUI()
         UpdateSize()
     end)
     self.uiLabel = label
-    
     -- Scene Management
     self.hudFragment = ZO_HUDFadeSceneFragment:New(ui)
     self.menuFragment = ZO_FadeSceneFragment:New(ui)
@@ -283,10 +282,8 @@ function PM:IsBusy()
     if IsUnitDead and IsUnitDead("player") then return true, 2000 end
     if IsUnitInCombat and IsUnitInCombat("player") and not self.settings.loopInCombat then return true, 1000 end
     if GetCraftingInteractionType and GetCraftingInteractionType() ~= 0 then return true, 2000 end
-    
     -- Interaction Checks
     if (IsInteracting and IsInteracting()) or (GetInteractionType and GetInteractionType() ~= INTERACTION_NONE) or (IsPlayerInteractingWithObject and IsPlayerInteractingWithObject()) then return true, 1000 end
-    
     -- Menu Checks
     if SCENE_MANAGER and not (SCENE_MANAGER:IsShowing("hud") or SCENE_MANAGER:IsShowing("hudui")) then
         return true, (self.settings.delayInMenu or 3000)
@@ -295,6 +292,16 @@ function PM:IsBusy()
     local isActionBusy, _, actionDelay = self:GetActionState()
     if isActionBusy then return true, actionDelay end
     return false, 0
+end
+
+function PM:OnEffectChanged(eventCode, changeType, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, effectType, abilityType, statusEffectType, unitName, unitId, abilityId, sourceUnitId)
+    if not self.settings or not self.settings.activeId then return end
+    
+    local data = self.mementoData[self.settings.activeId]
+    if data and abilityId == data.aid and changeType == EFFECT_RESULT_FADED then
+        self.loopToken = (self.loopToken or 0) + 1
+        self:Loop(self.loopToken)
+    end
 end
 
 function PM:Loop(loopID)
@@ -312,28 +319,32 @@ function PM:Loop(loopID)
     
     local remaining = 0
     if GetCollectibleCooldownAndDuration then remaining, _ = GetCollectibleCooldownAndDuration(self.settings.activeId) end
-    if remaining > 1000 then zo_callLater(function() self:Loop(loopID) end, remaining + 500); return end
     
-    self.isLooping = true; UseCollectible(self.settings.activeId); self.isLooping = false
-    zo_callLater(function() 
-        if not self.settings or not self.settings.activeId then return end
-        if loopID ~= self.loopToken then return end
-        local cooldown = 0
-        if GetCollectibleCooldownAndDuration then cooldown, _ = GetCollectibleCooldownAndDuration(self.settings.activeId) end
-        local nextDelay = (cooldown > 0) and (cooldown + 500) or (data.dur + (self.settings.delayIdle or 3000))
-        zo_callLater(function() self:Loop(loopID) end, nextDelay)
-    end, 1000)
+    if remaining > 500 then 
+        zo_callLater(function() self:Loop(loopID) end, remaining + 1000)
+        return 
+    end
+    
+    self.isLooping = true 
+    UseCollectible(self.settings.activeId) 
+    self.isLooping = false
+    
+    local nextDelay = data.dur + 1000 + (self.settings.delayIdle or 3000)
+    zo_callLater(function() self:Loop(loopID) end, nextDelay)
 end
 
 function PM:StartLoop(collectibleId)
     self.settings.activeId = collectibleId; self.settings.paused = false; self.loopToken = (self.loopToken or 0) + 1
-    local currentToken = self.loopToken; local isBusy, busyDelay = self:IsBusy()
+    local currentToken = self.loopToken; 
+    
+    local isBusy, busyDelay = self:IsBusy()
     if isBusy then 
         local wait = (busyDelay > 0) and busyDelay or (self.settings.delayIdle or 3000)
         zo_callLater(function() self:Loop(currentToken) end, wait)
     else 
         self.isLooping = true; UseCollectible(collectibleId); self.isLooping = false
-        zo_callLater(function() self:Loop(currentToken) end, self.mementoData[collectibleId].dur) 
+        local nextDelay = self.mementoData[collectibleId].dur + 1000 + (self.settings.delayIdle or 3000)
+        zo_callLater(function() self:Loop(currentToken) end, nextDelay) 
     end
 end
 
@@ -652,6 +663,7 @@ function PM:BuildMenu()
     AddOption({ type = "header", name = "Delays" })
     AddOption({ type = "slider", name = "Idle Loop Delay", tooltip = "Base delay between loops when not busy.", min = 500, max = 10000, step = 100, getFunc = function() return PM.settings.delayIdle end, setFunc = function(value) PM.settings.delayIdle = value end })
     AddOption({ type = "slider", name = "Menu/Interaction Delay (ms)", tooltip = "Wait time when in menus or interacting.", min = 500, max = 10000, step = 100, getFunc = function() return PM.settings.delayInMenu end, setFunc = function(value) PM.settings.delayInMenu = value end })
+    AddOption({ type = "slider", name = "Combat Cast Delay (ms)", tooltip = "Additional padding time to wait after a spell finishes casting.", min = 0, max = 5000, step = 100, getFunc = function() return PM.settings.delayCombat end, setFunc = function(value) PM.settings.delayCombat = value end })
     AddOption({ type = "slider", name = "Resurrecting Delay (ms)", tooltip = "Wait time when resurrecting a player.", min = 500, max = 5000, step = 100, getFunc = function() return PM.settings.delayResurrect end, setFunc = function(value) PM.settings.delayResurrect = value end })
     AddOption({ type = "slider", name = "Teleport/Reload Delay", tooltip = "Wait time after zoning or reloading.", min = 1000, max = 10000, step = 100, getFunc = function() return PM.settings.delayTeleport end, setFunc = function(value) PM.settings.delayTeleport = value end })
     AddOption({ type = "slider", name = "Move/Walk Delay (ms)", tooltip = "Wait time when moving.", min = 500, max = 5000, step = 100, getFunc = function() return PM.settings.delayMove end, setFunc = function(value) PM.settings.delayMove = value end })
@@ -711,6 +723,7 @@ function PM:BuildMenu()
             PM.settings.delayTeleport = d.delayTeleport
             PM.settings.delayResurrect = d.delayResurrect
             PM.settings.delayInMenu = d.delayInMenu
+            PM.settings.delayCombat = d.delayCombat
             
             PM.settings.sync = ZO_DeepTableCopy(d.sync)
             PM.settings.ui = ZO_DeepTableCopy(d.ui)
@@ -730,10 +743,50 @@ function PM:BuildMenu()
     LAM:RegisterOptionControls("PermMementoOptions", optionsData)
 end
 
+function PM:OnCombatEvent(eventCode, result, isError, abilityName, abilityGraphic, actionSlotType, sourceName, sourceType, targetName, targetType, hitValue, powerType, damageType, log, sourceUnitId, targetUnitId, abilityId, overflow)
+    if result == ACTION_RESULT_BEGIN or result == ACTION_RESULT_BEGIN_CHANNEL then
+        self.loopToken = (self.loopToken or 0) + 1
+        local newToken = self.loopToken
+        
+        local duration = self.settings.delayCast or 3000
+        if GetAbilityCastInfo then
+            local channeled, castTime, channelTime = GetAbilityCastInfo(abilityId)
+            if castTime and castTime > 0 then duration = castTime + 500 end
+            if channeled and channelTime and channelTime > 0 then duration = channelTime + 500 end
+        end
+        
+        duration = duration + (self.settings.delayCombat or 0)
+        zo_callLater(function() self:Loop(newToken) end, duration)
+    end
+end
+
+function PM:OnCollectibleUseResult(eventCode, result, isAttemptingActivation)
+    if not self.settings or not self.settings.activeId then return end
+    
+    if isAttemptingActivation and result ~= 0 then
+        self.loopToken = (self.loopToken or 0) + 1
+        local newToken = self.loopToken
+        
+        local retryDelay = self.settings.delayCast or 3000
+        zo_callLater(function() self:Loop(newToken) end, retryDelay)
+    end
+end
+
 function PM:Init(eventCode, addOnName)
     if addOnName ~= self.name then return end
     EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_ADD_ON_LOADED)
     EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_ACTIVATED, function() self:OnPlayerActivated(); self:BuildMenu(); self.pendingId = self.settings.activeId end)
+    
+    EVENT_MANAGER:RegisterForEvent(self.name, EVENT_COLLECTIBLE_USE_RESULT, function(eventCode, result, isAttemptingActivation)
+        self:OnCollectibleUseResult(eventCode, result, isAttemptingActivation)
+    end)
+    
+    EVENT_MANAGER:RegisterForEvent(self.name .. "_Combat", EVENT_COMBAT_EVENT, function(...) self:OnCombatEvent(...) end)
+    EVENT_MANAGER:AddFilterForEvent(self.name .. "_Combat", EVENT_COMBAT_EVENT, REGISTER_FILTER_SOURCE_COMBAT_UNIT_TYPE, COMBAT_UNIT_TYPE_PLAYER)
+
+    EVENT_MANAGER:RegisterForEvent(self.name .. "_Effect", EVENT_EFFECT_CHANGED, function(...) self:OnEffectChanged(...) end)
+    EVENT_MANAGER:AddFilterForEvent(self.name .. "_Effect", EVENT_EFFECT_CHANGED, REGISTER_FILTER_UNIT_TAG, "player")
+
     local world = GetWorldName() or "Default"
     self.acctSaved = ZO_SavedVars:NewAccountWide("PermMementoSaved", 1, world, self.defaults)
     self.charSaved = ZO_SavedVars:NewCharacterIdSettings("PermMementoSaved", 1, "Character", self.defaults)
