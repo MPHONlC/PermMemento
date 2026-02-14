@@ -1177,11 +1177,13 @@ function PM:BuildMenu()
         table.insert(optionsData, { type = "button", name = "|c00FF00COMMANDS INFO|r", tooltip = consoleCmds, func = function() end, width = "full" })
     end
     
-    if not IsConsoleUI() then
+    local isEU = (GetWorldName() == "EU Megaserver")
+
+    if not IsConsoleUI() and not isEU then
         table.insert(optionsData, {
             type = "button",
             name = "|cFFD700DONATE|r to @|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r",
-            tooltip = "Opens the in-game mail window. Keeping this addon updated takes a lot of testing! Any gold sent is hugely appreciated.",
+            tooltip = "Opens the in-game mail. Thank you! This donation will be used to buy new mementos to accurately input their data to the addon.",
             func = function()
                 SCENE_MANAGER:Show("mailSend")
                 zo_callLater(function()
@@ -1203,7 +1205,7 @@ function PM:BuildMenu()
             PM:Log("Data migration complete. Reloading UI to apply changes...", true, "settings")
             zo_callLater(function() ReloadUI("ingame") end, 2000)
         end,
-        width = "half"
+        width = (IsConsoleUI() or isEU) and "full" or "half"
     })
 
     local generalControls = {
