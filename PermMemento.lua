@@ -240,23 +240,21 @@ end
 
 function PM:MigrateData()
     local delaysToConvert = {"delayMove", "delaySprint", "delayBlock", "delayCast", "delaySwim", "delaySneak", "delayMount", "delayIdle", "delayTeleport", "delayResurrect", "delayInMenu", "delayCombatEnd"}
+    
     if self.settings then
-        -- Migrate Standard Delays
         for _, key in ipairs(delaysToConvert) do
             if self.settings[key] and self.settings[key] > 20 then
                 self.settings[key] = self.settings[key] / 1000
             end
         end
-        -- Migrate CSA Durations
         for k, v in pairs(self.settings.csaDurations) do
             if v > 10 then self.settings.csaDurations[k] = v / 1000 end
         end
-        -- Migrate Sync Delay
         if self.settings.sync and self.settings.sync.delay and self.settings.sync.delay > 20 then
             self.settings.sync.delay = self.settings.sync.delay / 1000
         end
     end
-    -- Clean up and Migrate Old Learned Data Format
+
     if self.acctSaved and self.acctSaved.learnedData then
         local migratedCount = 0
         for id, data in pairs(self.acctSaved.learnedData) do
@@ -267,6 +265,37 @@ function PM:MigrateData()
             end
         end
     end
+    
+    -- Erase obsolete data from savedvariables
+    if _G["PermMementoSaved"] then
+        for worldName, worldData in pairs(_G["PermMementoSaved"]) do
+            -- If we find an old "Default" server profile, nuke it entirely!
+            if worldName == "Default" then
+                 _G["PermMementoSaved"]["Default"] = nil
+            elseif type(worldData) == "table" then
+                for accountName, accountData in pairs(worldData) do
+                    if type(accountData) == "table" then
+                        for profileId, profileData in pairs(accountData) do
+                            if type(profileData) == "table" then
+                                -- 1. Clean Accountwide Data
+                                if profileId == "$AccountWide" then
+                                    profileData["autoResumeScan"] = nil
+                                -- 2. Clean Per Character Data
+                                elseif profileData["Character"] then
+                                    profileData["Character"]["autoResumeScan"] = nil
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Final safety check for currently loaded references
+    if self.acctSaved then self.acctSaved.autoResumeScan = nil end
+    if self.charSaved then self.charSaved.autoResumeScan = nil end
+    -- ==========================================================
 end
 
 function PM:Log(msg, isCSA, durKey)
