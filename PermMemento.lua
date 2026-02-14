@@ -1183,7 +1183,7 @@ function PM:BuildMenu()
     table.insert(optionsData, {
         type = "button",
         name = "|cFFD700DONATE|r to @|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r",
-        tooltip = "Thank you! This donation will be used to buy new mementos to accurately input their data to the addon.",
+        tooltip = "Opens the in-game mail window. Keeping this addon updated takes a lot of testing! Any gold sent is hugely appreciated.",
         func = function()
             SCENE_MANAGER:Show("mailSend")
             zo_callLater(function()
