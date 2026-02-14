@@ -241,19 +241,22 @@ end
 function PM:MigrateData()
     local delaysToConvert = {"delayMove", "delaySprint", "delayBlock", "delayCast", "delaySwim", "delaySneak", "delayMount", "delayIdle", "delayTeleport", "delayResurrect", "delayInMenu", "delayCombatEnd"}
     if self.settings then
+        -- Migrate Standard Delays
         for _, key in ipairs(delaysToConvert) do
             if self.settings[key] and self.settings[key] > 20 then
                 self.settings[key] = self.settings[key] / 1000
             end
         end
+        -- Migrate CSA Durations
         for k, v in pairs(self.settings.csaDurations) do
             if v > 10 then self.settings.csaDurations[k] = v / 1000 end
         end
+        -- Migrate Sync Delay
         if self.settings.sync and self.settings.sync.delay and self.settings.sync.delay > 20 then
             self.settings.sync.delay = self.settings.sync.delay / 1000
         end
     end
-
+    -- Clean up and Migrate Old Learned Data Format
     if self.acctSaved and self.acctSaved.learnedData then
         local migratedCount = 0
         for id, data in pairs(self.acctSaved.learnedData) do
@@ -1147,6 +1150,33 @@ function PM:BuildMenu()
         local consoleCmds = "|c00FF00/pmem <name>|r - Start\n|c00FF00/pmemstop|r - Stop loop\n|c00FF00/pmemrandom|r - Random\n|c00FF00/pmemautolearn|r - Auto-Scan\n|c00FF00/pmemui|r - Toggle UI\n|c00FF00/pmemuimode|r - HUD/Menu\n|c00FF00/pmemlock|r - Lock UI\n|c00FF00/pmemcsa|r - Toggle CSA\n|c00FF00/pmemunrestrict|r - Unrestrict\n|c00FF00/pmemcleanup|r - Run memory cleanup\n|c00FF00/pmemcsacleanup|r - Toggle auto cleanup CSA\n|c00FF00/pmemlearned|r - List learned data\n|c00FF00/pmsync <name>|r - Sync\n|c00FF00/pmsyncstop|r - Stop group\n|c00FF00/pmsyncrandom|r - Sync Rand"
         table.insert(optionsData, { type = "button", name = "|c00FF00COMMANDS INFO|r", tooltip = consoleCmds, func = function() end, width = "full" })
     end
+    
+    table.insert(optionsData, {
+        type = "button",
+        name = "|cFFD700DONATE|r to @|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r",
+        tooltip = "Thank you! This donation will be used to buy new mementos to accurately input their data to the addon.",
+        func = function()
+            SCENE_MANAGER:Show("mailSend")
+            zo_callLater(function()
+                ZO_MailSendToField:SetText("@APHONlC")
+                ZO_MailSendSubjectField:SetText("PermMemento Support")
+                ZO_MailSendBodyField:TakeFocus()
+            end, 200)
+        end,
+        width = "half"
+    })
+
+    table.insert(optionsData, {
+        type = "button",
+        name = "|c00FFFFMigrate SavedVariables|r",
+        tooltip = "Manually triggers the data migration process.",
+        func = function()
+            PM:MigrateData()
+            PM:Log("Data migration complete. Reloading UI to apply changes...", true, "settings")
+            zo_callLater(function() ReloadUI("ingame") end, 2000)
+        end,
+        width = "half"
+    })
 
     local generalControls = {
         { type = "checkbox", name = "Use Account-Wide Settings", tooltip = "If ON, settings are shared across all characters.", getFunc = function() return PM.charSaved.useAccountSettings end, setFunc = function(value) PM.charSaved.useAccountSettings = value; PM:UpdateSettingsReference(); ReloadUI("ingame") end },
