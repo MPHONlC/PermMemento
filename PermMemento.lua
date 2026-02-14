@@ -1177,20 +1177,22 @@ function PM:BuildMenu()
         table.insert(optionsData, { type = "button", name = "|c00FF00COMMANDS INFO|r", tooltip = consoleCmds, func = function() end, width = "full" })
     end
     
-    table.insert(optionsData, {
-        type = "button",
-        name = "|cFFD700DONATE|r to @|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r",
-        tooltip = "Opens the in-game mail window. Keeping this addon updated takes a lot of testing! Any gold sent is hugely appreciated.",
-        func = function()
-            SCENE_MANAGER:Show("mailSend")
-            zo_callLater(function()
-                ZO_MailSendToField:SetText("@APHONlC")
-                ZO_MailSendSubjectField:SetText("PermMemento Support")
-                ZO_MailSendBodyField:TakeFocus()
-            end, 200)
-        end,
-        width = "half"
-    })
+    if not IsConsoleUI() then
+        table.insert(optionsData, {
+            type = "button",
+            name = "|cFFD700DONATE|r to @|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r",
+            tooltip = "Opens the in-game mail window. Keeping this addon updated takes a lot of testing! Any gold sent is hugely appreciated.",
+            func = function()
+                SCENE_MANAGER:Show("mailSend")
+                zo_callLater(function()
+                    ZO_MailSendToField:SetText("@APHONlC")
+                    ZO_MailSendSubjectField:SetText("PermMemento Support")
+                    ZO_MailSendBodyField:TakeFocus()
+                end, 200)
+            end,
+            width = "half"
+        })
+    end
 
     table.insert(optionsData, {
         type = "button",
