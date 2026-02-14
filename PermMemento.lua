@@ -238,6 +238,7 @@ function PM:UpdateSettingsReference()
     PM:ApplySpinStop()
 end
 
+-- Data
 function PM:MigrateData()
     local delaysToConvert = {"delayMove", "delaySprint", "delayBlock", "delayCast", "delaySwim", "delaySneak", "delayMount", "delayIdle", "delayTeleport", "delayResurrect", "delayInMenu", "delayCombatEnd"}
     
@@ -269,18 +270,15 @@ function PM:MigrateData()
     -- Erase obsolete data from savedvariables
     if _G["PermMementoSaved"] then
         for worldName, worldData in pairs(_G["PermMementoSaved"]) do
-            -- If we find an old "Default" server profile, nuke it entirely!
-            if worldName == "Default" then
-                 _G["PermMementoSaved"]["Default"] = nil
-            elseif type(worldData) == "table" then
+            if type(worldData) == "table" then
                 for accountName, accountData in pairs(worldData) do
                     if type(accountData) == "table" then
                         for profileId, profileData in pairs(accountData) do
                             if type(profileData) == "table" then
-                                -- 1. Clean Accountwide Data
+                                -- Clean Accountwide Data
                                 if profileId == "$AccountWide" then
                                     profileData["autoResumeScan"] = nil
-                                -- 2. Clean Per Character Data
+                                -- Clean Per Character Data
                                 elseif profileData["Character"] then
                                     profileData["Character"]["autoResumeScan"] = nil
                                 end
@@ -292,10 +290,9 @@ function PM:MigrateData()
         end
     end
     
-    -- Final safety check for currently loaded references
+    -- safety check for currently loaded references
     if self.acctSaved then self.acctSaved.autoResumeScan = nil end
     if self.charSaved then self.charSaved.autoResumeScan = nil end
-    -- ==========================================================
 end
 
 function PM:Log(msg, isCSA, durKey)
@@ -1382,7 +1379,7 @@ function PM:Init(eventCode, addOnName)
     EVENT_MANAGER:AddFilterForEvent(self.name .. "_Effect", EVENT_EFFECT_CHANGED, REGISTER_FILTER_UNIT_TAG, "player")
 
     local world = GetWorldName() or "Default"
-    self.acctSaved = ZO_SavedVars:NewAccountWide("PermMementoSaved", 1, world, self.defaults)
+    self.acctSaved = ZO_SavedVars:NewAccountWide("PermMementoSaved", 1, "AccountWide", self.defaults, world)
     self.charSaved = ZO_SavedVars:NewCharacterIdSettings("PermMementoSaved", 1, "Character", self.defaults, world)
     
     if self.charSaved.useAccountSettings == nil then self.charSaved.useAccountSettings = self.defaults.useAccountSettings end
