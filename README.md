@@ -26,7 +26,7 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 * **Permanent Mementos:** Makes memento effects like Finvir's Trinket, Almalexia’s Lantern, or Wild Hunt Transform remain permanent. Pauses when in combat, crafting, or in menus to avoid interruptions.
 * **Auto-Scanner & Learned Data:** No longer restricted to Current Supported Mementos! Use the **LEARN: Auto-Scan** button to learn the durations/Effect IDs of all unmapped mementos. Includes a full Learned Data management settings. After learning your memento data turn on **UNRESTRICTED MODE** to allow them to loop.
 * **Favorites Settings:** Build a custom list of mementos, **"Reload UI"** after you're done adding them. All **"Randomize"** features will exclusively pull from your Favorites pool if any are selected. 
-* **Auto Lua Cleanup:** Background memory cleaner. Automatically runs when memory hits 400MB (PC) or 85MB (Console) to prevent performance stuttering. Safely waits until you are out of combat.
+* **Auto Lua Cleanup:** Background memory cleaner. Automatically runs when memory hits 400MB (PC) or 85MB (Console) to prevent performance stuttering. Only triggers outside combat.
 * **Live Statistics Panel:** A real-time dashboard displaying Addon Memory footprint, Total/Session loops, and your Top 5 most used mementos.
 * **Character Profiles:** Easily Copy or Delete settings profiles between different characters via a new submenu.
 * **Group Sync:** Share your active memento with your party. Supports ANY memento in the game, as long as you have it unlocked/owned!
