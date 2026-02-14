@@ -3,17 +3,16 @@
 -----------------------------------------------------------
 local PM = {
     name = "PermMemento",
-    version = "0.7.8",
+    version = "0.7.9",
     -- Default settings
     defaults = {
         activeId = nil, paused = false, logEnabled = not IsConsoleUI(), csaEnabled = true,
-        csaCleanupEnabled = true, -- New toggle for auto cleanup CSA
+        csaCleanupEnabled = true,
         randomOnLogin = false, randomOnZone = false, loopInCombat = false, performanceMode = true,
         useAccountSettings = false, showInHUD = true, unrestricted = false, autoCleanup = true,
-        lastVersion = "0.7.8", versionHistory = {},
+        lastVersion = "0.7.9", versionHistory = {},
         learnedData = {}, 
         favorites = {}, 
-        autoResumeScan = false, 
         stopSpinning = true, 
         totalLoops = 0,
         mementoUsage = {},
@@ -32,7 +31,7 @@ local PM = {
         -- Sync Defaults
         sync = { delay=0, random=false, ignoreInCombat=true, enabled=false }
     },
-    isLooping = false, isScanning = false, scanQueue = {}, scanTotal = 0, scanCount = 0,
+    isLooping = false, isScanning = false,
     loopToken = 0, lastPos = {x=0,y=0,z=0,t=0}, isMoving = false,
     
     -- Sync Flags
@@ -40,9 +39,7 @@ local PM = {
     pendingSyncId = nil, 
     
     -- Timer Tracking & UI State
-    scanEndTime = 0, 
-    nextFireTime = 0, 
-    currentBatchCount = 0, 
+    nextFireTime = 0,
     learnedCount = 0,
     sessionLoops = 0,
     currentFavCount = 0,
@@ -80,7 +77,7 @@ local PM = {
 PM.mementoData = {
     [336]   = {id = 336,   refID = 21226,  dur = 13000,  name = "Finvir's Trinket"},
     [341]   = {id = 341,   refID = 26829,  dur = 27000,  name = "Almalexia's Enchanted Lantern"},
-    [349]   = {id = 349,   refID = 42008,  dur = 30000,  name = "Token of Root Sunder"},
+    [349]   = {id = 349,   refID = 42008,  dur = 16000,  name = "Token of Root Sunder"},
     [594]   = {id = 594,   refID = 85344,  dur = 180000, name = "Storm Atronach Aura"},
     [758]   = {id = 758,   refID = 86978,  dur = 180000, name = "Floral Swirl Aura"},
     [759]   = {id = 759,   refID = 86977,  dur = 180000, name = "Wild Hunt Transform"},
@@ -90,17 +87,17 @@ PM.mementoData = {
     [9862]  = {id = 9862,  refID = 162813, dur = 180000, name = "Astral Aurora Projector"},
     [10652] = {id = 10652, refID = 175730, dur = 180000, name = "Soul Crystals of the Returned"},
     [10706] = {id = 10706, refID = 176334, dur = 180000, name = "Blossom Bloom"},
-    [13092] = {id = 13092, refID = 229843, dur = 69000,  name = "Remnant of Meridia's Light"},
+    [13092] = {id = 13092, refID = 229843, dur = 70500,  name = "Remnant of Meridia's Light"},
     [347]   = {id = 347,   refID = 41950,  dur = 33000,  name = "Fetish of Anger"},
     [596]   = {id = 596,   refID = 85349,  dur = 18000,  name = "Storm Atronach Transform"},
     [1167]  = {id = 1167,  refID = 91365,  dur = 6000,   name = "The Pie of Misrule"},
     [1182]  = {id = 1182,  refID = 92867,  dur = 10000,  name = "Dwarven Tonal Forks"},
     [1384]  = {id = 1384,  refID = 97274,  dur = 18000,  name = "Swarm of Crows"},
     [10236] = {id = 10236, refID = 166513, dur = 30000,  name = "Mariner's Nimbus Stone"},
-    [10371] = {id = 10371, refID = 170722, dur = 30000,  name = "Fargrave Occult Curio"},
-    [11480] = {id = 11480, refID = 195745, dur = 18000,  name = "Summoned Booknado"},
-    [13105] = {id = 13105, refID = 229989, dur = 18000,  name = "Surprising Snowglobe"},
-    [13736] = {id = 13736, refID = 242404, dur = 18000,  name = "Shimmering Gala Gown Veil"},
+    [10371] = {id = 10371, refID = 170722, dur = 60000,  name = "Fargrave Occult Curio"},
+    [11480] = {id = 11480, refID = 195745, dur = 180000,  name = "Summoned Booknado"},
+    [13105] = {id = 13105, refID = 229989, dur = 60000,  name = "Surprising Snowglobe"},
+    [13736] = {id = 13736, refID = 242404, dur = 195000,  name = "Shimmering Gala Gown Veil"},
 }
 
 function PM:GetData(id)
@@ -221,7 +218,6 @@ function PM:UpdateSettingsReference()
     if type(self.settings.csaDurations) ~= "table" then self.settings.csaDurations = ZO_DeepTableCopy(self.defaults.csaDurations) end
     
     if self.acctSaved and type(self.acctSaved.learnedData) ~= "table" then self.acctSaved.learnedData = {} end
-    if self.acctSaved.autoResumeScan == nil then self.acctSaved.autoResumeScan = false end
     if self.settings.favorites == nil then self.settings.favorites = {} end
     if self.settings.autoCleanup == nil then self.settings.autoCleanup = true end
     if self.settings.csaCleanupEnabled == nil then self.settings.csaCleanupEnabled = true end
@@ -299,12 +295,14 @@ function PM:ApplySpinStop()
     end
 end
 
+-- Fave Check
 function PM:GetRandomSupported()
     local available = {}
     if self.settings.favorites then
         for id, enabled in pairs(self.settings.favorites) do
             if enabled and IsCollectibleUnlocked(id) then
                 local isHardcoded = (self.mementoData[id] ~= nil)
+                -- Only allow it into the pool if UNRESTRICTED MODE is ON or in PM.mementoData
                 if self.settings.unrestricted or isHardcoded then
                      table.insert(available, id)
                 end
@@ -465,20 +463,9 @@ function PM:CreateUI()
         PM:UpdateMovementState()
         if not PM.settings then return end 
         
-        local refreshRate = PM.isScanning and 0.05 or 0.25
+        local refreshRate = 0.25
         if (time - lastUpdate < refreshRate) then return end
         lastUpdate = time
-        
-        if PM.isScanning then 
-            local infoText = ""
-            if PM.settings.activeId then
-                local remaining = math.max(0, (PM.scanEndTime - GetGameTimeMilliseconds()) / 1000)
-                local name = GetCollectibleName(PM.settings.activeId) or "Unknown"
-                infoText = string.format(" - %s (%0.1fs)", name, remaining)
-            end
-            label:SetText(string.format("|cFFFF00[PM] Scanning: %d/%d (Batch: %d/20)%s|r", PM.scanCount, PM.scanTotal, PM.currentBatchCount, infoText))
-            UpdateSize(); return
-        end
 
         local data = PM:GetData(PM.settings.activeId)
         if not PM.settings.activeId or not data then 
@@ -592,6 +579,7 @@ function PM:RunManualCleanup(isAuto)
     end, 500)
 end
 
+-- Auto Cleanup
 function PM:MemorySweepTick()
     if not self.settings.autoCleanup then return end
     
@@ -616,23 +604,41 @@ function PM:MemorySweepTick()
 
     local threshold = IsConsoleUI() and 85 or 400
     if currentMB >= threshold then
-        if not IsUnitInCombat("player") and not IsUnitDead("player") then
-            self:RunManualCleanup(true)
+        local inCombat = IsUnitInCombat and IsUnitInCombat("player")
+        if not inCombat and not IsUnitDead("player") and IsPlayerActivated() then
+            -- 3s buffer check before actually cleaning
+            zo_callLater(function()
+                local stillInCombat = IsUnitInCombat and IsUnitInCombat("player")
+                if not stillInCombat and not IsUnitDead("player") then
+                    self:RunManualCleanup(true)
+                end
+            end, 3000)
         end
     end
 end
 
 function PM:IsBusy()
+    -- Loading Screen Check
+    if not IsPlayerActivated() then return true, (self.settings.delayTeleport or 5) * 1000 end
+    -- Combat Checks
     if IsUnitDead and IsUnitDead("player") then return true, 2000 end
-    if IsUnitInCombat and IsUnitInCombat("player") and not self.settings.loopInCombat then return true, (self.settings.delayCombatEnd or 5) * 1000 end
+    local inCombat = IsUnitInCombat and IsUnitInCombat("player")
+    if inCombat then 
+        if not self.settings.loopInCombat then
+            -- Pause loops strictly while in combat, wait delayCombatEnd when exiting
+            return true, (self.settings.delayCombatEnd or 5) * 1000 
+        end
+    end
+    -- Interaction Checks
     if GetCraftingInteractionType and GetCraftingInteractionType() ~= 0 then return true, 2000 end
     if ZO_CraftingUtils_IsPerformingCrafting and ZO_CraftingUtils_IsPerformingCrafting() then return true, 2000 end
     if SCENE_MANAGER and SCENE_MANAGER:IsShowing("interact") then return true, 2000 end
     if (IsInteracting and IsInteracting()) or (GetInteractionType and GetInteractionType() ~= INTERACTION_NONE) or (IsPlayerInteractingWithObject and IsPlayerInteractingWithObject()) then return true, 1000 end
-    
+    -- UI Checks
     if SCENE_MANAGER and not (SCENE_MANAGER:IsShowing("hud") or SCENE_MANAGER:IsShowing("hudui")) then
         return true, (self.settings.delayInMenu or 5) * 1000
     end
+    -- Action States
     local isActionBusy, _, actionDelay = self:GetActionState()
     if isActionBusy then return true, actionDelay end
     return false, 0
@@ -642,7 +648,6 @@ function PM:OnEffectChanged(eventCode, changeType, effectSlot, effectName, unitT
     if not self.settings or not self.settings.activeId then return end
     
     if (self.settings.unrestricted or self.isScanning) and changeType == EFFECT_RESULT_GAINED then
-          if self.isScanning then return end
           local activeId = self.settings.activeId
           if not self.mementoData[activeId] and (self.acctSaved and self.acctSaved.learnedData and not self.acctSaved.learnedData[activeId]) then
               local remaining = 0
@@ -668,87 +673,55 @@ function PM:OnEffectChanged(eventCode, changeType, effectSlot, effectName, unitT
     if data and data.refID > 0 and abilityId == data.refID then match = true end
     
     if match and changeType == EFFECT_RESULT_FADED then
-        if self.isScanning then return end 
         self.loopToken = (self.loopToken or 0) + 1
         self:Loop(self.loopToken)
     end
 end
 
+-- LEARN
 function PM:AutoScanMementos()
     if self.isScanning then return end
-    local toScan = {}
+    self.isScanning = true
+    local count = 0
     local total = GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO)
+    
+    self:Log("Starting Silent Auto-Scan...", true, "settings")
+    
     for i = 1, total do
         local id = GetCollectibleIdFromType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO, i)
         if id and IsCollectibleUnlocked(id) then
             local known = false
             if self.acctSaved and self.acctSaved.learnedData and self.acctSaved.learnedData[id] then known = true end
-            if not known then table.insert(toScan, {id = id, name = GetCollectibleName(id)}) end
-        end
-    end
-    if #toScan == 0 then
-        self.acctSaved.autoResumeScan = false 
-        self:Log("All owned mementos have already been learned.", true, "settings")
-        return
-    end
-    self.acctSaved.autoResumeScan = true 
-    table.sort(toScan, function(a,b) return a.name < b.name end)
-    self.isScanning = true; self.scanQueue = toScan; self.scanTotal = #toScan; self.scanCount = 0; self.currentBatchCount = 0 
-    self:Log("Starting Auto-Scan for " .. self.scanTotal .. " mementos...", true, "settings")
-    self:ProcessNextScan()
-end
-
-function PM:ProcessNextScan()
-    if not self.isScanning or #self.scanQueue == 0 then
-        self.isScanning = false; self.settings.activeId = nil; self.acctSaved.autoResumeScan = false 
-        self.loopToken = (self.loopToken or 0) + 1 
-        self:Log("Auto-Scan Complete! All owned mementos learned.", true, "activation")
-        if self.currentBatchCount > 0 then
-            self:Log("Reloading UI in 5s to save final data...", true, "settings")
-            zo_callLater(function() ReloadUI("ingame") end, 5000)
-        else
-            self:Log("No new data to save. Reload skipped.", true, "settings")
-        end
-        return
-    end
-    local item = table.remove(self.scanQueue, 1)
-    self.scanCount = self.scanCount + 1; self.currentBatchCount = self.currentBatchCount + 1
-    self:Log(string.format("Scanning: %s (Batch Progress: %d/20)", item.name, self.currentBatchCount), true, "settings")
-    
-    self.settings.activeId = item.id
-    UseCollectible(item.id)
-    zo_callLater(function()
-        local remaining = 0
-        local cooldownDur = 10000
-        if GetCollectibleCooldownAndDuration then remaining, cooldownDur = GetCollectibleCooldownAndDuration(item.id) end
-        local saveDur = (cooldownDur > 0) and cooldownDur or 10000 
-        local waitTime = saveDur
-        if GetGameTimeMilliseconds then PM.scanEndTime = GetGameTimeMilliseconds() + waitTime + 2000 end
-        zo_callLater(function()
-            if not self.acctSaved.learnedData then self.acctSaved.learnedData = {} end
-            local refId = 0
-            local collectibleData = ZO_COLLECTIBLE_DATA_MANAGER:GetCollectibleDataById(item.id)
-            if collectibleData and collectibleData.GetReferenceId then refId = collectibleData:GetReferenceId() end
-            self.acctSaved.learnedData[item.id] = { id = item.id, refID = refId, dur = saveDur, name = item.name }
-            self:UpdateLearnedCount()
-            local logMsg = string.format("Saved: %s\nID: %d | RefID: %d | Dur: %dms | Total Learned: %d", item.name, item.id, refId, saveDur, self.learnedCount)
-            PM:Log(logMsg, true, "settings")
             
-            if self.currentBatchCount >= 20 and #self.scanQueue > 0 then
-                self.acctSaved.autoResumeScan = true; self.isScanning = false 
-                PM:Log("Batch limit (20) reached. Reloading UI in 5s to save progress...", true, "error")
-                zo_callLater(function() ReloadUI("ingame") end, 5000)
-                return
+            if not known then 
+                local _, cooldownDur = GetCollectibleCooldownAndDuration(id)
+                local saveDur = (cooldownDur > 0) and cooldownDur or 10000 
+                local cName = GetCollectibleName(id)
+                
+                if not self.acctSaved.learnedData then self.acctSaved.learnedData = {} end
+                local refId = 0
+                local collectibleData = ZO_COLLECTIBLE_DATA_MANAGER:GetCollectibleDataById(id)
+                if collectibleData and collectibleData.GetReferenceId then refId = collectibleData:GetReferenceId() end
+                
+                self.acctSaved.learnedData[id] = { id = id, refID = refId, dur = saveDur, name = cName }
+                count = count + 1
             end
-            
-            self.settings.activeId = nil
-            zo_callLater(function() PM:ProcessNextScan() end, 2000)
-        end, waitTime)
-    end, 500)
+        end
+    end
+    
+    self.isScanning = false
+    
+    if count == 0 then
+        self:Log("All owned mementos have already been learned.", true, "settings")
+    else
+        self:UpdateLearnedCount()
+        self:Log("Successfully Learned " .. count .. " new mementos!", true, "activation")
+        PM.menuBuilt = false 
+        zo_callLater(function() ReloadUI("ingame") end, 3000)
+    end
 end
 
 function PM:Loop(loopID)
-    if self.isScanning then return end
     if not self.settings or self.settings.paused or not self.settings.activeId then return end
     if loopID ~= self.loopToken then return end
     local data = PM:GetData(self.settings.activeId)
@@ -922,7 +895,6 @@ function PM.Sync:Initialize()
          local function TryChat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
          if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
          if PM.settings then PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1 end
-         if PM.isScanning then PM.isScanning = false; PM.acctSaved.autoResumeScan = false; PM:Log("Auto-Scan manually stopped.", true, "stop") end
          PM.nextFireTime = 0 
          return
     elseif cmd == "random" then 
@@ -1188,7 +1160,7 @@ function PM:BuildMenu()
         { type = "checkbox", name = "Screen Announcements", tooltip = "Shows large text alerts on screen.", getFunc = function() return PM.settings.csaEnabled end, setFunc = function(value) PM.settings.csaEnabled = value end },
         { type = "checkbox", name = "Show Auto Cleanup Announcements", tooltip = "Shows large text alerts on screen when Lua Memory is automatically cleaned.", getFunc = function() return PM.settings.csaCleanupEnabled end, setFunc = function(value) PM.settings.csaCleanupEnabled = value end },
         { type = "checkbox", name = "Performance Mode", tooltip = "Reduces UI update frequency to save resources.", getFunc = function() return PM.settings.performanceMode end, setFunc = function(value) PM.settings.performanceMode = value end },
-        { type = "checkbox", name = "Auto Lua Cleanup", tooltip = "Intelligently monitors addon memory and triggers garbage collection to prevent crashes when memory gets high. Only triggers outside combat.", getFunc = function() return PM.settings.autoCleanup end, setFunc = function(value) PM.settings.autoCleanup = value end }
+        { type = "checkbox", name = "Auto Lua Cleanup", tooltip = "Background memory cleaner. Automatically runs when memory hits 400MB (PC) or 85MB (Console) to prevent performance stuttering. Only triggers outside combat.", getFunc = function() return PM.settings.autoCleanup end, setFunc = function(value) PM.settings.autoCleanup = value end }
     }
 
     if IsConsoleUI() then
@@ -1326,7 +1298,6 @@ end
 
 function PM:OnCollectibleUseResult(eventCode, result, isAttemptingActivation)
     if not self.settings or not self.settings.activeId then return end
-    if self.isScanning then return end
     
     if isAttemptingActivation and result ~= 0 then
         self.loopToken = (self.loopToken or 0) + 1
@@ -1339,10 +1310,11 @@ function PM:OnCollectibleUseResult(eventCode, result, isAttemptingActivation)
     end
 end
 
+-- Migration
 function PM:Init(eventCode, addOnName)
     if addOnName ~= self.name then return end
     EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_ADD_ON_LOADED)
-    self:MigrateData()
+    
     EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_ACTIVATED, function() self:OnPlayerActivated(); self:BuildMenu(); self.pendingId = self.settings.activeId end)
     EVENT_MANAGER:RegisterForEvent(self.name, EVENT_COLLECTIBLE_USE_RESULT, function(eventCode, result, isAttemptingActivation) self:OnCollectibleUseResult(eventCode, result, isAttemptingActivation) end)
     EVENT_MANAGER:RegisterForEvent(self.name .. "_Combat", EVENT_COMBAT_EVENT, function(...) self:OnCombatEvent(...) end)
@@ -1353,8 +1325,16 @@ function PM:Init(eventCode, addOnName)
     local world = GetWorldName() or "Default"
     self.acctSaved = ZO_SavedVars:NewAccountWide("PermMementoSaved", 1, world, self.defaults)
     self.charSaved = ZO_SavedVars:NewCharacterIdSettings("PermMementoSaved", 1, "Character", self.defaults, world)
+    
     if self.charSaved.useAccountSettings == nil then self.charSaved.useAccountSettings = self.defaults.useAccountSettings end
+    
     self:UpdateSettingsReference()
+    self:MigrateData() 
+    
+    -- Delete old data
+    if self.acctSaved then self.acctSaved.autoResumeScan = nil end
+    if self.charSaved then self.charSaved.autoResumeScan = nil end
+
     if not self.loopToken then self.loopToken = 0 end
     
     if not self.acctSaved.installDate then
@@ -1446,7 +1426,6 @@ function PM:Init(eventCode, addOnName)
     -- Command Aliases
     SLASH_COMMANDS["/pmemstop"] = function()
         self.settings.activeId = nil; self.loopToken = (self.loopToken or 0) + 1; self:Log("Auto-loop Stopped", true, "stop"); self.pendingId = 0
-        if PM.isScanning then PM.isScanning = false; PM.acctSaved.autoResumeScan = false; PM:Log("Auto-Scan manually stopped.", true, "stop") end
         PM.nextFireTime = 0
     end
     
@@ -1545,11 +1524,6 @@ end
 
 function PM:OnPlayerActivated()
     local delay = (self.settings.delayTeleport or 5) * 1000
-    if self.acctSaved and self.acctSaved.autoResumeScan then 
-        self.acctSaved.autoResumeScan = false; 
-        PM:Log("Resuming Auto-Scan in " .. math.floor(delay/1000) .. "s...", true, "settings"); 
-        zo_callLater(function() PM:AutoScanMementos() end, delay) 
-    end
     if self.settings.randomOnZone then local randId = self:GetRandomSupported(); if randId then local data = PM:GetData(randId); self.settings.activeId = randId; self:Log("Zone Random: " .. data.name, true, "random") end
     elseif self.settings.randomOnLogin and not self.settings.activeId then local randId = self:GetRandomSupported(); if randId then local data = PM:GetData(randId); self.settings.activeId = randId; self:Log("Login Random: " .. data.name, true, "random") end end
     if self.settings and self.settings.activeId and not self.settings.paused then local currentToken = self.loopToken; zo_callLater(function() if self.settings.activeId then PM:Loop(currentToken) end end, delay) end
