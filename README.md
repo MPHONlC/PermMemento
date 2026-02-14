@@ -14,7 +14,7 @@ Keep your chosen memento effects active permanently.
 * [LibAddonMenu-2.0](https://www.esoui.com/downloads/info7-LibAddonMenu-2.0.html)
 
 ## Description
-PermMemento automates your mementos so you don't have to manually refresh them. supports Randomization, UI Scaling, and Console Gamepad Mode!
+PermMemento automates your mementos so you don't have to manually refresh them. Supports randomization, learned data scanning, and automatic memory management!
 
 <p align="center">
   <img src="https://ugcmods.bethesda.net/image/eyJidWNrZXQiOiJ1Z2Ntb2RzLmJldGhlc2RhLm5ldCIsImtleSI6InB1YmxpYy9jb250ZW50L0VTTy81ODY1NTEvQ0xBU1NJRklDQVRJT05fU0NSRUVOU0hPVF9JTUFHRS9CY0N6cG9iZHJJQ3dGdXhzTWw1VzFRPT0vZXNvNjRfQTJMbmNrd3ZiVC5wbmciLCJlZGl0cyI6eyJyZXNpemUiOnsid2lkdGgiOjYwMH19LCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIn0=" alt="Permanent Memento UI 1" />
@@ -22,32 +22,51 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
   <img src="https://ugcmods.bethesda.net/image/eyJidWNrZXQiOiJ1Z2Ntb2RzLmJldGhlc2RhLm5ldCIsImtleSI6InB1YmxpYy9jb250ZW50L0VTTy81ODY1NTEvQ0xBU1NJRklDQVRJT05fU0NSRUVOU0hPVF9JTUFHRS91MjlHdjRxVG1XVzJVOFp5Snc5YmtBPT0vU2NyZWVuc2hvdCBGcm9tIDIwMjYtMDItMDggMTMtNTYtMzcucG5nIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjo2MDB9fSwib3V0cHV0Rm9ybWF0Ijoid2VicCJ9" alt="Permanent Memento UI 2" />
 </p>
 
-## Key Features
+## Features
 * **Permanent Mementos:** Makes memento effects like Finvir's Trinket, Almalexia’s Lantern, or Wild Hunt Transform remain permanent. Pauses when in combat, crafting, or in menus to avoid interruptions.
+* **Auto-Scanner & Learned Data:** No longer restricted to Current Supported Mementos! Use the **LEARN: Auto-Scan** button to learn the durations/Effect IDs of all unmapped mementos. Includes a full Learned Data management settings. After learning your memento data turn on **UNRESTRICTED MODE** to allow them to loop.
+* **Favorites Settings:** Build a custom list of mementos, **"Reload UI"** after you're done adding them. All **"Randomize"** features will exclusively pull from your Favorites pool if any are selected. 
+* **Auto Lua Cleanup:** Background memory cleaner. Automatically runs when memory hits 400MB (PC) or 85MB (Console) to prevent performance stuttering. Safely waits until you are out of combat.
+* **Live Statistics Panel:** A real-time dashboard displaying Addon Memory footprint, Total/Session loops, and your Top 5 most used mementos.
+* **Character Profiles:** Easily Copy or Delete settings profiles between different characters via a new submenu.
 * **Group Sync:** Share your active memento with your party. Supports ANY memento in the game, as long as you have it unlocked/owned!
-* **UI Scaling:** Adjust the size of the status text with a slider.
-* **Randomizer:** Can now pick a random memento on login, zone change, or via a new menu button.
-* **Smart Delays:** Added specific delay settings for Resurrecting, Teleporting, and being in Menus/Crafting to prevent bugs.
-* **Status UI:** A simple, draggable UI label shows current memento and player state.
-* **Console Support:** Full menu support for Console/Gamepad mode.
-
+* **Status UI:** A draggable UI label shows current memento, player state, and settings status.
+* **Delay Settings:** Specific settings for Idle, Casting, Resurrecting, Teleporting, Menus etc.
 
 ## Usage (PC & Console)
 
 > [!TIP]
-> **AUTO-LOOP:** Simply activate any supported memento via your in-game **Collectibles > Mementos** menu. The addon will detect it and begin the loop automatically.
+> **AUTO-LOOP:** Activate any supported memento via Collections > Mementos. The addon will detect it and begin the loop automatically.
 
-**SETTINGS MENU:** Use the Addon Settings menu to select, randomize, or configure settings.
+**SETTINGS MENU:** Configure settings, randomize, or manage Learned Data.
 
 ### Slash Commands
 
 | Command | Description |
 | :--- | :--- |
-| `/pmem <name>` | Fallback command to force start looping a memento (e.g., `/pmem almalexia`). Supports partial names. |
-| `/pmem stop` | Stops the current loop. |
-| `/pmsync <name>` | Sends a sync request to your party. |
-| `/pmem ui` | Toggles the status display visibility. |
-| `/pmem lock` | Locks or unlocks UI movement. |
+| `/pmem <name>` | Fallback command to force start looping a memento (supports partial names). |
+| `/pmemstop` | Stops the current loop and any active Auto-Scan. |
+| `/pmemrandom` | Immediately activates a random supported memento. |
+| `/pmemrandomzonechange` | Toggles the "Randomize on Zone Change" setting. |
+| `/pmemrandomlogin` | Toggles the "Randomize on Login" setting. |
+| `/pmemautolearn` | Starts the Auto-Scan process. |
+| `/pmemcleanup` | Manually triggers Lua Memory Cleanup. |
+| `/pmemui` | Toggles the status display visibility. |
+| `/pmemuimode` | Toggles between HUD mode and Menu Only mode. |
+| `/pmemlock` | Locks or unlocks the status display for dragging. |
+| `/pmemuireset` | Resets the UI scale and position to default settings. |
+| `/pmemcsa` | Toggles Screen Announcements on or off. |
+| `/pmemunrestrict` | Toggles Unrestricted Mode on or off. |
+| `/pmsync <name>` | Sends a sync request for a specific memento to your party. |
+| `/pmsyncrandom` | Sends a random sync request to your party. |
+| `/pmsyncstop` | Sends a stop request to your party. |
+| `/pmemcurrent` | Displays the name of the currently active memento loop in chat. |
+| `/pmemactivatelearned <name>` | Forces activation of a specifically named memento from Learned Data. |
+| `/pmemdeletealllearned` | Permanently wipes all manual and auto-scanned learned data. |
+| `/pmemcsacleanup` | Toggles the Auto-Cleanup CSA notification on or off. |
+| `/pmemlearned` | Lists all learned memento data in chat. |
+
+---
 
 > **Current Supported Mementos:**
 
@@ -70,14 +89,16 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 | [**Storm Atronach Transform**](https://en.uesp.net/wiki/Online:Storm_Atronach_Transform) | 596 | 18s |
 | [**Summoned Booknado**](https://en.uesp.net/wiki/Online:Summoned_Booknado) | 11480 | 18s |
 | [**Surprising Snowglobe**](https://en.uesp.net/wiki/Online:Surprising_Snowglobe) | 13105 | 18s |
+| [**Shimmering Gala Gown Veil**](https://en.uesp.net/wiki/Online:Shimmering_Gala_Gown_Veil) | 13105 | 18s |
 | [**Swarm of Crows**](https://en.uesp.net/wiki/Online:Swarm_of_Crows) | 1384 | 18s |
 | [**The Pie of Misrule**](https://en.uesp.net/wiki/Online:The_Pie_of_Misrule) | 1167 | 30s |
 | [**Token of Root Sunder**](https://en.uesp.net/wiki/Online:Token_of_Root_Sunder) | 349 | 30s |
 | [**Wild Hunt Leaf-Dance Aura**](https://en.uesp.net/wiki/Online:Wild_Hunt_Leaf-Dance_Aura) | 760 | 180s |
 | [**Wild Hunt Transform**](https://en.uesp.net/wiki/Online:Wild_Hunt_Transform) | 759 | 180s |
 
-> if the memento you want is not supported feel free to request.
+> If the memento you want is not supported feel free to request.
 
+---
 
 > ⚠️ **Console Flow Mode Warning:** If you use the "Force Console Mode" toggle on PC to test and get stuck, type the following into your chat box to revert it:
 > `/script SetCVar("ForceConsoleFlow.2", "0")`
@@ -99,8 +120,6 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 > * [GitHub Issue Tracker](https://github.com/MPHONlC/PermMemento/issues)
 
 </div>
-
-
 
 ## Support
 
