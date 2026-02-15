@@ -3,14 +3,14 @@
 -----------------------------------------------------------
 local PM = {
     name = "PermMemento",
-    version = "0.8.1",
+    version = "0.8.2",
     -- Default settings
     defaults = {
         activeId = nil, paused = false, logEnabled = not IsConsoleUI(), csaEnabled = true,
         csaCleanupEnabled = true,
         randomOnLogin = false, randomOnZone = false, loopInCombat = false, performanceMode = true,
         useAccountSettings = false, showInHUD = true, unrestricted = false, autoCleanup = true,
-        lastVersion = "0.8.1", versionHistory = {},
+        lastVersion = "0.8.2", versionHistory = {},
         learnedData = {}, 
         favorites = {}, 
         stopSpinning = true, 
