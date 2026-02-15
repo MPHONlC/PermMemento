@@ -1197,6 +1197,8 @@ function PM:BuildMenu()
         table.insert(optionsData, { type = "button", name = "|c00FF00COMMANDS INFO|r", tooltip = consoleCmds, func = function() end, width = "full" })
     end
     
+    
+    
     local isEU = (GetWorldName() == "EU Megaserver")
 
     if not IsConsoleUI() and not isEU then
@@ -1349,12 +1351,28 @@ function PM:BuildMenu()
         table.insert(optionsData, commandsInfoBlock)
     end
     
-    if not IsConsoleUI() then
-        table.insert(optionsData, { type = "divider" })
+    table.insert(optionsData, { type = "divider" })
+
+    if IsConsoleUI() then
         table.insert(optionsData, {
             type = "button",
             name = "|cFFD700Buy Me A Coffee|r",
-            tooltip = "Support the development of PermMemento! Opens a secure link to my Buy Me A Coffee page in your default web browser.",
+            tooltip = "Thank you! Donations help support continued development and maintenance!\n\nLink: https://buymeacoffee.com/aph0nlc",
+            func = function() end,
+            width = "full"
+        })
+        table.insert(optionsData, {
+            type = "button",
+            name = "|cFF0000BUG REPORT|r",
+            tooltip = "Found an issue? Report it here:\n\nhttps://www.esoui.com/portal.php?id=360&a=listbugs",
+            func = function() end,
+            width = "full"
+        })
+    else
+        table.insert(optionsData, {
+            type = "button",
+            name = "|cFFD700Buy Me A Coffee|r",
+            tooltip = "Thank you! Donations help support continued development and maintenance! Opens a secure link to my Buy Me A Coffee page in your default web browser.",
             func = function() 
                 RequestOpenUnsafeURL("https://buymeacoffee.com/aph0nlc") 
             end,
@@ -1363,7 +1381,7 @@ function PM:BuildMenu()
         table.insert(optionsData, {
             type = "button",
             name = "|cFF0000BUG REPORT|r",
-            tooltip = "Found an issue? Opens the PermMemento Bug Portal on ESOUI in your default web browser.",
+            tooltip = "Found an issue? Opens the Bug Portal on ESOUI in your default web browser.",
             func = function() 
                 RequestOpenUnsafeURL("https://www.esoui.com/portal.php?id=360&a=listbugs") 
             end,
