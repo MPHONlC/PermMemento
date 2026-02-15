@@ -614,7 +614,7 @@ function PM:TriggerMemoryCheck(checkType, delay)
 
     -- Check if memory is above platform threshold. If not, IGNORE.
     local currentMB = IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
-    local threshold = IsConsoleUI() and 85 or 512 
+    local threshold = IsConsoleUI() and 85 or 400
 
     if currentMB >= threshold then
         
@@ -1349,24 +1349,8 @@ function PM:BuildMenu()
         table.insert(optionsData, commandsInfoBlock)
     end
     
-    table.insert(optionsData, { type = "divider" })
-    
-    if IsConsoleUI() then
-        table.insert(optionsData, {
-            type = "button",
-            name = "|cFFD700Buy Me A Coffee|r",
-            tooltip = "Support the development of PermMemento! Type this secure link into your phone or computer browser:\n\n|c00FFFFhttps://buymeacoffee.com/aph0nlc|r",
-            func = function() end,
-            width = "full"
-        })
-        table.insert(optionsData, {
-            type = "button",
-            name = "|cFF0000BUG REPORT|r",
-            tooltip = "Found an issue? Report it by typing this link into your phone or computer browser:\n\n|c00FFFFhttps://www.esoui.com/portal.php?id=360&a=listbugs|r",
-            func = function() end,
-            width = "full"
-        })
-    else
+    if not IsConsoleUI() then
+        table.insert(optionsData, { type = "divider" })
         table.insert(optionsData, {
             type = "button",
             name = "|cFFD700Buy Me A Coffee|r",
@@ -1699,3 +1683,4 @@ function PM:OnPlayerActivated()
 end
 
 EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_ADD_ON_LOADED, function(...) PM:Init(...) end)
+_G.PermMementoCore = PM
