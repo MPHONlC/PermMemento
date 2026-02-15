@@ -31,7 +31,7 @@ local PM = {
         -- Sync Defaults
         sync = { delay=0, random=false, ignoreInCombat=true, enabled=false }
     },
-    isLooping = false, isScanning = false,
+    isLooping = false, isScanning = false, isMemCheckQueued = false,
     loopToken = 0, lastPos = {x=0,y=0,z=0,t=0}, isMoving = false,
     
     -- Sync Flags
@@ -580,6 +580,7 @@ function PM:CreateUI()
     self:UpdateUIScenes()
 end
 
+-- Auto Cleanup
 function PM:RunManualCleanup(isAuto)
     self.memState = 1
     zo_callLater(function()
@@ -587,8 +588,7 @@ function PM:RunManualCleanup(isAuto)
         collectgarbage("collect")
         local after = collectgarbage("count") / 1024
         self.memFreed = before - after
-        self.memState = 2
-        self.memDisplayUntil = GetGameTimeMilliseconds() + 4000
+        self.memState = 0
         
         local msg = string.format("Memory Freed %.2f MB", self.memFreed)
         
@@ -608,41 +608,51 @@ function PM:RunManualCleanup(isAuto)
     end, 500)
 end
 
--- Auto Cleanup
-function PM:MemorySweepTick()
+function PM:TriggerMemoryCheck(checkType, delay)
     if not self.settings.autoCleanup then return end
-    
-    if self.memState == 3 then
-        if GetGameTimeMilliseconds() > self.memNextSweep then self.memState = 0 end
-        return
-    end
-    
-    if self.memState == 2 and GetGameTimeMilliseconds() > self.memDisplayUntil then
-        self.memState = 3
-        self.memNextSweep = GetGameTimeMilliseconds() + 30000 -- 30s Cooldown
-    end
+    if self.memState == 1 or self.isMemCheckQueued then return end
 
-    if self.memState ~= 0 then return end
+    -- Check if memory is above platform threshold. If not, IGNORE.
+    local currentMB = IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
+    local threshold = IsConsoleUI() and 85 or 512 
 
-    local currentMB = 0
-    if IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB then
-        currentMB = GetTotalUserAddOnMemoryPoolUsageMB()
-    else
-        currentMB = collectgarbage("count") / 1024
-    end
-
-    local threshold = IsConsoleUI() and 85 or 400
     if currentMB >= threshold then
+        
+        -- Combat Check
         local inCombat = IsUnitInCombat and IsUnitInCombat("player")
-        if not inCombat and not IsUnitDead("player") and IsPlayerActivated() then
-            -- 3s buffer check before actually cleaning
-            zo_callLater(function()
-                local stillInCombat = IsUnitInCombat and IsUnitInCombat("player")
-                if not stillInCombat and not IsUnitDead("player") then
-                    self:RunManualCleanup(true)
-                end
-            end, 3000)
-        end
+        if inCombat or IsUnitDead("player") then return end
+
+        self.isMemCheckQueued = true -- Lock the queue
+
+        -- Start delay 
+        zo_callLater(function()
+            self.isMemCheckQueued = false
+            if self.memState == 1 then return end
+
+            -- check state after delay
+            local stillInCombat = IsUnitInCombat and IsUnitInCombat("player")
+            if stillInCombat or IsUnitDead("player") then return end
+
+            -- Menu Check
+            if checkType == "Menu" then
+                local inMenu = SCENE_MANAGER and not (SCENE_MANAGER:IsShowing("hud") or SCENE_MANAGER:IsShowing("hudui"))
+                if not inMenu then return end -- Exited before 2s ran out, IGNORE
+            end
+
+            -- Memory Check
+            local recheckMB = IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
+            if recheckMB >= threshold then
+                self:RunManualCleanup(true)
+                
+                -- Reset
+                EVENT_MANAGER:UnregisterForUpdate(PM.name .. "_MemFallback")
+                EVENT_MANAGER:RegisterForUpdate(PM.name .. "_MemFallback", 300000, function() PM:TriggerMemoryCheck("Fallback", 0) end)
+            end
+        end, delay)
+    else
+        -- Go Dormant and kill Timers
+        EVENT_MANAGER:UnregisterForUpdate(PM.name .. "_MemFallback")
+        self.memState = 0
     end
 end
 
@@ -654,7 +664,6 @@ function PM:IsBusy()
     local inCombat = IsUnitInCombat and IsUnitInCombat("player")
     if inCombat then 
         if not self.settings.loopInCombat then
-            -- Pause loops strictly while in combat, wait delayCombatEnd when exiting
             return true, (self.settings.delayCombatEnd or 5) * 1000 
         end
     end
@@ -756,6 +765,7 @@ function PM:Loop(loopID)
     local data = PM:GetData(self.settings.activeId)
     if not data then self.settings.activeId = nil; return end
     
+    -- Cleanup AFK check
     local isBusy, busyDelay = self:IsBusy()
     if isBusy then 
         local wait = (busyDelay > 0) and busyDelay or ((self.settings.delayIdle or 0) * 1000)
@@ -764,6 +774,8 @@ function PM:Loop(loopID)
         zo_callLater(function() self:Loop(loopID) end, wait)
         return 
     end
+    
+    self:TriggerMemoryCheck("Loop", 0)
     
     local currentTargetId = self.settings.activeId
     if self.pendingSyncId then currentTargetId = self.pendingSyncId end
@@ -1432,7 +1444,21 @@ function PM:Init(eventCode, addOnName)
         end)
     end
 
-    EVENT_MANAGER:RegisterForUpdate(PM.name .. "_MemSweep", 5000, function() PM:MemorySweepTick() end)
+    -- Cleanup Event: Combat Exit Trigger
+    EVENT_MANAGER:RegisterForEvent(PM.name .. "_CombatState", EVENT_PLAYER_COMBAT_STATE, function(eventCode, inCombat)
+        if not inCombat then PM:TriggerMemoryCheck("CombatEnd", 3000) end
+    end)
+    
+    -- Cleanup Event: Menu Enter Trigger
+    if SCENE_MANAGER then
+        SCENE_MANAGER:RegisterCallback("SceneStateChanged", function(scene, oldState, newState)
+            if newState == SCENE_SHOWN then
+                if scene.name ~= "hud" and scene.name ~= "hudui" then
+                    PM:TriggerMemoryCheck("Menu", 2000)
+                end
+            end
+        end)
+    end
     
     -- PMEM Handler
     SLASH_COMMANDS["/pmem"] = function(extra)
@@ -1583,6 +1609,7 @@ function PM:Init(eventCode, addOnName)
 end
 
 function PM:OnPlayerActivated()
+    PM:TriggerMemoryCheck("ZoneLoad", 5000) -- Cleanup EVENT: Zone Load Trigger
     local delay = (self.settings.delayTeleport or 5) * 1000
     if self.settings.randomOnZone then local randId = self:GetRandomSupported(); if randId then local data = PM:GetData(randId); self.settings.activeId = randId; self:Log("Zone Random: " .. data.name, true, "random") end
     elseif self.settings.randomOnLogin and not self.settings.activeId then local randId = self:GetRandomSupported(); if randId then local data = PM:GetData(randId); self.settings.activeId = randId; self:Log("Login Random: " .. data.name, true, "random") end end
