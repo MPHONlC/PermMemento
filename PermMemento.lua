@@ -1348,6 +1348,44 @@ function PM:BuildMenu()
         table.insert(optionsData, liveStatsBlock)
         table.insert(optionsData, commandsInfoBlock)
     end
+    
+    table.insert(optionsData, { type = "divider" })
+    
+    if IsConsoleUI() then
+        table.insert(optionsData, {
+            type = "button",
+            name = "|cFFD700Buy Me A Coffee|r",
+            tooltip = "Support the development of PermMemento! Type this secure link into your phone or computer browser:\n\n|c00FFFFhttps://buymeacoffee.com/aph0nlc|r",
+            func = function() end,
+            width = "full"
+        })
+        table.insert(optionsData, {
+            type = "button",
+            name = "|cFF0000BUG REPORT|r",
+            tooltip = "Found an issue? Report it by typing this link into your phone or computer browser:\n\n|c00FFFFhttps://www.esoui.com/portal.php?id=360&a=listbugs|r",
+            func = function() end,
+            width = "full"
+        })
+    else
+        table.insert(optionsData, {
+            type = "button",
+            name = "|cFFD700Buy Me A Coffee|r",
+            tooltip = "Support the development of PermMemento! Opens a secure link to my Buy Me A Coffee page in your default web browser.",
+            func = function() 
+                RequestOpenUnsafeURL("https://buymeacoffee.com/aph0nlc") 
+            end,
+            width = "full"
+        })
+        table.insert(optionsData, {
+            type = "button",
+            name = "|cFF0000BUG REPORT|r",
+            tooltip = "Found an issue? Opens the PermMemento Bug Portal on ESOUI in your default web browser.",
+            func = function() 
+                RequestOpenUnsafeURL("https://www.esoui.com/portal.php?id=360&a=listbugs") 
+            end,
+            width = "full"
+        })
+    end
 
     LAM:RegisterAddonPanel("PermMementoOptions", panelData)
     LAM:RegisterOptionControls("PermMementoOptions", optionsData)
