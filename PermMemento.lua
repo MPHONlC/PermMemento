@@ -99,7 +99,7 @@ PM.mementoData = {
     [13105] = {id = 13105, refID = 229989, dur = 60000,  name = "Surprising Snowglobe"},
     [13736] = {id = 13736, refID = 242404, dur = 195000,  name = "Shimmering Gala Gown Veil"},
 }
-
+-- Return memento data or savedvariables data
 function PM:GetData(id)
     if self.mementoData[id] then return self.mementoData[id] end
     if self.acctSaved and self.acctSaved.learnedData and self.acctSaved.learnedData[id] then
@@ -110,7 +110,7 @@ function PM:GetData(id)
     end
     return nil
 end
-
+-- Estimate size of data table
 function PM:EstimateTableSize(t, seen)
     if type(t) ~= "table" then return 0 end
     seen = seen or {}
@@ -127,7 +127,7 @@ function PM:EstimateTableSize(t, seen)
     end
     return size
 end
-
+-- print stats on the statistics UI panel
 function PM:GetTopMementos()
     if not self.acctSaved or not self.acctSaved.mementoUsage then return "\n  None" end
     local sortable = {}
@@ -238,7 +238,7 @@ function PM:UpdateSettingsReference()
     PM:ApplySpinStop()
 end
 
--- Data
+-- Data Management & Migration
 function PM:MigrateData()
     local delaysToConvert = {"delayMove", "delaySprint", "delayBlock", "delayCast", "delaySwim", "delaySneak", "delayMount", "delayIdle", "delayTeleport", "delayResurrect", "delayInMenu", "delayCombatEnd"}
     
@@ -294,7 +294,7 @@ function PM:MigrateData()
     if self.acctSaved then self.acctSaved.autoResumeScan = nil end
     if self.charSaved then self.charSaved.autoResumeScan = nil end
 end
-
+-- Logs
 function PM:Log(msg, isCSA, durKey)
     if not self.settings then return end
     if self.settings.csaEnabled and isCSA and CENTER_SCREEN_ANNOUNCE then
@@ -308,7 +308,7 @@ function PM:Log(msg, isCSA, durKey)
         if CHAT_SYSTEM then CHAT_SYSTEM:AddMessage(formattedMsg) end
     end
 end
-
+-- Prevent camera spinning in certain Menus
 function PM:ApplySpinStop()
     if IsConsoleUI() then return end
     local scenes = { "character", "stats", "inventory", "interact" }
@@ -324,7 +324,7 @@ function PM:ApplySpinStop()
     end
 end
 
--- Fave Check
+-- Fave selection
 function PM:GetRandomSupported()
     local available = {}
     if self.settings.favorites then
@@ -365,7 +365,7 @@ function PM:GetRandomAny()
     end
     return #available > 0 and available[math.random(#available)] or nil
 end
-
+-- Calculate 3D distance for Movement Checks
 function PM:UpdateMovementState()
     if not GetUnitRawWorldPosition then return end
     local x, _, z = GetUnitRawWorldPosition("player"); local time = GetGameTimeMilliseconds()
@@ -374,7 +374,7 @@ function PM:UpdateMovementState()
         local dist = zo_sqrt((x - self.lastPos.x)^2 + (z - self.lastPos.z)^2); self.isMoving = (dist > 0.5); self.lastPos = {x=x, z=z, t=time}
     end
 end
-
+-- Return the current action state and appropriate delay
 function PM:GetActionState()
     if IsResurrecting and IsResurrecting() then return true, "|cFF0000(Resurrecting)|r", (self.settings.delayResurrect or 5) * 1000 end
     if IsUnitReincarnating and IsUnitReincarnating("player") then return true, "|cFF0000(Reviving)|r", (self.settings.delayResurrect or 5) * 1000 end
@@ -388,7 +388,7 @@ function PM:GetActionState()
     if self.isMoving then return true, "|c00CED1(Moving)|r", (self.settings.delayMove or 5) * 1000 end
     return false, "", 0
 end
-
+-- UI Anchor Management
 function PM:UpdateUIAnchor()
     if not self.uiWindow or not self.settings then return end
     self.uiWindow:ClearAnchors()
@@ -422,7 +422,7 @@ function PM:UpdateUIAnchor()
         end
     end
 end
-
+-- UI management, where it shows up
 function PM:UpdateUIScenes()
     if not self.hudFragment or not self.menuFragment then return end
     local hudScenes = {"hud", "hudui", "gamepad_hud", "interact"}
@@ -487,7 +487,7 @@ function PM:CreateUI()
     
     local function UpdateSize() ui:SetDimensions(label:GetTextWidth() + 20, label:GetTextHeight() + 10) end
     local lastUpdate = 0
-    
+    -- UI Update Loop control
     ui:SetHandler("OnUpdate", function(control, time)
         PM:UpdateMovementState()
         if not PM.settings then return end 
@@ -580,7 +580,7 @@ function PM:CreateUI()
     self:UpdateUIScenes()
 end
 
--- Auto Cleanup
+-- Auto LUA Cleanup
 function PM:RunManualCleanup(isAuto)
     self.memState = 1
     zo_callLater(function()
@@ -610,7 +610,7 @@ end
 
 function PM:TriggerMemoryCheck(checkType, delay)
     if not self.settings.autoCleanup then return end
-    if self.memState == 1 or self.isMemCheckQueued then return end
+    if self.memState == 1 or self.isMemCheckQueued then return end -- Prevent overlapping checks if a cleanup is already happening
 
     -- Check if memory is above platform threshold. If not, IGNORE.
     local currentMB = IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
@@ -633,18 +633,18 @@ function PM:TriggerMemoryCheck(checkType, delay)
             local stillInCombat = IsUnitInCombat and IsUnitInCombat("player")
             if stillInCombat or IsUnitDead("player") then return end
 
-            -- Menu Check
+            -- Menu Intent Check
             if checkType == "Menu" then
                 local inMenu = SCENE_MANAGER and not (SCENE_MANAGER:IsShowing("hud") or SCENE_MANAGER:IsShowing("hudui"))
                 if not inMenu then return end -- Exited before 2s ran out, IGNORE
             end
 
-            -- Memory Check
+            -- Memory Check & Execution
             local recheckMB = IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
             if recheckMB >= threshold then
                 self:RunManualCleanup(true)
                 
-                -- Reset
+                -- Fallback timer
                 EVENT_MANAGER:UnregisterForUpdate(PM.name .. "_MemFallback")
                 EVENT_MANAGER:RegisterForUpdate(PM.name .. "_MemFallback", 300000, function() PM:TriggerMemoryCheck("Fallback", 0) end)
             end
@@ -681,7 +681,7 @@ function PM:IsBusy()
     if isActionBusy then return true, actionDelay end
     return false, 0
 end
-
+-- Monitor PM:OnEffectChanged to trigger next loop
 function PM:OnEffectChanged(eventCode, changeType, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, effectType, abilityType, statusEffectType, unitName, unitId, abilityId, sourceUnitId)
     if not self.settings or not self.settings.activeId then return end
     
@@ -725,6 +725,9 @@ function PM:AutoScanMementos()
     
     self:Log("Starting Silent Auto-Scan...", true, "settings")
     
+    -- Temp Table
+    self.acctSaved.recentScans = {} 
+    
     for i = 1, total do
         local id = GetCollectibleIdFromType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO, i)
         if id and IsCollectibleUnlocked(id) then
@@ -742,6 +745,9 @@ function PM:AutoScanMementos()
                 if collectibleData and collectibleData.GetReferenceId then refId = collectibleData:GetReferenceId() end
                 
                 self.acctSaved.learnedData[id] = { id = id, refID = refId, dur = saveDur, name = cName }
+                
+                -- Temp ID
+                table.insert(self.acctSaved.recentScans, id)
                 count = count + 1
             end
         end
@@ -751,14 +757,16 @@ function PM:AutoScanMementos()
     
     if count == 0 then
         self:Log("All owned mementos have already been learned.", true, "settings")
+        self.acctSaved.recentScans = nil -- Delete temp table so it doesn't print again
     else
         self:UpdateLearnedCount()
-        self:Log("Successfully Learned " .. count .. " new mementos!", true, "activation")
+        -- Print to chat
+        self:Log("Successfully Learned " .. count .. " new mementos! Reloading UI...", false)
         PM.menuBuilt = false 
         zo_callLater(function() ReloadUI("ingame") end, 3000)
     end
 end
-
+-- Loop Logic
 function PM:Loop(loopID)
     if not self.settings or self.settings.paused or not self.settings.activeId then return end
     if loopID ~= self.loopToken then return end
@@ -774,7 +782,7 @@ function PM:Loop(loopID)
         zo_callLater(function() self:Loop(loopID) end, wait)
         return 
     end
-    
+    -- Occasional dormant memory check during long AFK loops
     self:TriggerMemoryCheck("Loop", 0)
     
     local currentTargetId = self.settings.activeId
@@ -793,7 +801,7 @@ function PM:Loop(loopID)
     end
     
     self.isLooping = true 
-    
+    -- Play Group Sync Memento
     if self.pendingSyncId then
          self.isSyncFiring = true
          UseCollectible(self.pendingSyncId)
@@ -864,7 +872,7 @@ function PM:StartLoop(collectibleId, ignoreRestriction)
         zo_callLater(function() self:Loop(currentToken) end, nextDelay) 
     end
 end
-
+-- Bind UI clicks
 function PM:HookGameUI()
     ZO_PreHook("UseCollectible", function(collectibleId)
         if not PM.settings then return end
@@ -926,7 +934,7 @@ function PM:HookGameUI()
         end
     end)
 end
-
+-- Group Sync
 function PM.Sync:Initialize()
   SLASH_COMMANDS["/pmsync"] = function(argString)
     if not argString or string.len(argString) < 1 then PM:Log("Usage: /pmsync <searchterm>, /pmsync random OR /pmsync stop", true, "error"); return end
@@ -1128,7 +1136,7 @@ function PM:DeleteAllFavorites()
     PM:Log("All Favorites Cleared.", true, "settings")
     PM:UpdateFavoritesChoices()
 end
-
+-- Refresh UI Dropdown Data
 function PM:UpdateMenuChoices()
     PM.activeNames, PM.activeIDs = {"None"}, {0}
     local sortedActive = {}
@@ -1169,7 +1177,7 @@ function PM:UpdateMenuChoices()
     end
     if PM.ctrlLearnedDropdown then PM.ctrlLearnedDropdown:UpdateChoices(PM.learnedListNames, PM.learnedListValues) end
 end
-
+-- LibAddonMenu UI Settings
 function PM:BuildMenu()
     if PM.menuBuilt then return end
     PM.menuBuilt = true
@@ -1610,9 +1618,46 @@ end
 
 function PM:OnPlayerActivated()
     PM:TriggerMemoryCheck("ZoneLoad", 5000) -- Cleanup EVENT: Zone Load Trigger
+    
+    -- Print recent scans to chat log after reload
+    if self.acctSaved and self.acctSaved.recentScans and #self.acctSaved.recentScans > 0 then
+        zo_callLater(function()
+            PM:Log("Newly Learned Mementos from Auto-Scan:", false)
+            for _, id in ipairs(self.acctSaved.recentScans) do
+                local data = self.acctSaved.learnedData[id]
+                if data then
+                    local msg = string.format("- %s (ID: %d | RefID: %d | Dur: %dms)", data.name, data.id, data.refID, data.dur)
+                    PM:Log(msg, false) -- no CSA
+                end
+            end
+            -- Delete temp table so it doesn't print again
+            self.acctSaved.recentScans = nil 
+        end, 2000)
+    end
+
     local delay = (self.settings.delayTeleport or 5) * 1000
-    if self.settings.randomOnZone then local randId = self:GetRandomSupported(); if randId then local data = PM:GetData(randId); self.settings.activeId = randId; self:Log("Zone Random: " .. data.name, true, "random") end
-    elseif self.settings.randomOnLogin and not self.settings.activeId then local randId = self:GetRandomSupported(); if randId then local data = PM:GetData(randId); self.settings.activeId = randId; self:Log("Login Random: " .. data.name, true, "random") end end
-    if self.settings and self.settings.activeId and not self.settings.paused then local currentToken = self.loopToken; zo_callLater(function() if self.settings.activeId then PM:Loop(currentToken) end end, delay) end
+    if self.settings.randomOnZone then 
+        local randId = self:GetRandomSupported()
+        if randId then 
+            local data = PM:GetData(randId)
+            self.settings.activeId = randId
+            self:Log("Zone Random: " .. data.name, true, "random") 
+        end
+    elseif self.settings.randomOnLogin and not self.settings.activeId then 
+        local randId = self:GetRandomSupported()
+        if randId then 
+            local data = PM:GetData(randId)
+            self.settings.activeId = randId
+            self:Log("Login Random: " .. data.name, true, "random") 
+        end 
+    end
+    
+    if self.settings and self.settings.activeId and not self.settings.paused then 
+        local currentToken = self.loopToken
+        zo_callLater(function() 
+            if self.settings.activeId then PM:Loop(currentToken) end 
+        end, delay) 
+    end
 end
+
 EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_ADD_ON_LOADED, function(...) PM:Init(...) end)
