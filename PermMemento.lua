@@ -1247,9 +1247,9 @@ function PM:BuildMenu()
     
     local optionsData = {}
     
-    local consoleCmds = "|cFF5733/pmem <name>|r (or /permmemento) |cFFD700- Start loop|r\n|c33FF57/pmemstop|r (or /permmementostop) |cFFD700- Stop loop|r\n|c3357FF/pmemrand|r (or /pmemrandom) |cFFD700- Activate random memento|r\n|c33FFF5/pmemscan|r (or /pmemautolearn) |cFFD700- Run Auto-Scan|r\n|c8F33FF/pmemui|r (or /pmemtoggleui) |cFFD700- Toggle UI visibility|r\n|c33FF8F/pmemhud|r (or /pmemuimode) |cFFD700- Toggle HUD/Menu mode|r\n|cFF3333/pmemlock|r (or /pmemuilock) |cFFD700- Lock/Unlock UI|r\n|cFFFF33/pmemcsa|r (or /pmemtogglecsa) |cFFD700- Toggle Announcements|r\n|cFF00FF/pmemfree|r (or /pmemunrestrict) |cFFD700- Toggle Unrestricted|r\n|cF5FF33/pmemclean|r (or /pmemcleanup) |cFFD700- Force manual Lua memory cleanup|r\n|cFF8F33/pmemcsacls|r (or /pmemcsacleanup) |cFFD700- Toggle Auto-Cleanup CSA|r\n|cFF1493/pmemlist|r (or /pmemlearned) |cFFD700- List learned data|r\n|c00FFCC/pmsync <name>|r (or /permmementosync) |cFFD700- Party sync request|r\n|cFFCC00/pmsyncstop|r (or /permmementosyncstop) |cFFD700- Party stop request|r\n|cCC00FF/pmsyncrand|r (or /permmementosyncrandom) |cFFD700- Random party sync|r"
+    local consoleCmds = "|cFFFFFF/pmem <name>|r (or |cFF0000/permmemento|r) |cFFD700- Start loop|r\n|cFFFFFF/pmemstop|r (or |cFF0000/permmementostop|r) |cFFD700- Stop loop|r\n|cFFFFFF/pmemrand|r (or |cFF0000/pmemrandom|r) |cFFD700- Activate random memento|r\n|cFFFFFF/pmemscan|r (or |cFF0000/pmemautolearn|r) |cFFD700- Run Auto-Scan|r\n|cFFFFFF/pmemui|r (or |cFF0000/pmemtoggleui|r) |cFFD700- Toggle UI visibility|r\n|cFFFFFF/pmemhud|r (or |cFF0000/pmemuimode|r) |cFFD700- Toggle HUD/Menu mode|r\n|cFFFFFF/pmemlock|r (or |cFF0000/pmemuilock|r) |cFFD700- Lock/Unlock UI|r\n|cFFFFFF/pmemcsa|r (or |cFF0000/pmemtogglecsa|r) |cFFD700- Toggle Announcements|r\n|cFFFFFF/pmemfree|r (or |cFF0000/pmemunrestrict|r) |cFFD700- Toggle Unrestricted|r\n|cFFFFFF/pmemclean|r (or |cFF0000/pmemcleanup|r) |cFFD700- Force manual Lua memory cleanup|r\n|cFFFFFF/pmemcsacls|r (or |cFF0000/pmemcsacleanup|r) |cFFD700- Toggle Auto-Cleanup CSA|r\n|cFFFFFF/pmemlist|r (or |cFF0000/pmemlearned|r) |cFFD700- List learned data|r\n|cFFFFFF/pmsync <name>|r (or |cFF0000/permmementosync|r) |cFFD700- Party sync request|r\n|cFFFFFF/pmsyncstop|r (or |cFF0000/permmementosyncstop|r) |cFFD700- Party stop request|r\n|cFFFFFF/pmsyncrand|r (or |cFF0000/permmementosyncrandom|r) |cFFD700- Random party sync|r"
 
-    local pcCmdsText = "|cFF5733/pmem <name>|r (or /permmemento) |cFFD700- Force loop a specific memento|r\n|c33FF57/pmemstop|r (or /permmementostop) |cFFD700- Stops current loop & Auto-Scan|r\n|c3357FF/pmemrand|r (or /pmemrandom) |cFFD700- Activate a random memento|r\n|cF333FF/pmemrandzone|r (or /pmemrandomzonechange) |cFFD700- Toggle Zone Randomizer|r\n|cFF33A8/pmemrandlog|r (or /pmemrandomlogin) |cFFD700- Toggle Login Randomizer|r\n|c33FFF5/pmemscan|r (or /pmemautolearn) |cFFD700- Starts silent Auto-Scan|r\n|cF5FF33/pmemclean|r (or /pmemcleanup) |cFFD700- Run manual Lua memory cleanup|r\n|cFF8F33/pmemcsacls|r (or /pmemcsacleanup) |cFFD700- Toggle Auto-Cleanup Announcements|r\n|c8F33FF/pmemui|r (or /pmemtoggleui) |cFFD700- Toggle status display|r\n|c33FF8F/pmemhud|r (or /pmemuimode) |cFFD700- Toggle HUD/Menu mode|r\n|cFF3333/pmemlock|r (or /pmemuilock) |cFFD700- Lock/unlock UI dragging|r\n|c33FFFF/pmemresetui|r (or /pmemuireset) |cFFD700- Reset UI scale/position|r\n|cFFFF33/pmemcsa|r (or /pmemtogglecsa) |cFFD700- Toggle Screen Announcements|r\n|cFF00FF/pmemfree|r (or /pmemunrestrict) |cFFD700- Toggle Unrestricted Mode|r\n|c00FFCC/pmsync <name>|r (or /permmementosync) |cFFD700- Send party sync request|r\n|cCC00FF/pmsyncrand|r (or /permmementosyncrandom) |cFFD700- Send random party sync|r\n|cFFCC00/pmsyncstop|r (or /permmementosyncstop) |cFFD700- Send party stop request|r\n|c00BFFF/pmemcur|r (or /pmemcurrent) |cFFD700- Print current looping memento|r\n|cFF1493/pmemlist|r (or /pmemlearned) |cFFD700- List all learned data|r\n|c7CFC00/pmemplay <name>|r (or /pmemactivatelearned) |cFFD700- Force loop a learned memento|r\n|cFF5733/pmemwipe|r (or /pmemdeletealllearned) |cFFD700- Wipe all learned data permanently|r\n|c33FF57/pmempause|r (or /pmemtogglepause) |cFFD700- Pause/Resume the current loop|r\n|c3357FF/pmemcombat|r (or /pmemloopincombat) |cFFD700- Toggle Loop in Combat|r\n|cF333FF/pmemperf|r (or /pmemperformancemode) |cFFD700- Toggle Performance Mode|r\n|cFF33A8/pmemautoclean|r (or /pmemautocleanup) |cFFD700- Toggle Auto Lua Cleanup|r\n|c33FFF5/pmemacct|r (or /pmemuseaccountsettings) |cFFD700- Toggle Account-Wide Settings|r\n|cF5FF33/pmemwipefav|r (or /pmemdeleteallfavorites) |cFFD700- Clear all favorites|r\n|cFF8F33/pmemreset|r (or /pmemresetdefaults) |cFFD700- Reset settings to default|r\n|c8F33FF/pmemhudscale <val>|r (or /pmemsethudscale) |cFFD700- Set HUD UI scale|r\n|c33FF8F/pmemmenuscale <val>|r (or /pmemsetmenuscale) |cFFD700- Set Menu UI scale|r\n|cFF3333/pmemlogs|r (or /pmemchatlogs) |cFFD700- Toggle Chat Logs|r\n|c33FFFF/pmemnospin|r (or /pmemstopspinning) |cFFD700- Toggle Stop Spinning in Menus|r\n|cFFFF33/pmsyncon|r (or /pmemsyncenable) |cFFD700- Toggle Sync Listening|r\n|cFF00FF/pmsyncdelay|r (or /pmemsyncrandomdelay) |cFFD700- Toggle Random Sync Delay|r\n\n|cFF0000WARNING:|r Force Console Mode requires reload. To revert if stuck:\n|cFFFF00/script SetCVar(\"ForceConsoleFlow.2\", \"0\")|r"
+    local pcCmdsText = "|cFFFFFF/pmem <name>|r (or |cFF0000/permmemento|r) |cFFD700- Force loop a specific memento|r\n|cFFFFFF/pmemstop|r (or |cFF0000/permmementostop|r) |cFFD700- Stops current loop & Auto-Scan|r\n|cFFFFFF/pmemrand|r (or |cFF0000/pmemrandom|r) |cFFD700- Activate a random memento|r\n|cFFFFFF/pmemrandzone|r (or |cFF0000/pmemrandomzonechange|r) |cFFD700- Toggle Zone Randomizer|r\n|cFFFFFF/pmemrandlog|r (or |cFF0000/pmemrandomlogin|r) |cFFD700- Toggle Login Randomizer|r\n|cFFFFFF/pmemscan|r (or |cFF0000/pmemautolearn|r) |cFFD700- Starts silent Auto-Scan|r\n|cFFFFFF/pmemclean|r (or |cFF0000/pmemcleanup|r) |cFFD700- Run manual Lua memory cleanup|r\n|cFFFFFF/pmemcsacls|r (or |cFF0000/pmemcsacleanup|r) |cFFD700- Toggle Auto-Cleanup Announcements|r\n|cFFFFFF/pmemui|r (or |cFF0000/pmemtoggleui|r) |cFFD700- Toggle status display|r\n|cFFFFFF/pmemhud|r (or |cFF0000/pmemuimode|r) |cFFD700- Toggle HUD/Menu mode|r\n|cFFFFFF/pmemlock|r (or |cFF0000/pmemuilock|r) |cFFD700- Lock/unlock UI dragging|r\n|cFFFFFF/pmemresetui|r (or |cFF0000/pmemuireset|r) |cFFD700- Reset UI scale/position|r\n|cFFFFFF/pmemcsa|r (or |cFF0000/pmemtogglecsa|r) |cFFD700- Toggle Screen Announcements|r\n|cFFFFFF/pmemfree|r (or |cFF0000/pmemunrestrict|r) |cFFD700- Toggle Unrestricted Mode|r\n|cFFFFFF/pmsync <name>|r (or |cFF0000/permmementosync|r) |cFFD700- Send party sync request|r\n|cFFFFFF/pmsyncrand|r (or |cFF0000/permmementosyncrandom|r) |cFFD700- Send random party sync|r\n|cFFFFFF/pmsyncstop|r (or |cFF0000/permmementosyncstop|r) |cFFD700- Send party stop request|r\n|cFFFFFF/pmemcur|r (or |cFF0000/pmemcurrent|r) |cFFD700- Print current looping memento|r\n|cFFFFFF/pmemlist|r (or |cFF0000/pmemlearned|r) |cFFD700- List all learned data|r\n|cFFFFFF/pmemplay <name>|r (or |cFF0000/pmemactivatelearned|r) |cFFD700- Force loop a learned memento|r\n|cFFFFFF/pmemwipe|r (or |cFF0000/pmemdeletealllearned|r) |cFFD700- Wipe all learned data permanently|r\n|cFFFFFF/pmempause|r (or |cFF0000/pmemtogglepause|r) |cFFD700- Pause/Resume the current loop|r\n|cFFFFFF/pmemcombat|r (or |cFF0000/pmemloopincombat|r) |cFFD700- Toggle Loop in Combat|r\n|cFFFFFF/pmemperf|r (or |cFF0000/pmemperformancemode|r) |cFFD700- Toggle Performance Mode|r\n|cFFFFFF/pmemautoclean|r (or |cFF0000/pmemautocleanup|r) |cFFD700- Toggle Auto Lua Cleanup|r\n|cFFFFFF/pmemacct|r (or |cFF0000/pmemuseaccountsettings|r) |cFFD700- Toggle Account-Wide Settings|r\n|cFFFFFF/pmemwipefav|r (or |cFF0000/pmemdeleteallfavorites|r) |cFFD700- Clear all favorites|r\n|cFFFFFF/pmemreset|r (or |cFF0000/pmemresetdefaults|r) |cFFD700- Reset settings to default|r\n|cFFFFFF/pmemhudscale <val>|r (or |cFF0000/pmemsethudscale|r) |cFFD700- Set HUD UI scale|r\n|cFFFFFF/pmemmenuscale <val>|r (or |cFF0000/pmemsetmenuscale|r) |cFFD700- Set Menu UI scale|r\n|cFFFFFF/pmemlogs|r (or |cFF0000/pmemchatlogs|r) |cFFD700- Toggle Chat Logs|r\n|cFFFFFF/pmemnospin|r (or |cFF0000/pmemstopspinning|r) |cFFD700- Toggle Stop Spinning in Menus|r\n|cFFFFFF/pmsyncon|r (or |cFF0000/pmemsyncenable|r) |cFFD700- Toggle Sync Listening|r\n|cFFFFFF/pmsyncdelay|r (or |cFF0000/pmemsyncrandomdelay|r) |cFFD700- Toggle Random Sync Delay|r\n\n|cFF0000WARNING:|r Force Console Mode requires reload. To revert if stuck:\n|cFFFF00/script SetCVar(\"ForceConsoleFlow.2\", \"0\")|r"
 
     if IsConsoleUI() then
         table.insert(optionsData, { type = "button", name = "|c00FF00PERMANENT MEMENTO STATS|r", tooltip = function() return PM:GetStatsText() end, func = function() end, width = "full" })
@@ -1402,6 +1402,7 @@ function PM:BuildMenu()
             { type = "description", title = "|c00FFFFLive Statistics|r", text = "Loading statistics...", reference = "PM_StatsText" }
         }}
         
+        local pcCmdsText = "|cFFFFFF/pmem <name>|r (or |cFF0000/permmemento|r) |cFFD700- Force loop a specific memento|r\n|cFFFFFF/pmemstop|r (or |cFF0000/permmementostop|r) |cFFD700- Stops current loop & Auto-Scan|r\n|cFFFFFF/pmemrand|r (or |cFF0000/pmemrandom|r) |cFFD700- Activate a random memento|r\n|cFFFFFF/pmemrandzone|r (or |cFF0000/pmemrandomzonechange|r) |cFFD700- Toggle Zone Randomizer|r\n|cFFFFFF/pmemrandlog|r (or |cFF0000/pmemrandomlogin|r) |cFFD700- Toggle Login Randomizer|r\n|cFFFFFF/pmemscan|r (or |cFF0000/pmemautolearn|r) |cFFD700- Starts silent Auto-Scan|r\n|cFFFFFF/pmemclean|r (or |cFF0000/pmemcleanup|r) |cFFD700- Run manual Lua memory cleanup|r\n|cFFFFFF/pmemcsacls|r (or |cFF0000/pmemcsacleanup|r) |cFFD700- Toggle Auto-Cleanup Announcements|r\n|cFFFFFF/pmemui|r (or |cFF0000/pmemtoggleui|r) |cFFD700- Toggle status display|r\n|cFFFFFF/pmemhud|r (or |cFF0000/pmemuimode|r) |cFFD700- Toggle HUD/Menu mode|r\n|cFFFFFF/pmemlock|r (or |cFF0000/pmemuilock|r) |cFFD700- Lock/unlock UI dragging|r\n|cFFFFFF/pmemresetui|r (or |cFF0000/pmemuireset|r) |cFFD700- Reset UI scale/position|r\n|cFFFFFF/pmemcsa|r (or |cFF0000/pmemtogglecsa|r) |cFFD700- Toggle Screen Announcements|r\n|cFFFFFF/pmemfree|r (or |cFF0000/pmemunrestrict|r) |cFFD700- Toggle Unrestricted Mode|r\n|cFFFFFF/pmsync <name>|r (or |cFF0000/permmementosync|r) |cFFD700- Send party sync request|r\n|cFFFFFF/pmsyncrand|r (or |cFF0000/permmementosyncrandom|r) |cFFD700- Send random party sync|r\n|cFFFFFF/pmsyncstop|r (or |cFF0000/permmementosyncstop|r) |cFFD700- Send party stop request|r\n|cFFFFFF/pmemcur|r (or |cFF0000/pmemcurrent|r) |cFFD700- Print current looping memento|r\n|cFFFFFF/pmemlist|r (or |cFF0000/pmemlearned|r) |cFFD700- List all learned data|r\n|cFFFFFF/pmemplay <name>|r (or |cFF0000/pmemactivatelearned|r) |cFFD700- Force loop a learned memento|r\n|cFFFFFF/pmemwipe|r (or |cFF0000/pmemdeletealllearned|r) |cFFD700- Wipe all learned data permanently|r\n|cFFFFFF/pmempause|r (or |cFF0000/pmemtogglepause|r) |cFFD700- Pause/Resume the current loop|r\n|cFFFFFF/pmemcombat|r (or |cFF0000/pmemloopincombat|r) |cFFD700- Toggle Loop in Combat|r\n|cFFFFFF/pmemperf|r (or |cFF0000/pmemperformancemode|r) |cFFD700- Toggle Performance Mode|r\n|cFFFFFF/pmemautoclean|r (or |cFF0000/pmemautocleanup|r) |cFFD700- Toggle Auto Lua Cleanup|r\n|cFFFFFF/pmemacct|r (or |cFF0000/pmemuseaccountsettings|r) |cFFD700- Toggle Account-Wide Settings|r\n|cFFFFFF/pmemwipefav|r (or |cFF0000/pmemdeleteallfavorites|r) |cFFD700- Clear all favorites|r\n|cFFFFFF/pmemreset|r (or |cFF0000/pmemresetdefaults|r) |cFFD700- Reset settings to default|r\n|cFFFFFF/pmemhudscale <val>|r (or |cFF0000/pmemsethudscale|r) |cFFD700- Set HUD UI scale|r\n|cFFFFFF/pmemmenuscale <val>|r (or |cFF0000/pmemsetmenuscale|r) |cFFD700- Set Menu UI scale|r\n|cFFFFFF/pmemlogs|r (or |cFF0000/pmemchatlogs|r) |cFFD700- Toggle Chat Logs|r\n|cFFFFFF/pmemnospin|r (or |cFF0000/pmemstopspinning|r) |cFFD700- Toggle Stop Spinning in Menus|r\n|cFFFFFF/pmsyncon|r (or |cFF0000/pmemsyncenable|r) |cFFD700- Toggle Sync Listening|r\n|cFFFFFF/pmsyncdelay|r (or |cFF0000/pmemsyncrandomdelay|r) |cFFD700- Toggle Random Sync Delay|r\n\n|cFF0000WARNING:|r Force Console Mode requires reload. To revert if stuck:\n|cFFFF00/script SetCVar(\"ForceConsoleFlow.2\", \"0\")|r"
         local commandsInfoBlock = { type = "description", title = "Commands Info", text = pcCmdsText }
         table.insert(optionsData, liveStatsBlock)
         table.insert(optionsData, commandsInfoBlock)
@@ -1570,62 +1571,67 @@ function PM:Init(eventCode, addOnName)
         local cmd = extra:lower()
         if cmd == "" then
             local cmds1 = "|c00FF00[1/2] PermMemento Core Commands:|r\n"
-            cmds1 = cmds1 .. "|cFF5733/pmem <name>|r (or |cFF5733/permmemento|r) |cFFD700- Force loop a specific memento|r\n"
-            cmds1 = cmds1 .. "|c33FF57/pmemstop|r (or |c33FF57/permmementostop|r) |cFFD700- Stops current loop & Auto-Scan|r\n"
-            cmds1 = cmds1 .. "|c3357FF/pmemrand|r (or |c3357FF/pmemrandom|r) |cFFD700- Activate a random memento|r\n"
-            cmds1 = cmds1 .. "|cF333FF/pmemrandzone|r (or |cF333FF/pmemrandomzonechange|r) |cFFD700- Toggle Zone Randomizer|r\n"
-            cmds1 = cmds1 .. "|cFF33A8/pmemrandlog|r (or |cFF33A8/pmemrandomlogin|r) |cFFD700- Toggle Login Randomizer|r\n"
-            cmds1 = cmds1 .. "|c33FFF5/pmemscan|r (or |c33FFF5/pmemautolearn|r) |cFFD700- Starts silent Auto-Scan|r\n"
-            cmds1 = cmds1 .. "|cF5FF33/pmemclean|r (or |cF5FF33/pmemcleanup|r) |cFFD700- Run manual Lua memory cleanup|r\n"
-            cmds1 = cmds1 .. "|cFF8F33/pmemcsacls|r (or |cFF8F33/pmemcsacleanup|r) |cFFD700- Toggle Auto-Cleanup Announcements|r\n"
-            cmds1 = cmds1 .. "|c8F33FF/pmemui|r (or |c8F33FF/pmemtoggleui|r) |cFFD700- Toggle status UI visibility|r\n"
-            cmds1 = cmds1 .. "|c33FF8F/pmemhud|r (or |c33FF8F/pmemuimode|r) |cFFD700- Toggle HUD/Menu mode|r\n"
-            cmds1 = cmds1 .. "|cFF3333/pmemlock|r (or |cFF3333/pmemuilock|r) |cFFD700- Lock/unlock UI dragging|r\n"
-            cmds1 = cmds1 .. "|c33FFFF/pmemresetui|r (or |c33FFFF/pmemuireset|r) |cFFD700- Reset UI scale/position|r\n"
-            cmds1 = cmds1 .. "|cFFFF33/pmemcsa|r (or |cFFFF33/pmemtogglecsa|r) |cFFD700- Toggle Screen Announcements|r\n"
-            cmds1 = cmds1 .. "|cFF00FF/pmemfree|r (or |cFF00FF/pmemunrestrict|r) |cFFD700- Toggle Unrestricted Mode|r\n"
-            cmds1 = cmds1 .. "|c00FFCC/pmsync <name>|r (or |c00FFCC/permmementosync|r) |cFFD700- Party sync request|r\n"
-            cmds1 = cmds1 .. "|cCC00FF/pmsyncrand|r (or |cCC00FF/permmementosyncrandom|r) |cFFD700- Random party sync|r\n"
-            cmds1 = cmds1 .. "|cFFCC00/pmsyncstop|r (or |cFFCC00/permmementosyncstop|r) |cFFD700- Party stop request|r"
-            PM:Log(cmds1, false)
+            cmds1 = cmds1 .. "|cFFFFFF/pmem <name>|r (or |cFF0000/permmemento|r) |cFFD700- Force loop a specific memento|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemstop|r (or |cFF0000/permmementostop|r) |cFFD700- Stops current loop & Auto-Scan|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemrand|r (or |cFF0000/pmemrandom|r) |cFFD700- Activate a random memento|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemrandzone|r (or |cFF0000/pmemrandomzonechange|r) |cFFD700- Toggle Zone Randomizer|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemrandlog|r (or |cFF0000/pmemrandomlogin|r) |cFFD700- Toggle Login Randomizer|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemscan|r (or |cFF0000/pmemautolearn|r) |cFFD700- Starts silent Auto-Scan|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemclean|r (or |cFF0000/pmemcleanup|r) |cFFD700- Run manual Lua memory cleanup|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemcsacls|r (or |cFF0000/pmemcsacleanup|r) |cFFD700- Toggle Auto-Cleanup Announcements|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemui|r (or |cFF0000/pmemtoggleui|r) |cFFD700- Toggle status UI visibility|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemhud|r (or |cFF0000/pmemuimode|r) |cFFD700- Toggle HUD/Menu mode|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemlock|r (or |cFF0000/pmemuilock|r) |cFFD700- Lock/unlock UI dragging|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemresetui|r (or |cFF0000/pmemuireset|r) |cFFD700- Reset UI scale/position|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemcsa|r (or |cFF0000/pmemtogglecsa|r) |cFFD700- Toggle Screen Announcements|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmemfree|r (or |cFF0000/pmemunrestrict|r) |cFFD700- Toggle Unrestricted Mode|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmsync <name>|r (or |cFF0000/permmementosync|r) |cFFD700- Party sync request|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmsyncrand|r (or |cFF0000/permmementosyncrandom|r) |cFFD700- Random party sync|r\n"
+            cmds1 = cmds1 .. "|cFFFFFF/pmsyncstop|r (or |cFF0000/permmementosyncstop|r) |cFFD700- Party stop request|r"
 
             local cmds2 = "|c00FF00[2/2] PermMemento Data & Settings Commands:|r\n"
-            cmds2 = cmds2 .. "|c00BFFF/pmemcur|r (or |c00BFFF/pmemcurrent|r) |cFFD700- Print current looping memento|r\n"
-            cmds2 = cmds2 .. "|cFF1493/pmemlist|r (or |cFF1493/pmemlearned|r) |cFFD700- List all learned data|r\n"
-            cmds2 = cmds2 .. "|c7CFC00/pmemplay <name>|r (or |c7CFC00/pmemactivatelearned|r) |cFFD700- Force loop a learned memento|r\n"
-            cmds2 = cmds2 .. "|cFF5733/pmemwipe|r (or |cFF5733/pmemdeletealllearned|r) |cFFD700- Wipe all learned data permanently|r\n"
-            cmds2 = cmds2 .. "|c33FF57/pmempause|r (or |c33FF57/pmemtogglepause|r) |cFFD700- Pause/Resume the current loop|r\n"
-            cmds2 = cmds2 .. "|c3357FF/pmemcombat|r (or |c3357FF/pmemloopincombat|r) |cFFD700- Toggle Loop in Combat|r\n"
-            cmds2 = cmds2 .. "|cF333FF/pmemperf|r (or |cF333FF/pmemperformancemode|r) |cFFD700- Toggle Performance Mode|r\n"
-            cmds2 = cmds2 .. "|cFF33A8/pmemautoclean|r (or |cFF33A8/pmemautocleanup|r) |cFFD700- Toggle Auto Lua Cleanup|r\n"
-            cmds2 = cmds2 .. "|c33FFF5/pmemacct|r (or |c33FFF5/pmemuseaccountsettings|r) |cFFD700- Toggle Account-Wide Settings|r\n"
-            cmds2 = cmds2 .. "|cF5FF33/pmemwipefav|r (or |cF5FF33/pmemdeleteallfavorites|r) |cFFD700- Clear all favorites|r\n"
-            cmds2 = cmds2 .. "|cFF8F33/pmemreset|r (or |cFF8F33/pmemresetdefaults|r) |cFFD700- Reset settings to default|r\n"
-            cmds2 = cmds2 .. "|c8F33FF/pmemhudscale <val>|r (or |c8F33FF/pmemsethudscale|r) |cFFD700- Set HUD UI scale|r\n"
-            cmds2 = cmds2 .. "|c33FF8F/pmemmenuscale <val>|r (or |c33FF8F/pmemsetmenuscale|r) |cFFD700- Set Menu UI scale|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemcur|r (or |cFF0000/pmemcurrent|r) |cFFD700- Print current looping memento|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemlist|r (or |cFF0000/pmemlearned|r) |cFFD700- List all learned data|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemplay <name>|r (or |cFF0000/pmemactivatelearned|r) |cFFD700- Force loop a learned memento|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemwipe|r (or |cFF0000/pmemdeletealllearned|r) |cFFD700- Wipe all learned data permanently|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmempause|r (or |cFF0000/pmemtogglepause|r) |cFFD700- Pause/Resume the current loop|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemcombat|r (or |cFF0000/pmemloopincombat|r) |cFFD700- Toggle Loop in Combat|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemperf|r (or |cFF0000/pmemperformancemode|r) |cFFD700- Toggle Performance Mode|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemautoclean|r (or |cFF0000/pmemautocleanup|r) |cFFD700- Toggle Auto Lua Cleanup|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemacct|r (or |cFF0000/pmemuseaccountsettings|r) |cFFD700- Toggle Account-Wide Settings|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemwipefav|r (or |cFF0000/pmemdeleteallfavorites|r) |cFFD700- Clear all favorites|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemreset|r (or |cFF0000/pmemresetdefaults|r) |cFFD700- Reset settings to default|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemhudscale <val>|r (or |cFF0000/pmemsethudscale|r) |cFFD700- Set HUD UI scale|r\n"
+            cmds2 = cmds2 .. "|cFFFFFF/pmemmenuscale <val>|r (or |cFF0000/pmemsetmenuscale|r) |cFFD700- Set Menu UI scale|r\n"
             if not IsConsoleUI() then
-                cmds2 = cmds2 .. "|cFF3333/pmemlogs|r (or |cFF3333/pmemchatlogs|r) |cFFD700- Toggle Chat Logs|r\n"
-                cmds2 = cmds2 .. "|c33FFFF/pmemnospin|r (or |c33FFFF/pmemstopspinning|r) |cFFD700- Toggle Stop Spinning in Menus|r\n"
-                cmds2 = cmds2 .. "|cFFFF33/pmsyncon|r (or |cFFFF33/pmemsyncenable|r) |cFFD700- Toggle Sync Listening|r\n"
-                cmds2 = cmds2 .. "|cFF00FF/pmsyncdelay|r (or |cFF00FF/pmemsyncrandomdelay|r) |cFFD700- Toggle Random Sync Delay|r\n"
+                cmds2 = cmds2 .. "|cFFFFFF/pmemlogs|r (or |cFF0000/pmemchatlogs|r) |cFFD700- Toggle Chat Logs|r\n"
+                cmds2 = cmds2 .. "|cFFFFFF/pmemnospin|r (or |cFF0000/pmemstopspinning|r) |cFFD700- Toggle Stop Spinning in Menus|r\n"
+                cmds2 = cmds2 .. "|cFFFFFF/pmsyncon|r (or |cFF0000/pmemsyncenable|r) |cFFD700- Toggle Sync Listening|r\n"
+                cmds2 = cmds2 .. "|cFFFFFF/pmsyncdelay|r (or |cFF0000/pmemsyncrandomdelay|r) |cFFD700- Toggle Random Sync Delay|r"
             end
-            PM:Log(cmds2, false)
             
-            local listStr = "|c00FF00Supported Mementos:|r\n"
+            local listStr = "|c00FF00Supported Mementos:|r "
             local sortedActive = {}
             for id, data in pairs(self.mementoData) do
                 if IsCollectibleUnlocked(id) then table.insert(sortedActive, data) end
             end
             table.sort(sortedActive, function(a,b) return a.name < b.name end)
             
-            local palette = {"FF5733", "33FF57", "3357FF", "F333FF", "FF33A8", "33FFF5", "F5FF33", "FF8F33", "8F33FF", "33FF8F", "FF3333", "33FFFF", "FFFF33", "FF00FF", "00FFCC", "CC00FF", "FFCC00", "00BFFF", "FF1493", "7CFC00"}
-            
             for _, data in ipairs(sortedActive) do
-                local randomColor = palette[math.random(#palette)]
-                listStr = listStr .. "- |c" .. randomColor .. data.name .. "|r (" .. (data.dur/1000) .. "s)\n"
+                listStr = listStr .. "- |cFFFFFF" .. data.name .. "|r |cFFD700(" .. (data.dur/1000) .. "s)|r "
             end
             
-            PM:Log(listStr, false)
+            if CHAT_SYSTEM then
+                CHAT_SYSTEM:AddMessage("|cFF9900[PM]|r\n" .. cmds1)
+                CHAT_SYSTEM:AddMessage(" ")
+                CHAT_SYSTEM:AddMessage(" ")
+                CHAT_SYSTEM:AddMessage(" ")
+                CHAT_SYSTEM:AddMessage("|cFF9900[PM]|r\n" .. cmds2)
+                CHAT_SYSTEM:AddMessage(" ")
+                CHAT_SYSTEM:AddMessage(" ")
+                CHAT_SYSTEM:AddMessage(" ")
+                CHAT_SYSTEM:AddMessage("|cFF9900[PM]|r\n" .. listStr)
+            end
             return
         end
         
