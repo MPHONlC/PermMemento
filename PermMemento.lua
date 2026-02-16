@@ -171,7 +171,7 @@ function PM:GetTopMementos()
     return result
 end
 
--- Compiles the Live Statistics text for the settings menu
+-- Live statistics
 function PM:GetStatsText()
     local currentMB = 0
     if IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB then
@@ -641,7 +641,6 @@ end
 function PM:TriggerMemoryCheck(checkType, delay)
     if not self.settings.autoCleanup then return end
     if self.memState == 1 or self.isMemCheckQueued then return end -- Prevent overlapping checks if a cleanup is already happening
-
     -- Check if memory is above platform threshold. If not, IGNORE.
     local currentMB = IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
     local threshold = IsConsoleUI() and 85 or 400
