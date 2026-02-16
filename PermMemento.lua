@@ -1652,7 +1652,7 @@ function PM:Init(eventCode, addOnName)
     end
     SLASH_COMMANDS["/permmemento"] = SLASH_COMMANDS["/pmem"]
 
-    -- Compact Command Aliases + Long Versions
+    -- Command Aliases
     SLASH_COMMANDS["/pmemstop"] = function()
         self.settings.activeId = nil; self.loopToken = (self.loopToken or 0) + 1; self:Log("Auto-loop Stopped", true, "stop"); self.pendingId = 0; PM.nextFireTime = 0
     end
