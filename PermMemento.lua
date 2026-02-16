@@ -653,7 +653,7 @@ function PM:TriggerMemoryCheck(checkType, delay)
 
         self.isMemCheckQueued = true -- Lock the queue
 
-        -- Start delay
+        -- Start delay 
         zo_callLater(function()
             self.isMemCheckQueued = false
             if self.memState == 1 then return end
@@ -855,7 +855,7 @@ function PM:Loop(loopID)
         if not self.acctSaved.mementoUsage then self.acctSaved.mementoUsage = {} end
         self.acctSaved.mementoUsage[self.settings.activeId] = (self.acctSaved.mementoUsage[self.settings.activeId] or 0) + 1
         
-        -- Attempt a background save
+        -- Attempt a background hard-disk save to protect lifetime stats
         self:TriggerPrioritySave()
     end
     
@@ -900,7 +900,7 @@ function PM:StartLoop(collectibleId, ignoreRestriction)
             if not self.acctSaved.mementoUsage then self.acctSaved.mementoUsage = {} end
             self.acctSaved.mementoUsage[collectibleId] = (self.acctSaved.mementoUsage[collectibleId] or 0) + 1
             
-            -- Attempt a background save
+            -- Attempt a background hard-disk save to protect lifetime stats
             self:TriggerPrioritySave()
         end
         local nextDelay = data.dur + 1000 + ((self.settings.delayIdle or 0) * 1000)
@@ -969,6 +969,209 @@ function PM:HookGameUI()
             end
         end
     end)
+end
+-- Group Sync
+function PM.Sync:Initialize()
+  SLASH_COMMANDS["/pmsync"] = function(argString)
+    if not argString or string.len(argString) < 1 then PM:Log("Usage: /pmsync <searchterm>, /pmsync random OR /pmsync stop", true, "error"); return end
+    local cmd = string.lower(argString)
+    
+    if cmd == "stop" then
+         local function TryChat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
+         if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
+         if PM.settings then PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1 end
+         PM.nextFireTime = 0 
+         return
+    elseif cmd == "random" then 
+         local randId = PM:GetRandomAny(); if randId then
+            local link = GetCollectibleLink(randId, LINK_STYLE_BRACKETS)
+            local function TryChat() StartChatInput(string.format("PM %s", link), CHAT_CHANNEL_PARTY) end
+            if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry(string.format("PM %s", link)) end
+            PM:Log("Sent Random Sync Request", true, "sync")
+            return
+         end
+    end
+    
+    for i = 1, GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO) do
+      local id = GetCollectibleIdFromType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO, i)
+      if id and IsCollectibleUnlocked(id) then
+          if string.find(string.lower(GetCollectibleName(id)), cmd, 1, true) then
+            local link = GetCollectibleLink(id, LINK_STYLE_BRACKETS)
+            local function TryChat() StartChatInput(string.format("PM %s", link), CHAT_CHANNEL_PARTY) end
+            if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry(string.format("PM %s", link)) end
+            return
+          end
+      end
+    end
+    PM:Log("Memento not found or not unlocked.", true, "error")
+  end
+  SLASH_COMMANDS["/permmementosync"] = SLASH_COMMANDS["/pmsync"]
+
+  local function attemptCollectible(id)
+    if not IsCollectibleUsable(id) then return end
+    if not PM.settings then return end 
+    if not PM.settings.sync.enabled then return end
+    if IsUnitInCombat and IsUnitInCombat("player") and PM.settings.sync.ignoreInCombat then return end
+    if PM.settings.activeId then
+         PM:Log("Sync received! Queuing after current loop: " .. GetCollectibleName(id), true, "sync")
+         PM.pendingSyncId = id
+    else
+         local remaining = 0
+         if GetCollectibleCooldownAndDuration then remaining, _ = GetCollectibleCooldownAndDuration(id) end
+         if remaining and remaining > 0 then
+             PM:Log("Sync received but on cooldown: " .. GetCollectibleName(id), true, "sync")
+             zo_callLater(function() attemptCollectible(id) end, remaining + 1000)
+         else
+             PM:Log("Sync received! Playing: " .. GetCollectibleName(id), true, "sync")
+             PM.isSyncFiring = true
+             UseCollectible(id)
+             zo_callLater(function() PM.isSyncFiring = false end, 1000)
+         end
+    end
+  end
+
+  local function onSyncChatMessage(eventCode, channelType, fromName, text)
+    if channelType ~= CHAT_CHANNEL_PARTY then return end
+    local cleanName = zo_strformat("<<1>>", fromName)
+    if string.match(text, "^PM STOP") then
+        if cleanName == GetUnitDisplayName("player") then PM:Log("Sent Group Stop Command.", true, "sync"); return end
+        if PM.settings then PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1; PM.pendingSyncId = nil; PM.nextFireTime = 0; PM:Log("Group Stop received from " .. cleanName, true, "stop") end
+        return
+    end
+    local id
+    for collectibleId in string.gmatch(text, "^PM |H1:collectible:(%d+)|h|h$") do id = tonumber(collectibleId) end
+    if not id then for collectibleId in string.gmatch(text, "^PM (%d+)$") do id = tonumber(collectibleId) end end
+    if not id or not IsCollectibleUnlocked(id) then return end
+    if cleanName == GetUnitDisplayName("player") then PM:Log("Sent Group Sync Command.", true, "sync"); return end
+    if not PM.settings then return end 
+    local delay = PM.settings.sync.delay or 0
+    if PM.settings.sync.random then delay = math.random(0, delay) end
+    if delay == 0 then attemptCollectible(id) else zo_callLater(function() attemptCollectible(id) end, delay * 1000) end
+  end
+  EVENT_MANAGER:UnregisterForEvent(PM.name .. "_Sync", EVENT_CHAT_MESSAGE_CHANNEL)
+  EVENT_MANAGER:RegisterForEvent(PM.name .. "_Sync", EVENT_CHAT_MESSAGE_CHANNEL, onSyncChatMessage)
+end
+
+function PM:GetCharacterList(skipCurrent)
+    local names, ids = {}, {}
+    local sv = _G["PermMementoSaved"]; local acct = GetDisplayName(); local currentId = GetCurrentCharacterId()
+    local world = GetWorldName() or "Default"
+    
+    if sv and sv[world] and sv[world][acct] then
+        for id, data in pairs(sv[world][acct]) do
+            if id ~= "$AccountWide" and type(data) == "table" and data["Character"] then
+                if not skipCurrent or id ~= currentId then
+                    local cName = data["$LastCharacterName"] or zo_strformat("<<1>>", GetCharacterNameById(id))
+                    if not cName or cName == "" then cName = "Unknown ID: " .. id end
+                    table.insert(names, cName); table.insert(ids, id)
+                end
+            end
+        end
+    end
+    if #names == 0 then return {"None"}, {""} end
+    return names, ids
+end
+
+function PM:CopyCharacterSettings(sourceId)
+    if not sourceId or sourceId == "" then PM:Log("No character selected to copy.", true, "error"); return end
+    local acct = GetDisplayName()
+    local world = GetWorldName() or "Default"
+    
+    local src = _G["PermMementoSaved"][world][acct][sourceId]["Character"]
+    if src then 
+        _G["PermMementoSaved"][world][acct][GetCurrentCharacterId()]["Character"] = ZO_DeepTableCopy(src)
+        ReloadUI("ingame") 
+    end
+end
+
+function PM:DeleteCharacterSettings(targetId)
+    if not targetId or targetId == "" then PM:Log("No character selected for deletion.", true, "error"); return end
+    if targetId == GetCurrentCharacterId() then PM:Log("Cannot delete current character's data while logged in.", true, "error"); return end
+    
+    local acct = GetDisplayName()
+    local world = GetWorldName() or "Default"
+    
+    if _G["PermMementoSaved"][world] and _G["PermMementoSaved"][world][acct] then
+        _G["PermMementoSaved"][world][acct][targetId] = nil
+        ReloadUI("ingame")
+    end
+end
+
+function PM:DeleteLearnedData(targetId)
+    if not targetId or targetId == 0 then return end
+    if self.acctSaved and self.acctSaved.learnedData then
+        self.acctSaved.learnedData[targetId] = nil; PM:Log("Learned data deleted.", true, "settings"); PM.menuBuilt = false; ReloadUI("ingame")
+    end
+end
+
+function PM:DeleteAllLearnedData()
+    if self.acctSaved and self.acctSaved.learnedData then
+        self.acctSaved.learnedData = {}; PM:Log("ALL Learned data deleted.", true, "settings"); PM.menuBuilt = false; ReloadUI("ingame")
+    end
+end
+
+function PM:UpdateFavoritesChoices()
+    PM:UpdateFavCount()
+    
+    PM.favAllNames, PM.favAllIDs = {}, {}
+    PM.favCurrentNames, PM.favCurrentIDs = {"None"}, {0}
+    
+    local sortedAll = {}
+    for i = 1, GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO) do
+        local id = GetCollectibleIdFromType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO, i)
+        if id and IsCollectibleUnlocked(id) then table.insert(sortedAll, {name=GetCollectibleName(id), id=id}) end
+    end
+    table.sort(sortedAll, function(a,b) return a.name < b.name end)
+    for _, t in ipairs(sortedAll) do
+        local name = t.name
+        local data = PM:GetData(t.id)
+        if data then name = name .. string.format(" (%ds)", data.dur / 1000) end
+        
+        if PM.settings.favorites[t.id] then name = "|c00FF00" .. name .. " (Fav)|r" end
+        table.insert(PM.favAllNames, name); table.insert(PM.favAllIDs, t.id)
+    end
+    
+    local sortedFavs = {}
+    if self.settings and self.settings.favorites then
+        for id, enabled in pairs(self.settings.favorites) do
+            if enabled and IsCollectibleUnlocked(id) then table.insert(sortedFavs, {name=GetCollectibleName(id), id=id}) end
+        end
+    end
+    table.sort(sortedFavs, function(a,b) return a.name < b.name end)
+    for _, t in ipairs(sortedFavs) do 
+        local name = t.name
+        local data = PM:GetData(t.id)
+        if data then name = name .. string.format(" (%ds)", data.dur / 1000) end
+        table.insert(PM.favCurrentNames, name); table.insert(PM.favCurrentIDs, t.id) 
+    end
+    
+    if PM.ctrlFavCandidateDropdown then 
+        PM.ctrlFavCandidateDropdown:UpdateChoices(PM.favAllNames, PM.favAllIDs)
+        PM.ctrlFavCandidateDropdown:UpdateValue()
+    end
+    if PM.ctrlFavRemoveDropdown then 
+        PM.ctrlFavRemoveDropdown:UpdateChoices(PM.favCurrentNames, PM.favCurrentIDs)
+        PM.ctrlFavRemoveDropdown:UpdateValue()
+    end
+end
+
+function PM:ToggleFavorite(id)
+    if not id or id == 0 then return end
+    if not self.settings.favorites then self.settings.favorites = {} end
+    if self.settings.favorites[id] then
+        self.settings.favorites[id] = nil
+        PM:Log("Removed from Favorites: " .. GetCollectibleName(id), true, "settings")
+    else
+        self.settings.favorites[id] = true
+        PM:Log("Added to Favorites: " .. GetCollectibleName(id), true, "settings")
+    end
+    PM:UpdateFavoritesChoices()
+end
+
+function PM:DeleteAllFavorites()
+    if self.settings then self.settings.favorites = {} end
+    PM:Log("All Favorites Cleared.", true, "settings")
+    PM:UpdateFavoritesChoices()
 end
 
 -- Refresh UI Dropdown Data
@@ -1374,6 +1577,7 @@ function PM:Init(eventCode, addOnName)
 
             PM:Log(cmds, false)
             PM:Log("Type |c00FF00/pmem <name>|r to activate a specific memento. Example: |c00FF00/pmem alma|r", false)
+            PM:Log("Note: You can also use long names like |c00FF00/permmemento|r, |c00FF00/pmemcleanup|r, etc.", false)
             
             local listStr = "|c00FF00Supported Mementos:|r\n"
             local sortedActive = {}
@@ -1408,59 +1612,90 @@ function PM:Init(eventCode, addOnName)
         end
         if not found then self:Log("Memento not found or not supported.", true, "error") end
     end
+    SLASH_COMMANDS["/permmemento"] = SLASH_COMMANDS["/pmem"]
     
-    -- Command Aliases
+    -- Compact Command Aliases + Long Versions
     SLASH_COMMANDS["/pmemstop"] = function()
         self.settings.activeId = nil; self.loopToken = (self.loopToken or 0) + 1; self:Log("Auto-loop Stopped", true, "stop"); self.pendingId = 0; PM.nextFireTime = 0
     end
+    SLASH_COMMANDS["/permmementostop"] = SLASH_COMMANDS["/pmemstop"]
+
     SLASH_COMMANDS["/pmemclean"] = function() PM:RunManualCleanup(false) end
+    SLASH_COMMANDS["/pmemcleanup"] = SLASH_COMMANDS["/pmemclean"]
+
     SLASH_COMMANDS["/pmemcsacls"] = function() 
         self.settings.csaCleanupEnabled = not self.settings.csaCleanupEnabled
         self:Log("Auto-Cleanup CSA: " .. (self.settings.csaCleanupEnabled and "ON" or "OFF"), true, "settings") 
     end
+    SLASH_COMMANDS["/pmemcsacleanup"] = SLASH_COMMANDS["/pmemcsacls"]
+
     SLASH_COMMANDS["/pmemui"] = function() 
         self.settings.ui.hidden = not self.settings.ui.hidden; PM:UpdateUIScenes()
         self:Log("UI Visibility: " .. (self.settings.ui.hidden and "HIDDEN" or "VISIBLE"), true, "ui") 
     end
+    SLASH_COMMANDS["/pmemtoggleui"] = SLASH_COMMANDS["/pmemui"]
+
     SLASH_COMMANDS["/pmemhud"] = function() 
         self.settings.showInHUD = not self.settings.showInHUD; PM:UpdateUIScenes()
         self:Log("UI Mode: " .. (self.settings.showInHUD and "HUD" or "Menu"), true, "settings") 
     end
+    SLASH_COMMANDS["/pmemuimode"] = SLASH_COMMANDS["/pmemhud"]
+
     SLASH_COMMANDS["/pmemrandzone"] = function() 
         self.settings.randomOnZone = not self.settings.randomOnZone
         self:Log("Random on Zone: " .. (self.settings.randomOnZone and "ON" or "OFF"), true, "settings") 
     end
+    SLASH_COMMANDS["/pmemrandomzonechange"] = SLASH_COMMANDS["/pmemrandzone"]
+
     SLASH_COMMANDS["/pmemrandlog"] = function() 
         self.settings.randomOnLogin = not self.settings.randomOnLogin
         self:Log("Random on Login: " .. (self.settings.randomOnLogin and "ON" or "OFF"), true, "settings") 
     end
+    SLASH_COMMANDS["/pmemrandomlogin"] = SLASH_COMMANDS["/pmemrandlog"]
+
     SLASH_COMMANDS["/pmemrand"] = function() 
         local randId = self:GetRandomSupported()
         if randId then self.settings.activeId = randId; self:Log("Randomly Selected: " .. PM:GetData(randId).name, true, "random"); self:StartLoop(randId) end 
     end
+    SLASH_COMMANDS["/pmemrandom"] = SLASH_COMMANDS["/pmemrand"]
+
     SLASH_COMMANDS["/pmemrandlrn"] = function() 
         local randId = self:GetRandomLearned()
         if randId then self.settings.activeId = randId; self:Log("Randomly Selected (Learned): " .. PM:GetData(randId).name, true, "random"); self:StartLoop(randId) 
         else self:Log("No learned data found.", true, "error") end 
     end
+    SLASH_COMMANDS["/pmemrandomlearned"] = SLASH_COMMANDS["/pmemrandlrn"]
+
     SLASH_COMMANDS["/pmemcsa"] = function() 
         self.settings.csaEnabled = not self.settings.csaEnabled
         self:Log("Screen Announcements: " .. (self.settings.csaEnabled and "ON" or "OFF"), true, "settings") 
     end
+    SLASH_COMMANDS["/pmemtogglecsa"] = SLASH_COMMANDS["/pmemcsa"]
+
     SLASH_COMMANDS["/pmemfree"] = function() 
         self.settings.unrestricted = not self.settings.unrestricted
         self:Log("Unrestricted Mode: " .. (self.settings.unrestricted and "ON" or "OFF"), true, "settings") 
     end
+    SLASH_COMMANDS["/pmemunrestrict"] = SLASH_COMMANDS["/pmemfree"]
+
     SLASH_COMMANDS["/pmemlock"] = function() 
         self.settings.ui.locked = not self.settings.ui.locked; self.uiWindow:SetMovable(not self.settings.ui.locked)
         self:Log("UI " .. (self.settings.ui.locked and "Locked" or "Unlocked"), true, "ui") 
     end
+    SLASH_COMMANDS["/pmemuilock"] = SLASH_COMMANDS["/pmemlock"]
+
     SLASH_COMMANDS["/pmemresetui"] = function() 
         self.settings.ui.left = self.defaults.ui.left; self.settings.ui.top = self.defaults.ui.top; self.settings.uiMenu.left = self.defaults.uiMenu.left; self.settings.uiMenu.top = self.defaults.uiMenu.top
         self:UpdateUIAnchor(); self:Log("UI Position Reset.", true, "ui") 
     end
+    SLASH_COMMANDS["/pmemuireset"] = SLASH_COMMANDS["/pmemresetui"]
+
     SLASH_COMMANDS["/pmemwipe"] = function() PM:DeleteAllLearnedData() end
+    SLASH_COMMANDS["/pmemdeletealllearned"] = SLASH_COMMANDS["/pmemwipe"]
+
     SLASH_COMMANDS["/pmemscan"] = function() PM:AutoScanMementos() end
+    SLASH_COMMANDS["/pmemautolearn"] = SLASH_COMMANDS["/pmemscan"]
+
     SLASH_COMMANDS["/pmemlist"] = function() 
         if self.acctSaved and self.acctSaved.learnedData then 
             local msg = "Learned Data:\n"; local count = 0
@@ -1468,6 +1703,8 @@ function PM:Init(eventCode, addOnName)
             if count == 0 then PM:Log("Learned Data is empty.", false) else PM:Log(msg, false) end
         else PM:Log("Learned Data is empty.", false) end
     end
+    SLASH_COMMANDS["/pmemlearned"] = SLASH_COMMANDS["/pmemlist"]
+
     SLASH_COMMANDS["/pmemplay"] = function(extra) 
         local term = extra:lower()
         if term and term ~= "" then 
@@ -1481,10 +1718,13 @@ function PM:Init(eventCode, addOnName)
             self:Log("Learned Memento not found: " .. term, true, "error") 
         end 
     end
+    SLASH_COMMANDS["/pmemactivatelearned"] = SLASH_COMMANDS["/pmemplay"]
+
     SLASH_COMMANDS["/pmemcur"] = function() 
         local data = PM:GetData(self.settings.activeId)
         if self.settings.activeId and data then PM:Log("Active: " .. (data.name or "Unknown"), false) else PM:Log("Inactive", false) end 
     end
+    SLASH_COMMANDS["/pmemcurrent"] = SLASH_COMMANDS["/pmemcur"]
 
     -- Toggle Slash Commands
     SLASH_COMMANDS["/pmempause"] = function()
@@ -1492,25 +1732,37 @@ function PM:Init(eventCode, addOnName)
         if self.settings.paused then self:Log("Auto-loop PAUSED.", true, "stop")
         else self:Log("Auto-loop RESUMED.", true, "activation"); if self.settings.activeId then self:Loop(self.loopToken) end end
     end
+    SLASH_COMMANDS["/pmemtogglepause"] = SLASH_COMMANDS["/pmempause"]
+
     SLASH_COMMANDS["/pmemcombat"] = function()
         self.settings.loopInCombat = not self.settings.loopInCombat
         self:Log("Loop In Combat: " .. (self.settings.loopInCombat and "ON" or "OFF"), true, "settings")
     end
+    SLASH_COMMANDS["/pmemloopincombat"] = SLASH_COMMANDS["/pmemcombat"]
+
     SLASH_COMMANDS["/pmemperf"] = function()
         self.settings.performanceMode = not self.settings.performanceMode
         self:Log("Performance Mode: " .. (self.settings.performanceMode and "ON" or "OFF"), true, "settings")
     end
+    SLASH_COMMANDS["/pmemperformancemode"] = SLASH_COMMANDS["/pmemperf"]
+
     SLASH_COMMANDS["/pmemautoclean"] = function()
         self.settings.autoCleanup = not self.settings.autoCleanup
         self:Log("Auto Lua Cleanup: " .. (self.settings.autoCleanup and "ON" or "OFF"), true, "settings")
     end
+    SLASH_COMMANDS["/pmemautocleanup"] = SLASH_COMMANDS["/pmemautoclean"]
+
     SLASH_COMMANDS["/pmemacct"] = function()
         self.charSaved.useAccountSettings = not self.charSaved.useAccountSettings
         self:UpdateSettingsReference()
         self:Log("Account-Wide Settings: " .. (self.charSaved.useAccountSettings and "ON" or "OFF") .. " (Reloading UI...)", true, "settings")
         zo_callLater(function() ReloadUI("ingame") end, 2000)
     end
+    SLASH_COMMANDS["/pmemuseaccountsettings"] = SLASH_COMMANDS["/pmemacct"]
+
     SLASH_COMMANDS["/pmemwipefav"] = function() self:DeleteAllFavorites() end
+    SLASH_COMMANDS["/pmemdeleteallfavorites"] = SLASH_COMMANDS["/pmemwipefav"]
+
     SLASH_COMMANDS["/pmemreset"] = function()
         local d = self.defaults
         self.settings.activeId = d.activeId; self.settings.paused = d.paused; self.settings.logEnabled = d.logEnabled
@@ -1527,53 +1779,49 @@ function PM:Init(eventCode, addOnName)
         self:Log("Settings reset to defaults. Reloading UI...", true, "settings")
         zo_callLater(function() ReloadUI("ingame") end, 2000)
     end
+    SLASH_COMMANDS["/pmemresetdefaults"] = SLASH_COMMANDS["/pmemreset"]
+
     SLASH_COMMANDS["/pmemhudscale"] = function(extra)
         local val = tonumber(extra)
         if val and val >= 0.5 and val <= 2.0 then self.settings.ui.scale = val; self:UpdateUIAnchor(); self:Log("HUD Scale set to: " .. val, true, "ui")
         else self:Log("Usage: /pmemhudscale <0.5 to 2.0>", true, "error") end
     end
+    SLASH_COMMANDS["/pmemsethudscale"] = SLASH_COMMANDS["/pmemhudscale"]
+
     SLASH_COMMANDS["/pmemmenuscale"] = function(extra)
         local val = tonumber(extra)
         if val and val >= 0.5 and val <= 2.0 then self.settings.uiMenu.scale = val; self:UpdateUIAnchor(); self:Log("Menu Scale set to: " .. val, true, "ui")
         else self:Log("Usage: /pmemmenuscale <0.5 to 2.0>", true, "error") end
     end
+    SLASH_COMMANDS["/pmemsetmenuscale"] = SLASH_COMMANDS["/pmemmenuscale"]
 
     if not IsConsoleUI() then
         SLASH_COMMANDS["/pmemlogs"] = function()
             self.settings.logEnabled = not self.settings.logEnabled
             self:Log("Chat Logs: " .. (self.settings.logEnabled and "ON" or "OFF"), true, "settings")
         end
+        SLASH_COMMANDS["/pmemchatlogs"] = SLASH_COMMANDS["/pmemlogs"]
+
         SLASH_COMMANDS["/pmemnospin"] = function()
             self.settings.stopSpinning = not self.settings.stopSpinning
             self:ApplySpinStop()
             self:Log("Stop Spinning in Menus: " .. (self.settings.stopSpinning and "ON" or "OFF"), true, "settings")
         end
+        SLASH_COMMANDS["/pmemstopspinning"] = SLASH_COMMANDS["/pmemnospin"]
+
         SLASH_COMMANDS["/pmsyncon"] = function()
             self.settings.sync.enabled = not self.settings.sync.enabled
             self:Log("Sync Listening: " .. (self.settings.sync.enabled and "ON" or "OFF"), true, "settings")
         end
+        SLASH_COMMANDS["/pmemsyncenable"] = SLASH_COMMANDS["/pmsyncon"]
+
         SLASH_COMMANDS["/pmsyncdelay"] = function()
             self.settings.sync.random = not self.settings.sync.random
             self:Log("Random Sync Delay: " .. (self.settings.sync.random and "ON" or "OFF"), true, "settings")
         end
+        SLASH_COMMANDS["/pmemsyncrandomdelay"] = SLASH_COMMANDS["/pmsyncdelay"]
     end
     
-    -- Sync Commands
-    SLASH_COMMANDS["/pmsyncstop"] = function() 
-        local function TryChat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
-        if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
-        if self.settings then self.settings.activeId = nil; self.loopToken = (self.loopToken or 0) + 1 end
-        PM.nextFireTime = 0 
-    end
-    SLASH_COMMANDS["/pmsyncrand"] = function() 
-        local randId = self:GetRandomAny()
-        if randId then
-            local link = GetCollectibleLink(randId, LINK_STYLE_BRACKETS)
-            local function TryChat() StartChatInput(string.format("PM %s", link), CHAT_CHANNEL_PARTY) end
-            if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry(string.format("PM %s", link)) end
-            self:Log("Sent Random Sync Request", true, "sync")
-        end
-    end
 end
 
 function PM:OnPlayerActivated()
