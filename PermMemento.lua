@@ -3,14 +3,14 @@
 -----------------------------------------------------------
 local PM = {
     name = "PermMemento",
-    version = "0.8.2",
+    version = "0.8.3",
     -- Default settings
     defaults = {
         activeId = nil, paused = false, logEnabled = not IsConsoleUI(), csaEnabled = true,
         csaCleanupEnabled = true,
         randomOnLogin = false, randomOnZone = false, loopInCombat = false, performanceMode = true,
         useAccountSettings = false, showInHUD = true, unrestricted = false, autoCleanup = true,
-        lastVersion = "0.8.2", versionHistory = {},
+        lastVersion = "0.8.3", versionHistory = {},
         learnedData = {}, 
         favorites = {}, 
         stopSpinning = true, 
@@ -45,6 +45,7 @@ local PM = {
     currentFavCount = 0,
     currentSVSizeKB = 0,
     nextRandomPrecalc = nil,
+    lastPrioritySaveTime = 0,
     
     -- Memory Auto Cleanup States
     memState = 0, -- 0=idle, 1=cleaning, 2=freed, 3=cooldown
@@ -99,6 +100,30 @@ PM.mementoData = {
     [13105] = {id = 13105, refID = 229989, dur = 60000,  name = "Surprising Snowglobe"},
     [13736] = {id = 13736, refID = 242404, dur = 195000,  name = "Shimmering Gala Gown Veil"},
 }
+-- LibAddonMenu-2.0 Version
+local REQUIRED_LAM_VERSION = 41
+
+-- save without reloading UI
+function PM:TriggerPrioritySave()
+    local now = GetGameTimeMilliseconds()
+    if (now - self.lastPrioritySaveTime) >= 900000 then
+        GetAddOnManager():RequestAddOnSavedVariablesPrioritySave(self.name)
+        self.lastPrioritySaveTime = now
+    end
+end
+
+-- Check if LibAddonMenu-2.0 is running and get its loaded version
+local function GetLAMVersion()
+    local am = GetAddOnManager()
+    for i = 1, am:GetNumAddOns() do
+        local name, _, _, _, _, state = am:GetAddOnInfo(i)
+        if name == "LibAddonMenu-2.0" and state == ADDON_STATE_ENABLED then
+            return true, am:GetAddOnVersion(i)
+        end
+    end
+    return false, 0
+end
+
 -- Return memento data or savedvariables data
 function PM:GetData(id)
     if self.mementoData[id] then return self.mementoData[id] end
@@ -127,6 +152,7 @@ function PM:EstimateTableSize(t, seen)
     end
     return size
 end
+
 -- print stats on the statistics UI panel
 function PM:GetTopMementos()
     if not self.acctSaved or not self.acctSaved.mementoUsage then return "\n  None" end
@@ -145,6 +171,7 @@ function PM:GetTopMementos()
     return result
 end
 
+-- Compiles the Live Statistics text for the settings menu
 function PM:GetStatsText()
     local currentMB = 0
     if IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB then
@@ -182,11 +209,14 @@ function PM:GetStatsText()
         if svSizeKB > 5000 then svWarning = "|cFFA500(Large File)|r" else svWarning = "|c00FF00(Safe)|r" end
     end
     
+    local _, lamVersion = GetLAMVersion()
+    local lamText = lamVersion > 0 and tostring(lamVersion) or "Not Installed"
+    
     local topMementos = PM:GetTopMementos()
 
     return string.format(
-        "Installed Since: %s\nVersion History: %s\nMax Lua Memory: %s\nGlobal Addon Memory: %.2f MB %s\nPermMemento Data Footprint: ~%.2f MB (Estimated)\nSV Disk Size: ~%d KB (%s) %s\nSession Loops: %d | Total Loops: %d\nFavorites: %d | Learned: %d\n\nMost Used Mementos:%s", 
-        installDate, vHistoryText, luaLimitTxt, currentMB, memWarning, pmMemMB, svSizeKB, svStatus, svWarning, PM.sessionLoops, totalLoops, favCount, PM.learnedCount, topMementos
+        "Installed Since: %s\nVersion History: %s\nLibAddonMenu-2.0 Version: %s\nMax Lua Memory: %s\nCurrent Global Memory: %.2f MB %s\nPermMemento Data Footprint: ~%.2f MB (Estimated)\nSV Disk Size: ~%d KB (%s) %s\nSession Loops: %d | Total Loops: %d\nFavorites: %d | Learned: %d\n\nMost Used Mementos:%s", 
+        installDate, vHistoryText, lamText, luaLimitTxt, currentMB, memWarning, pmMemMB, svSizeKB, svStatus, svWarning, PM.sessionLoops, totalLoops, favCount, PM.learnedCount, topMementos
     )
 end
 
@@ -686,24 +716,24 @@ function PM:OnEffectChanged(eventCode, changeType, effectSlot, effectName, unitT
     if not self.settings or not self.settings.activeId then return end
     
     if (self.settings.unrestricted or self.isScanning) and changeType == EFFECT_RESULT_GAINED then
-          local activeId = self.settings.activeId
-          if not self.mementoData[activeId] and (self.acctSaved and self.acctSaved.learnedData and not self.acctSaved.learnedData[activeId]) then
-              local remaining = 0
-              local cooldownDur = 10000
-              if GetCollectibleCooldownAndDuration then remaining, cooldownDur = GetCollectibleCooldownAndDuration(activeId) end
-              local durMS = (cooldownDur > 0) and cooldownDur or 10000 
-              local name = GetCollectibleName(activeId)
-              if not self.acctSaved.learnedData then self.acctSaved.learnedData = {} end
-              local refId = 0
-              local collectibleData = ZO_COLLECTIBLE_DATA_MANAGER:GetCollectibleDataById(activeId)
-              if collectibleData and collectibleData.GetReferenceId then refId = collectibleData:GetReferenceId() end
-              if refId == 0 then refId = abilityId end 
+         local activeId = self.settings.activeId
+         if not self.mementoData[activeId] and (self.acctSaved and self.acctSaved.learnedData and not self.acctSaved.learnedData[activeId]) then
+             local remaining = 0
+             local cooldownDur = 10000
+             if GetCollectibleCooldownAndDuration then remaining, cooldownDur = GetCollectibleCooldownAndDuration(activeId) end
+             local durMS = (cooldownDur > 0) and cooldownDur or 10000 
+             local name = GetCollectibleName(activeId)
+             if not self.acctSaved.learnedData then self.acctSaved.learnedData = {} end
+             local refId = 0
+             local collectibleData = ZO_COLLECTIBLE_DATA_MANAGER:GetCollectibleDataById(activeId)
+             if collectibleData and collectibleData.GetReferenceId then refId = collectibleData:GetReferenceId() end
+             if refId == 0 then refId = abilityId end 
 
-              self.acctSaved.learnedData[activeId] = { id = activeId, refID = refId, dur = durMS, name = name }
-              self:UpdateLearnedCount()
-              local logMsg = string.format("Saved: %s\nID: %d | RefID: %d | Dur: %dms | Total Learned: %d", name, activeId, refId, durMS, self.learnedCount)
-              PM:Log(logMsg, true, "settings")
-          end
+             self.acctSaved.learnedData[activeId] = { id = activeId, refID = refId, dur = durMS, name = name }
+             self:UpdateLearnedCount()
+             local logMsg = string.format("Saved: %s\nID: %d | RefID: %d | Dur: %dms | Total Learned: %d", name, activeId, refId, durMS, self.learnedCount)
+             PM:Log(logMsg, true, "settings")
+         end
     end
     
     local data = PM:GetData(self.settings.activeId)
@@ -766,6 +796,7 @@ function PM:AutoScanMementos()
         zo_callLater(function() ReloadUI("ingame") end, 3000)
     end
 end
+
 -- Loop Logic
 function PM:Loop(loopID)
     if not self.settings or self.settings.paused or not self.settings.activeId then return end
@@ -824,6 +855,9 @@ function PM:Loop(loopID)
         self.acctSaved.totalLoops = (self.acctSaved.totalLoops or 0) + 1
         if not self.acctSaved.mementoUsage then self.acctSaved.mementoUsage = {} end
         self.acctSaved.mementoUsage[self.settings.activeId] = (self.acctSaved.mementoUsage[self.settings.activeId] or 0) + 1
+        
+        -- Attempt a background hard-disk save to protect lifetime stats
+        self:TriggerPrioritySave()
     end
     
     if self.settings.randomOnZone or self.settings.randomOnLogin then
@@ -866,6 +900,9 @@ function PM:StartLoop(collectibleId, ignoreRestriction)
             self.acctSaved.totalLoops = (self.acctSaved.totalLoops or 0) + 1
             if not self.acctSaved.mementoUsage then self.acctSaved.mementoUsage = {} end
             self.acctSaved.mementoUsage[collectibleId] = (self.acctSaved.mementoUsage[collectibleId] or 0) + 1
+            
+            -- Attempt a background hard-disk save to protect lifetime stats
+            self:TriggerPrioritySave()
         end
         local nextDelay = data.dur + 1000 + ((self.settings.delayIdle or 0) * 1000)
         if GetGameTimeMilliseconds then PM.nextFireTime = GetGameTimeMilliseconds() + nextDelay end
@@ -1136,6 +1173,7 @@ function PM:DeleteAllFavorites()
     PM:Log("All Favorites Cleared.", true, "settings")
     PM:UpdateFavoritesChoices()
 end
+
 -- Refresh UI Dropdown Data
 function PM:UpdateMenuChoices()
     PM.activeNames, PM.activeIDs = {"None"}, {0}
@@ -1177,9 +1215,27 @@ function PM:UpdateMenuChoices()
     end
     if PM.ctrlLearnedDropdown then PM.ctrlLearnedDropdown:UpdateChoices(PM.learnedListNames, PM.learnedListValues) end
 end
+
 -- LibAddonMenu UI Settings
 function PM:BuildMenu()
     if PM.menuBuilt then return end
+    -- Check LAM version and prevent menu from loading if LAM is outdated
+    local isLAMInstalled, lamVersion = GetLAMVersion()
+    if not isLAMInstalled then return end
+
+    if lamVersion < REQUIRED_LAM_VERSION then
+        zo_callLater(function()
+            local msg = "|cFFFF00Warning: LibAddonMenu is outdated (v%d). Update to (v%d) for PM menu.|r"
+            if CHAT_SYSTEM then CHAT_SYSTEM:AddMessage("|cFF9900[PM]|r " .. msg) end
+            if CENTER_SCREEN_ANNOUNCE then
+                local params = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_LARGE_TEXT, SOUNDS.NONE)
+                params:SetText(msg); params:SetLifespanMS(6000)
+                CENTER_SCREEN_ANNOUNCE:AddMessageWithParams(params)
+            end
+        end, 4000)
+        return
+    end
+
     PM.menuBuilt = true
     PM:UpdateMenuChoices()
     PM:UpdateFavoritesChoices()
@@ -1196,8 +1252,6 @@ function PM:BuildMenu()
         local consoleCmds = "|c00FF00/pmem <name>|r - Start\n|c00FF00/pmemstop|r - Stop loop\n|c00FF00/pmemrandom|r - Random\n|c00FF00/pmemautolearn|r - Auto-Scan\n|c00FF00/pmemui|r - Toggle UI\n|c00FF00/pmemuimode|r - HUD/Menu\n|c00FF00/pmemlock|r - Lock UI\n|c00FF00/pmemcsa|r - Toggle CSA\n|c00FF00/pmemunrestrict|r - Unrestrict\n|c00FF00/pmemcleanup|r - Run memory cleanup\n|c00FF00/pmemcsacleanup|r - Toggle auto cleanup CSA\n|c00FF00/pmemlearned|r - List learned data\n|c00FF00/pmsync <name>|r - Sync\n|c00FF00/pmsyncstop|r - Stop group\n|c00FF00/pmsyncrandom|r - Sync Rand"
         table.insert(optionsData, { type = "button", name = "|c00FF00COMMANDS INFO|r", tooltip = consoleCmds, func = function() end, width = "full" })
     end
-    
-    
     
     local isEU = (GetWorldName() == "EU Megaserver")
 
