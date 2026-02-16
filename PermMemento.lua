@@ -970,6 +970,7 @@ function PM:HookGameUI()
         end
     end)
 end
+-- Slash Commands
 -- Group Sync
 function PM.Sync:Initialize()
   SLASH_COMMANDS["/pmsync"] = function(argString)
