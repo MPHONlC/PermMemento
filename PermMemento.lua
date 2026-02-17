@@ -752,7 +752,7 @@ function PM:AutoScanMementos()
     local count = 0
     local total = GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO)
     
-    self:Log("Starting Silent Auto-Scan...", true, "settings")
+    self:Log("Auto-Scan...Reloading UI...", true, "settings")
     
     -- Temp Table
     self.acctSaved.recentScans = {} 
