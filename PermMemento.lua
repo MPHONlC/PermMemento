@@ -817,7 +817,7 @@ function PM:OnEffectChanged(eventCode, changeType, effectSlot, effectName, unitT
              self.acctSaved.learnedData[activeId] = { id = activeId, refID = refId, dur = durMS, name = name }
              self:UpdateLearnedCount()
              local logMsg = string.format("Saved: %s\nID: %d | RefID: %d | Dur: %dms | Total Learned: %d", name, activeId, refId, durMS, self.learnedCount)
-             PM:Log(logMsg, true, "settings")
+             PM:Log(logMsg, true, "settings", 70)
          end
     end
     
@@ -838,7 +838,7 @@ function PM:AutoScanMementos()
     local count = 0
     local total = GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO)
     
-    self:Log("Auto-Scan...Reloading UI...", true, "settings")
+    self:Log("Auto-Scan...Reloading UI...", true, "settings", 90)
     
     -- Temp Table
     self.acctSaved.recentScans = {} 
@@ -871,7 +871,7 @@ function PM:AutoScanMementos()
     self.isScanning = false
     
     if count == 0 then
-        self:Log("All owned mementos have already been learned.", true, "settings")
+        self:Log("All owned mementos have already been learned.", true, "settings", 90)
         self.acctSaved.recentScans = nil -- Delete temp table so it doesn't print again
     else
         self:UpdateLearnedCount()
@@ -926,7 +926,7 @@ function PM:Loop(loopID)
              local syncRemaining, cooldownDur = 0, 10000
              if GetCollectibleCooldownAndDuration then syncRemaining, cooldownDur = GetCollectibleCooldownAndDuration(self.pendingSyncId) end
              local waitTime = (syncRemaining > 0) and syncRemaining or cooldownDur
-             PM:Log("Sync Finished. Resuming loop in " .. math.floor(waitTime/1000) .. "s", true, "sync")
+             PM:Log("Sync Finished...", true, "sync", 80)
              self.pendingSyncId = nil; self.isSyncFiring = false; self.isLooping = false
              if GetGameTimeMilliseconds then PM.nextFireTime = GetGameTimeMilliseconds() + waitTime + 1000 end
              zo_callLater(function() self:Loop(loopID) end, waitTime + 1000)
@@ -1026,7 +1026,7 @@ function PM:HookGameUI()
                  PM.acctSaved.learnedData[collectibleId] = { id = collectibleId, refID = refId, dur = durMS, name = cName }
                  self:UpdateLearnedCount()
                  local logMsg = string.format("Saved: %s\nID: %d | RefID: %d | Dur: %dms | Total Learned: %d", cName, collectibleId, refId, durMS, self.learnedCount)
-                 PM:Log(logMsg, true, "settings")
+                 PM:Log(logMsg, true, "settings", 70)
                  PM.menuBuilt = false 
              end, 500)
         end
@@ -1073,7 +1073,7 @@ function PM.Sync:Initialize()
             local link = GetCollectibleLink(randId, LINK_STYLE_BRACKETS)
             local function TryChat() StartChatInput(string.format("PM %s", link), CHAT_CHANNEL_PARTY) end
             if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry(string.format("PM %s", link)) end
-            PM:Log("Sent Random Sync Request", true, "sync")
+            PM:Log("Sent Random Sync Request", true, "sync", 90)
             return
          end
     end
@@ -1099,16 +1099,16 @@ function PM.Sync:Initialize()
     if not PM.settings.sync.enabled then return end
     if IsUnitInCombat and IsUnitInCombat("player") and PM.settings.sync.ignoreInCombat then return end
     if PM.settings.activeId then
-         PM:Log("Sync received! Queuing after current loop: " .. GetCollectibleName(id), true, "sync")
+         PM:Log("Sync received! Queuing...", true, "sync", 70)
          PM.pendingSyncId = id
     else
          local remaining = 0
          if GetCollectibleCooldownAndDuration then remaining, _ = GetCollectibleCooldownAndDuration(id) end
          if remaining and remaining > 0 then
-             PM:Log("Sync received but on cooldown: " .. GetCollectibleName(id), true, "sync")
+             PM:Log("Sync received but on cooldown...", true, "sync", 70)
              zo_callLater(function() attemptCollectible(id) end, remaining + 1000)
          else
-             PM:Log("Sync received! Playing: " .. GetCollectibleName(id), true, "sync")
+             PM:Log("Sync received! Playing...", true, "sync", 80)
              PM.isSyncFiring = true
              UseCollectible(id)
              zo_callLater(function() PM.isSyncFiring = false end, 1000)
@@ -1120,15 +1120,15 @@ function PM.Sync:Initialize()
     if channelType ~= CHAT_CHANNEL_PARTY then return end
     local cleanName = zo_strformat("<<1>>", fromName)
     if string.match(text, "^PM STOP") then
-        if cleanName == GetUnitDisplayName("player") then PM:Log("Sent Group Stop Command.", true, "sync"); return end
-        if PM.settings then PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1; PM.pendingSyncId = nil; PM.nextFireTime = 0; PM:Log("Group Stop received from " .. cleanName, true, "stop") end
+        if cleanName == GetUnitDisplayName("player") then PM:Log("Sent Group Stop Command.", true, "sync", 90); return end
+        if PM.settings then PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1; PM.pendingSyncId = nil; PM.nextFireTime = 0; PM:Log("Group Stop received from " .. cleanName, true, "stop", 90) end
         return
     end
     local id
     for collectibleId in string.gmatch(text, "^PM |H1:collectible:(%d+)|h|h$") do id = tonumber(collectibleId) end
     if not id then for collectibleId in string.gmatch(text, "^PM (%d+)$") do id = tonumber(collectibleId) end end
     if not id or not IsCollectibleUnlocked(id) then return end
-    if cleanName == GetUnitDisplayName("player") then PM:Log("Sent Group Sync Command.", true, "sync"); return end
+    if cleanName == GetUnitDisplayName("player") then PM:Log("Sent Group Sync Command.", true, "sync", 90); return end
     if not PM.settings then return end 
     local delay = PM.settings.sync.delay or 0
     if PM.settings.sync.random then delay = math.random(0, delay) end
@@ -1186,13 +1186,13 @@ end
 function PM:DeleteLearnedData(targetId)
     if not targetId or targetId == 0 then return end
     if self.acctSaved and self.acctSaved.learnedData then
-        self.acctSaved.learnedData[targetId] = nil; PM:Log("Learned data deleted.", true, "settings"); PM.menuBuilt = false; ReloadUI("ingame")
+        self.acctSaved.learnedData[targetId] = nil; PM:Log("Learned data deleted.", true, "settings", 90); PM.menuBuilt = false; ReloadUI("ingame")
     end
 end
 
 function PM:DeleteAllLearnedData()
     if self.acctSaved and self.acctSaved.learnedData then
-        self.acctSaved.learnedData = {}; PM:Log("ALL Learned data deleted.", true, "settings"); PM.menuBuilt = false; ReloadUI("ingame")
+        self.acctSaved.learnedData = {}; PM:Log("ALL Learned data deleted.", true, "settings", 90); PM.menuBuilt = false; ReloadUI("ingame")
     end
 end
 
@@ -1246,17 +1246,17 @@ function PM:ToggleFavorite(id)
     if not self.settings.favorites then self.settings.favorites = {} end
     if self.settings.favorites[id] then
         self.settings.favorites[id] = nil
-        PM:Log("Removed from Favorites: " .. GetCollectibleName(id), true, "settings")
+        PM:Log("Removed from Favorites: " .. GetCollectibleName(id), true, "settings", 90)
     else
         self.settings.favorites[id] = true
-        PM:Log("Added to Favorites: " .. GetCollectibleName(id), true, "settings")
+        PM:Log("Added to Favorites: " .. GetCollectibleName(id), true, "settings", 90)
     end
     PM:UpdateFavoritesChoices()
 end
 
 function PM:DeleteAllFavorites()
     if self.settings then self.settings.favorites = {} end
-    PM:Log("All Favorites Cleared.", true, "settings")
+    PM:Log("All Favorites Cleared.", true, "settings", 90)
     PM:UpdateFavoritesChoices()
 end
 
@@ -1369,7 +1369,7 @@ function PM:BuildMenu()
         tooltip = "Manually triggers the data migration process.",
         func = function()
             PM:MigrateData()
-            PM:Log("Data migration complete. Reloading UI to apply changes...", true, "settings")
+            PM:Log("Data migration complete...", true, "settings", 80)
             zo_callLater(function() ReloadUI("ingame") end, 2000)
         end,
         width = (IsConsoleUI() or isEU) and "full" or "half"
@@ -1378,7 +1378,7 @@ function PM:BuildMenu()
     local generalControls = {
         { type = "checkbox", name = "Use Account-Wide Settings", tooltip = "If ON, settings are shared across all characters.", getFunc = function() return PM.charSaved.useAccountSettings end, setFunc = function(value) PM.charSaved.useAccountSettings = value; PM:UpdateSettingsReference(); ReloadUI("ingame") end },
         { type = "dropdown", name = "Select Active Memento", tooltip = "Select a memento. Click 'Apply' to start.", choices = PM.activeNames, choicesValues = PM.activeIDs, getFunc = function() if PM.pendingId == nil then return PM.settings.activeId or 0 end return PM.pendingId end, setFunc = function(value) PM.pendingId = value end, disabled = function() return PM.settings.randomOnZone end, reference = "PM_ActiveDropdown" },
-        { type = "button", name = "Activate Random Memento", tooltip = "Immediately picks and starts a random supported memento.", width = "half", func = function() local randId = PM:GetRandomSupported(); if randId then PM.settings.activeId = randId; PM:Log("Randomly Selected: " .. PM:GetData(randId).name, true, "random"); PM:StartLoop(randId) end end },
+        { type = "button", name = "Activate Random Memento", tooltip = "Immediately picks and starts a random supported memento.", width = "half", func = function() local randId = PM:GetRandomSupported(); if randId then PM.settings.activeId = randId; PM:Log("Randomly Selected: " .. PM:GetData(randId).name, true, "random", 90); PM:StartLoop(randId) end end },
         { type = "button", name = "|c00FF00Apply Selected Memento|r", tooltip = "|c00FF00Starts the memento selected above.|r", width = "half", func = function() if PM.pendingId and PM.pendingId ~= 0 then PM.settings.activeId = PM.pendingId; local data = PM:GetData(PM.pendingId); PM:Log("Selected via Menu: " .. (data.name or "Unknown"), true, "activation"); PM:StartLoop(PM.pendingId); PM.pendingId = nil elseif PM.pendingId == 0 then PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1; PM:Log("Auto-loop Stopped", true, "stop", 90); PM.pendingId = nil; PM.nextFireTime = 0 end end },
         { type = "button", name = "|cFF0000STOP LOOP|r", tooltip = "Stops the currently running memento loop.", width = "full", func = function() PM.settings.activeId = nil; PM.loopToken = (PM.loopToken or 0) + 1; PM.pendingId = 0; PM.settings.randomOnZone = false; PM.settings.randomOnLogin = false; PM:Log("Auto-loop Stopped", true, "stop", 90); PM.nextFireTime = 0 end },
         { type = "checkbox", name = "Randomize on Zone Change", tooltip = "Randomly picks a supported memento whenever you change zones.", getFunc = function() return PM.settings.randomOnZone end, setFunc = function(value) PM.settings.randomOnZone = value end },
@@ -1400,12 +1400,12 @@ function PM:BuildMenu()
     end
 
     local uiVisibilityControls = {
-        { type = "checkbox", name = "UI Visibility", tooltip = "Shows or hides the status text completely.", getFunc = function() return not PM.settings.ui.hidden end, setFunc = function(value) PM.settings.ui.hidden = not value; PM:UpdateUIScenes(); PM:Log("UI Visibility: " .. (PM.settings.ui.hidden and "HIDDEN" or "VISIBLE"), true, "ui") end },
+        { type = "checkbox", name = "UI Visibility", tooltip = "Shows or hides the status text completely.", getFunc = function() return not PM.settings.ui.hidden end, setFunc = function(value) PM.settings.ui.hidden = not value; PM:UpdateUIScenes(); PM:Log("UI Visibility...", true, "ui", 90) end },
         { type = "checkbox", name = "UI Mode", tooltip = "ON: Shows during normal gameplay (HUD).\nOFF: Shows ONLY inside the Collectibles menu.", getFunc = function() return PM.settings.showInHUD end, setFunc = function(value) PM.settings.showInHUD = value; PM:UpdateUIScenes(); PM:Log("UI Mode: " .. (value and "HUD Only" or "Menu Only"), true, "ui") end, disabled = function() return PM.settings.ui.hidden end },
         { type = "checkbox", name = "Lock UI Position", tooltip = "Prevents the on-screen status text UI from being moved.", getFunc = function() return PM.settings.ui.locked end, setFunc = function(value) PM.settings.ui.locked = value; if PM.uiWindow then PM.uiWindow:SetMovable(not value) end end },
         { type = "slider", name = "HUD UI Scale", tooltip = "Adjusts the size of the status text UI in HUD mode.", min = 0.5, max = 2.0, step = 0.1, decimals = 1, getFunc = function() return PM.settings.ui.scale or (IsConsoleUI() and 1.0 or 1.0) end, setFunc = function(value) PM.settings.ui.scale = value; PM:UpdateUIAnchor() end },
         { type = "slider", name = "Menu UI Scale", tooltip = "Adjusts the size of the status text UI in Menu mode.", min = 0.5, max = 2.0, step = 0.1, decimals = 1, getFunc = function() return PM.settings.uiMenu.scale or (IsConsoleUI() and 1.2 or 1.0) end, setFunc = function(value) PM.settings.uiMenu.scale = value; PM:UpdateUIAnchor() end },
-        { type = "button", name = "|cFF0000RESET UI POSITION|r", tooltip = "Resets the status text UI position to default.", func = function() PM.settings.ui.left = PM.defaults.ui.left; PM.settings.ui.top = PM.defaults.ui.top; PM.settings.uiMenu.left = PM.defaults.uiMenu.left; PM.settings.uiMenu.top = PM.defaults.uiMenu.top; PM:UpdateUIAnchor(); PM:Log("UI Position Reset.", true, "ui") end }
+        { type = "button", name = "|cFF0000RESET UI POSITION|r", tooltip = "Resets the status text UI position to default.", func = function() PM.settings.ui.left = PM.defaults.ui.left; PM.settings.ui.top = PM.defaults.ui.top; PM.settings.uiMenu.left = PM.defaults.uiMenu.left; PM.settings.uiMenu.top = PM.defaults.uiMenu.top; PM:UpdateUIAnchor(); PM:Log("UI Position Reset.", true, "ui", 90) end }
     }
     table.insert(optionsData, { type = "submenu", name = "UI Visibility Settings", tooltip = "Options for the on-screen status text.", controls = uiVisibilityControls })
 
@@ -1433,7 +1433,7 @@ function PM:BuildMenu()
         { type = "button", name = "|c00FF00Activate Selected Memento|r", tooltip = "|c00FF00Activates the memento currently selected in the dropdown above.|r", width = "half", func = function() if PM.selectedLearnedId and PM.selectedLearnedId ~= 0 then PM.settings.activeId = PM.selectedLearnedId; local data = PM:GetData(PM.selectedLearnedId); PM:Log("Selected (Learned): " .. (data and data.name or "Unknown"), true, "activation"); PM:StartLoop(PM.selectedLearnedId) end end },
         { type = "button", name = "|cFFFF00LEARN: Auto-Scan|r", tooltip = "|cFFFF00Scans all owned mementos, activates them once to learn their Effect ID, and saves them to memory. Skips already known mementos.|r", width = "half", func = function() PM:AutoScanMementos() end },
         { type = "button", name = "Delete Selected Memento", tooltip = "Removes the selected memento from Learned Data and reloads UI.", width = "half", func = function() PM:DeleteLearnedData(PM.selectedLearnedId) end },
-        { type = "button", name = "Randomize Learned Memento", tooltip = "Picks a random memento from your Learned Data list.", width = "half", func = function() local randId = PM:GetRandomLearned(); if randId then PM.settings.activeId = randId; PM:Log("Randomly Selected (Learned): " .. PM:GetData(randId).name, true, "random"); PM:StartLoop(randId) else PM:Log("No learned data found.", true, "error") end end },
+        { type = "button", name = "Randomize Learned Memento", tooltip = "Picks a random memento from your Learned Data list.", width = "half", func = function() local randId = PM:GetRandomLearned(); if randId then PM.settings.activeId = randId; PM:Log("Randomly Selected (Learned): " .. PM:GetData(randId).name, true, "random", 90); PM:StartLoop(randId) else PM:Log("No learned data found.", true, "error") end end },
         { type = "button", name = "|cFF0000DELETE ALL LEARNED DATA|r", tooltip = "|cFF0000WARNING: Deletes ALL manual and auto-scanned learned memento data. This cannot be undone.|r", width = "half", func = function() PM:DeleteAllLearnedData() end }
     }
     table.insert(optionsData, { type = "submenu", name = "Learned Data Management", tooltip = "Manage mementos scanned by the Auto-Scan feature.", controls = learnedDataControls })
@@ -1449,28 +1449,17 @@ function PM:BuildMenu()
     if not IsConsoleUI() then table.insert(durControls, 3, { type = "slider", name = "Sync Messages Duration", tooltip = "Duration for Sync related messages.", min=1, max=10, step=1, getFunc=function() return PM.settings.csaDurations.sync end, setFunc=function(v) PM.settings.csaDurations.sync = v end }) end
     table.insert(optionsData, { type = "submenu", name = "Announcement Durations (Seconds)", tooltip = "Configure how long text stays on screen.", controls = durControls })
 
-    -- Developer Test Button (Only visible to @APHONlC)
+    -- CSA Test Button
     if GetDisplayName() == "@APHONlC" then
         table.insert(optionsData, { 
             type = "button", 
             name = "Test Screen Announcements", 
             tooltip = "Triggers a sequence of all CSA messages to verify formatting, colors, and the long text split logic.", 
             func = function() 
-                -- 1. Standard Loop Activation (Limit: 90)
-                local actMsg = "|c00FFFF[PM]|r Auto-loop started: Floral Swirl Aura"
-                PM:SafeCSA(actMsg, "activation", 90)
-
-                -- 2. Warning Message (Limit: 90)
                 zo_callLater(function()
-                    local warningMsg = "|cFFFF00Warning: LibAddonMenu is outdated. Update to v41+ for PM menu.|r"
+                    local warningMsg = "|cFFFF00[PM] LibAddonMenu is outdated. Update to v41+ for PM menu.|r"
                     PM:SafeCSA(warningMsg, "error", 100)
                 end, 3000)
-
-                -- 3. Long Split Test (Limit: 70)
-                zo_callLater(function()
-                    local testMsg = "|c00FFFF[PM] This is a very long test message designed to exceed the character limit of the Center Screen Announce system to verify that the split logic works.|r"
-                    PM:SafeCSA("|cFFD700" .. testMsg .. "|r", "settings", 80) 
-                end, 6000)
             end,
             width = "full"
         })
@@ -1763,7 +1752,7 @@ function PM:Init(eventCode, addOnName)
                 end 
             end 
         end
-        if not found then self:Log("Memento not found or not supported.", true, "error") end
+        if not found then self:Log("Memento not found or not supported.", true, "error", 90) end
     end
     SLASH_COMMANDS["/permmemento"] = SLASH_COMMANDS["/pmem"]
 
@@ -1908,7 +1897,7 @@ function PM:Init(eventCode, addOnName)
     SLASH_COMMANDS["/pmemacct"] = function()
         self.charSaved.useAccountSettings = not self.charSaved.useAccountSettings
         self:UpdateSettingsReference()
-        self:Log("Account-Wide Settings: " .. (self.charSaved.useAccountSettings and "ON" or "OFF") .. " (Reloading UI...)", true, "settings")
+        self:Log("Account-Wide Settings...", true, "settings", 80)
         zo_callLater(function() ReloadUI("ingame") end, 2000)
     end
     SLASH_COMMANDS["/pmemuseaccountsettings"] = SLASH_COMMANDS["/pmemacct"]
@@ -1929,7 +1918,7 @@ function PM:Init(eventCode, addOnName)
         self.settings.delayResurrect = d.delayResurrect; self.settings.delayInMenu = d.delayInMenu; self.settings.delayCombatEnd = d.delayCombatEnd
         self.settings.sync = ZO_DeepTableCopy(d.sync); self.settings.ui = ZO_DeepTableCopy(d.ui)
         self.settings.uiMenu = ZO_DeepTableCopy(d.uiMenu); self.settings.csaDurations = ZO_DeepTableCopy(d.csaDurations)
-        self:Log("Settings reset to defaults. Reloading UI...", true, "settings")
+        self:Log("Settings reset to defaults...", true, "settings", 90)
         zo_callLater(function() ReloadUI("ingame") end, 2000)
     end
     SLASH_COMMANDS["/pmemresetdefaults"] = SLASH_COMMANDS["/pmemreset"]
@@ -1937,14 +1926,14 @@ function PM:Init(eventCode, addOnName)
     SLASH_COMMANDS["/pmemhudscale"] = function(extra)
         local val = tonumber(extra)
         if val and val >= 0.5 and val <= 2.0 then self.settings.ui.scale = val; self:UpdateUIAnchor(); self:Log("HUD Scale set to: " .. val, true, "ui")
-        else self:Log("Usage: /pmemhudscale <0.5 to 2.0>", true, "error") end
+        else self:Log("Usage: /pmemhudscale <0.5 to 2.0>", true, "error", 90) end
     end
     SLASH_COMMANDS["/pmemsethudscale"] = SLASH_COMMANDS["/pmemhudscale"]
 
     SLASH_COMMANDS["/pmemmenuscale"] = function(extra)
         local val = tonumber(extra)
         if val and val >= 0.5 and val <= 2.0 then self.settings.uiMenu.scale = val; self:UpdateUIAnchor(); self:Log("Menu Scale set to: " .. val, true, "ui")
-        else self:Log("Usage: /pmemmenuscale <0.5 to 2.0>", true, "error") end
+        else self:Log("Usage: /pmemmenuscale <0.5 to 2.0>", true, "error", 90) end
     end
     SLASH_COMMANDS["/pmemsetmenuscale"] = SLASH_COMMANDS["/pmemmenuscale"]
 
@@ -1990,7 +1979,7 @@ function PM:Init(eventCode, addOnName)
             local link = GetCollectibleLink(randId, LINK_STYLE_BRACKETS)
             local function TryChat() StartChatInput(string.format("PM %s", link), CHAT_CHANNEL_PARTY) end
             if not pcall(TryChat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry(string.format("PM %s", link)) end
-            self:Log("Sent Random Sync Request", true, "sync")
+            self:Log("Sent Random Sync Request", true, "sync", 90)
         end
     end
     SLASH_COMMANDS["/permmementosyncrandom"] = SLASH_COMMANDS["/pmsyncrand"]
