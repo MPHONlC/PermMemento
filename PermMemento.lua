@@ -3,7 +3,7 @@
 -----------------------------------------------------------
 local PM = {
     name = "PermMemento",
-    version = "0.8.4",
+    version = "0.8.5",
     -- Default settings
     defaults = {
         activeId = nil, paused = false, logEnabled = not IsConsoleUI(), csaEnabled = true,
@@ -697,11 +697,14 @@ function PM:CreateUI()
 end
 
 -- Auto LUA Cleanup
-function PM:RunManualCleanup(isAuto)
+function PM:RunManualCleanup(isAuto, isEmergency)
     self.memState = 1
     zo_callLater(function()
         local before = collectgarbage("count") / 1024
         collectgarbage("collect")
+        if isEmergency then 
+            collectgarbage("collect") 
+        end
         local after = collectgarbage("count") / 1024
         self.memFreed = before - after
         self.memState = 0
@@ -1596,12 +1599,14 @@ function PM:Init(eventCode, addOnName)
     if addOnName ~= self.name then return end
     EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_ADD_ON_LOADED)
     
+    EVENT_MANAGER:RegisterForEvent(self.name .. "_LowMem", EVENT_LUA_LOW_MEMORY, function() self:RunManualCleanup(true, true) end)
     EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_ACTIVATED, function() self:OnPlayerActivated(); self:BuildMenu(); self.pendingId = self.settings.activeId end)
     EVENT_MANAGER:RegisterForEvent(self.name, EVENT_COLLECTIBLE_USE_RESULT, function(eventCode, result, isAttemptingActivation) self:OnCollectibleUseResult(eventCode, result, isAttemptingActivation) end)
     EVENT_MANAGER:RegisterForEvent(self.name .. "_Combat", EVENT_COMBAT_EVENT, function(...) self:OnCombatEvent(...) end)
     EVENT_MANAGER:AddFilterForEvent(self.name .. "_Combat", EVENT_COMBAT_EVENT, REGISTER_FILTER_SOURCE_COMBAT_UNIT_TYPE, COMBAT_UNIT_TYPE_PLAYER)
     EVENT_MANAGER:RegisterForEvent(self.name .. "_Effect", EVENT_EFFECT_CHANGED, function(...) self:OnEffectChanged(...) end)
     EVENT_MANAGER:AddFilterForEvent(self.name .. "_Effect", EVENT_EFFECT_CHANGED, REGISTER_FILTER_UNIT_TAG, "player")
+    
 
     local world = GetWorldName() or "Default"
     self.acctSaved = ZO_SavedVars:NewAccountWide("PermMementoSaved", 1, "AccountWide", self.defaults, world)
