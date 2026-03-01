@@ -47,28 +47,41 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 
 | Command | Description |
 | :--- | :--- |
-| `/pmem <name>` | Fallback command to force start looping a memento (supports partial names). |
-| `/pmemstop` | Stops the current loop and any active Auto-Scan. |
-| `/pmemrandom` | Immediately activates a random supported memento. |
-| `/pmemrandomzonechange` | Toggles the "Randomize on Zone Change" setting. |
-| `/pmemrandomlogin` | Toggles the "Randomize on Login" setting. |
-| `/pmemautolearn` | Starts the Auto-Scan process to identify memento IDs. |
-| `/pmemcleanup` | Manually triggers a Lua Memory Cleanup. |
-| `/pmemui` | Toggles the status display visibility. |
-| `/pmemuimode` | Toggles between HUD mode and Menu Only mode. |
-| `/pmemlock` | Locks or unlocks the status display for dragging. |
-| `/pmemuireset` | Resets the UI scale and position to default settings. |
-| `/pmemreset` | Alias for `/pmemuireset`. |
-| `/pmemcsa` | Toggles Screen Announcements (CSA) on or off. |
-| `/pmemunrestrict` | Toggles Unrestricted Mode (skips movement/sprint checks). |
-| `/pmsync <name>` | Sends a sync request for a specific memento to your party. |
-| `/pmsyncrandom` | Sends a random sync request to your party. |
-| `/pmsyncstop` | Sends a stop request to your party. |
-| `/pmemcurrent` | Displays the name of the currently active memento loop in chat. |
-| `/pmemactivatelearned <name>` | Forces activation of a specifically named memento from Learned Data. |
-| `/pmemdeletealllearned` | Permanently wipes all manual and auto-scanned learned data. |
-| `/pmemcsacleanup` | Toggles the Auto-Cleanup CSA notification on or off. |
-| `/pmemlearned` | Lists all learned memento data in chat. |
+| `/pmem <name>` | Force loop a specific memento (Alias: `/permmemento`) |
+| `/pmemstop` | Stops current loop & Auto-Scan (Alias: `/permmementostop`) |
+| `/pmemrand` | Activate a random memento (Alias: `/pmemrandom`) |
+| `/pmemrandzone` | Toggle Zone Randomizer (Alias: `/pmemrandomzonechange`) |
+| `/pmemrandlog` | Toggle Login Randomizer (Alias: `/pmemrandomlogin`) |
+| `/pmemrandlrn` | Activate a random learned memento (Alias: `/pmemrandomlearned`) |
+| `/pmemscan` | Starts silent Auto-Scan (Alias: `/pmemautolearn`) |
+| `/pmemclean` | Run manual Lua memory cleanup (Alias: `/pmemcleanup`) |
+| `/pmemcsacls` | Toggle Auto-Cleanup Announcements (Alias: `/pmemcsacleanup`) |
+| `/pmemui` | Toggle status display visibility (Alias: `/pmemtoggleui`) |
+| `/pmemhud` | Toggle HUD/Menu mode (Alias: `/pmemuimode`) |
+| `/pmemlock` | Lock/unlock UI dragging (Alias: `/pmemuilock`) |
+| `/pmemresetui` | Reset UI scale/position (Alias: `/pmemuireset`) |
+| `/pmemcsa` | Toggle Screen Announcements (Alias: `/pmemtogglecsa`) |
+| `/pmemfree` | Toggle Unrestricted Mode (Alias: `/pmemunrestrict`) |
+| `/pmsync <name>` | Send party sync request (Alias: `/permmementosync`) |
+| `/pmsyncrand` | Send random party sync (Alias: `/permmementosyncrandom`) |
+| `/pmsyncstop` | Send party stop request (Alias: `/permmementosyncstop`) |
+| `/pmemcur` | Print current looping memento (Alias: `/pmemcurrent`) |
+| `/pmemlist` | List all learned data (Alias: `/pmemlearned`) |
+| `/pmemplay <name>` | Force loop a learned memento (Alias: `/pmemactivatelearned`) |
+| `/pmemwipe` | Wipe all learned data permanently (Alias: `/pmemdeletealllearned`) |
+| `/pmempause` | Pause/Resume the current loop (Alias: `/pmemtogglepause`) |
+| `/pmemcombat` | Toggle Loop in Combat (Alias: `/pmemloopincombat`) |
+| `/pmemperf` | Toggle Performance Mode (Alias: `/pmemperformancemode`) |
+| `/pmemautoclean` | Toggle Auto Lua Cleanup (Alias: `/pmemautocleanup`) |
+| `/pmemacct` | Toggle Account-Wide Settings (Alias: `/pmemuseaccountsettings`) |
+| `/pmemwipefav` | Clear all favorites (Alias: `/pmemdeleteallfavorites`) |
+| `/pmemreset` | Reset settings to default (Alias: `/pmemresetdefaults`) |
+| `/pmemhudscale <val>` | Set HUD UI scale [0.5 to 2.0] (Alias: `/pmemsethudscale`) |
+| `/pmemmenuscale <val>`| Set Menu UI scale [0.5 to 2.0] (Alias: `/pmemsetmenuscale`) |
+| `/pmemlogs` | **(PC Only)** Toggle Chat Logs (Alias: `/pmemchatlogs`) |
+| `/pmemnospin` | **(PC Only)** Toggle Stop Spinning in Menus (Alias: `/pmemstopspinning`) |
+| `/pmsyncon` | **(PC Only)** Toggle Sync Listening (Alias: `/pmemsyncenable`) |
+| `/pmsyncdelay` | **(PC Only)** Toggle Random Sync Delay (Alias: `/pmemsyncrandomdelay`) |
 
 ---
 
