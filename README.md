@@ -20,9 +20,9 @@ This addon requires the following optional library to access the settings GUI me
 PermMemento automates your mementos so you don't have to manually refresh them. Supports randomization, learned data scanning, and automatic memory management!
 
 <p align="center">
-  <img src="https://ugcmods.bethesda.net/image/eyJidWNrZXQiOiJ1Z2Ntb2RzLmJldGhlc2RhLm5ldCIsImtleSI6InB1YmxpYy9jb250ZW50L0VTTy81ODY1NTEvQ0xBU1NJRklDQVRJT05fU0NSRUVOU0hPVF9JTUFHRS9CY0N6cG9iZHJJQ3dGdXhzTWw1VzFRPT0vZXNvNjRfQTJMbmNrd3ZiVC5wbmciLCJlZGl0cyI6eyJyZXNpemUiOnsid2lkdGgiOjYwMH19LCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIn0=" alt="Permanent Memento UI 1" />
+  <img src="https://cdn-eso.mmoui.com/preview/pvw15320.png" alt="Permanent Memento UI 1" />
   <br>
-  <img src="https://ugcmods.bethesda.net/image/eyJidWNrZXQiOiJ1Z2Ntb2RzLmJldGhlc2RhLm5ldCIsImtleSI6InB1YmxpYy9jb250ZW50L0VTTy81ODY1NTEvQ0xBU1NJRklDQVRJT05fU0NSRUVOU0hPVF9JTUFHRS91MjlHdjRxVG1XVzJVOFp5Snc5YmtBPT0vU2NyZWVuc2hvdCBGcm9tIDIwMjYtMDItMDggMTMtNTYtMzcucG5nIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjo2MDB9fSwib3V0cHV0Rm9ybWF0Ijoid2VicCJ9" alt="Permanent Memento UI 2" />
+  <img src="https://cdn-eso.mmoui.com/preview/pvw15319.png" alt="Permanent Memento UI 2" />
 </p>
 
 ## Features
