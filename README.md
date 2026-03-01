@@ -10,8 +10,11 @@
 Keep your chosen memento effects active permanently.
 </div>
 
-## Dependencies
+## Optional Dependencies
+This addon requires the following optional library to access the settings GUI menu:
 * [LibAddonMenu-2.0](https://www.esoui.com/downloads/info7-LibAddonMenu-2.0.html)
+
+**Without the Dependencies:** you can still run the addon entirely independent, and control its settings via built-in slash commands as a standalone control.
 
 ## Description
 PermMemento automates your mementos so you don't have to manually refresh them. Supports randomization, learned data scanning, and automatic memory management!
@@ -49,14 +52,15 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
 | `/pmemrandom` | Immediately activates a random supported memento. |
 | `/pmemrandomzonechange` | Toggles the "Randomize on Zone Change" setting. |
 | `/pmemrandomlogin` | Toggles the "Randomize on Login" setting. |
-| `/pmemautolearn` | Starts the Auto-Scan process. |
-| `/pmemcleanup` | Manually triggers Lua Memory Cleanup. |
+| `/pmemautolearn` | Starts the Auto-Scan process to identify memento IDs. |
+| `/pmemcleanup` | Manually triggers a Lua Memory Cleanup. |
 | `/pmemui` | Toggles the status display visibility. |
 | `/pmemuimode` | Toggles between HUD mode and Menu Only mode. |
 | `/pmemlock` | Locks or unlocks the status display for dragging. |
 | `/pmemuireset` | Resets the UI scale and position to default settings. |
-| `/pmemcsa` | Toggles Screen Announcements on or off. |
-| `/pmemunrestrict` | Toggles Unrestricted Mode on or off. |
+| `/pmemreset` | Alias for `/pmemuireset`. |
+| `/pmemcsa` | Toggles Screen Announcements (CSA) on or off. |
+| `/pmemunrestrict` | Toggles Unrestricted Mode (skips movement/sprint checks). |
 | `/pmsync <name>` | Sends a sync request for a specific memento to your party. |
 | `/pmsyncrandom` | Sends a random sync request to your party. |
 | `/pmsyncstop` | Sends a stop request to your party. |
