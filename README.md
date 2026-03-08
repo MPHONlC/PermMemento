@@ -1,23 +1,10 @@
-<div align="center">
-
-# Permanent Memento
+# PermMemento 🎭
 
 [![ESOUI](https://img.shields.io/badge/PC-ESOUI-orange.svg?style=for-the-badge)](https://www.esoui.com/downloads/fileinfo.php?id=4116)
 [![Bethesda Mods](https://img.shields.io/badge/Console-Bethesda.net-black.svg?style=for-the-badge&logo=bethesda&logoColor=white)](https://mods.bethesda.net/en/elderscrollsonline/details/2aa223e9-ba88-45f7-90d3-0a47002c720c/Permanent_Memento)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](LICENSE)
 
-</div>
-<div align="center">
 Keep your chosen memento effects active permanently.
-</div>
-
-## Optional Dependencies
-This addon requires the following optional library to access the settings GUI menu:
-* [LibAddonMenu-2.0](https://www.esoui.com/downloads/info7-LibAddonMenu-2.0.html)
-
-**Without the Dependencies:** you can still run the addon entirely independent, and control its settings via built-in slash commands as a standalone control.
-
-## Description
-PermMemento automates your mementos so you don't have to manually refresh them. Supports randomization, learned data scanning, and automatic memory management!
 
 <p align="center">
   <img src="https://cdn-eso.mmoui.com/preview/pvw15320.png" alt="Permanent Memento UI 1" />
@@ -25,121 +12,136 @@ PermMemento automates your mementos so you don't have to manually refresh them. 
   <img src="https://cdn-eso.mmoui.com/preview/pvw15319.png" alt="Permanent Memento UI 2" />
 </p>
 
-## Features
-* **Permanent Mementos:** Makes memento effects like Finvir's Trinket, Almalexia’s Lantern, or Wild Hunt Transform remain permanent. Pauses when in combat, crafting, or in menus to avoid interruptions.
-* **Auto-Scanner & Learned Data:** No longer restricted to Current Supported Mementos! Use the **LEARN: Auto-Scan** button to learn the durations/Effect IDs of all unmapped mementos. Includes a full Learned Data management settings. After learning your memento data turn on **UNRESTRICTED MODE** to allow them to loop.
-* **Favorites Settings:** Build a custom list of mementos, **"Reload UI"** after you're done adding them. All **"Randomize"** features will exclusively pull from your Favorites pool if any are selected. 
-* **Auto Lua Cleanup:** Background memory cleaner. Automatically runs when memory hits 400MB (PC) or 85MB (Console) to prevent performance stuttering. Only triggers outside combat.
+### 🛠️ Optional Dependencies
+This addon requires the following optional library to access the settings GUI menu:
+* [LibAddonMenu-2.0](https://www.esoui.com/downloads/info7-LibAddonMenu-2.0.html)
+
+**Without the Dependencies:** you can still run the addon entirely independent and control its settings via built-in slash commands as a standalone control.
+
+### ✨ Features
+* **Permanent Mementos:** Automates memento effects like Finvir's Trinket, Almalexia’s Lantern, or Wild Hunt Transform. Intelligently pauses during combat, crafting, or specific menus to ensure zero gameplay interruption.
+* **Auto Lua Cleanup Integration:** background memory cleaner. Automatically runs when memory hits 400MB (PC) or 85MB (Console) to prevent performance stuttering. Only triggers outside combat. For more control use [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/info4388.html) addon.
+* **Auto-Scanner & Learned Data:** No longer restricted to hardcoded mementos. Use the **LEARN: Auto-Scan** button to learn the durations and Effect IDs of any memento you own.
+* **Favorites Manager:** Build a curated list of your favorite effects. All "Randomize" features will prioritize your favorites pool.
 * **Live Statistics Panel:** A real-time dashboard displaying Addon Memory footprint, Total/Session loops, and your Top 5 most used mementos.
-* **Character Profiles:** Easily Copy or Delete settings profiles between different characters via a new submenu.
-* **Group Sync:** Share your active memento with your party. Supports ANY memento in the game, as long as you have it unlocked/owned!
+* **Character Profiles:** Easily Copy or Delete settings profiles between different characters.
+* **Group Sync (PC):** Synchronize your memento with your party. Supports every memento in the game, as long as you have it unlocked/owned!
 * **Status UI:** A draggable UI label shows current memento, player state, and settings status.
 * **Delay Settings:** Specific settings for Idle, Casting, Resurrecting, Teleporting, Menus etc.
 
-## Usage (PC & Console)
-
-> [!TIP]
-> **AUTO-LOOP:** Activate any supported memento via Collections > Mementos. The addon will detect it and begin the loop automatically.
-
-**SETTINGS MENU:** Configure settings, randomize, or manage Learned Data.
-
-### Slash Commands
+### ⌨️ Slash Commands
 
 | Command | Description |
 | :--- | :--- |
-| `/pmem <name>` | Force loop a specific memento (Alias: `/permmemento`) |
-| `/pmemstop` | Stops current loop & Auto-Scan (Alias: `/permmementostop`) |
+| `/pmem` | Displays the help menu and supported memento list (Alias: `/permmemento`) |
+| `/pmem <name>` | Force loop a specific memento |
+| `/pmemstop` | Stops current loop and any active Auto-Scan (Alias: `/permmementostop`) |
+| `/pmempause` | Pause or Resume the current loop (Alias: `/pmemtogglepause`) |
+| `/pmemcur` | Print the name of the currently looping memento (Alias: `/pmemcurrent`) |
 | `/pmemrand` | Activate a random memento (Alias: `/pmemrandom`) |
-| `/pmemrandzone` | Toggle Zone Randomizer (Alias: `/pmemrandomzonechange`) |
-| `/pmemrandlog` | Toggle Login Randomizer (Alias: `/pmemrandomlogin`) |
-| `/pmemrandlrn` | Activate a random learned memento (Alias: `/pmemrandomlearned`) |
-| `/pmemscan` | Starts silent Auto-Scan (Alias: `/pmemautolearn`) |
-| `/pmemclean` | Run manual Lua memory cleanup (Alias: `/pmemcleanup`) |
-| `/pmemcsacls` | Toggle Auto-Cleanup Announcements (Alias: `/pmemcsacleanup`) |
-| `/pmemui` | Toggle status display visibility (Alias: `/pmemtoggleui`) |
-| `/pmemhud` | Toggle HUD/Menu mode (Alias: `/pmemuimode`) |
-| `/pmemlock` | Lock/unlock UI dragging (Alias: `/pmemuilock`) |
-| `/pmemresetui` | Reset UI scale/position (Alias: `/pmemuireset`) |
-| `/pmemcsa` | Toggle Screen Announcements (Alias: `/pmemtogglecsa`) |
-| `/pmemfree` | Toggle Unrestricted Mode (Alias: `/pmemunrestrict`) |
-| `/pmsync <name>` | Send party sync request (Alias: `/permmementosync`) |
-| `/pmsyncrand` | Send random party sync (Alias: `/permmementosyncrandom`) |
-| `/pmsyncstop` | Send party stop request (Alias: `/permmementosyncstop`) |
-| `/pmemcur` | Print current looping memento (Alias: `/pmemcurrent`) |
-| `/pmemlist` | List all learned data (Alias: `/pmemlearned`) |
+| `/pmemrandzone` | Toggle randomizing every time you change zones (Alias: `/pmemrandomzonechange`) |
+| `/pmemrandlog` | Toggle randomizing every time you login (Alias: `/pmemrandomlogin`) |
+| `/pmemstats` | Master toggle for the Stats Tracker module |
+| `/pmemrandfav` | Master toggle for Randomization & Favorites logic |
+| `/pmemlearn` | Master toggle for Learning Mode & Auto-Scan hooks |
+| `/pmemperf` | Toggle Performance Mode for UI refresh optimization (Alias: `/pmemperformancemode`) |
+| `/pmemclean` | Run manual Lua memory cleanup sweep (Alias: `/pmemcleanup`) |
+| `/pmemautoclean` | Toggle background Auto Lua Cleanup (Alias: `/pmemautocleanup`) |
+| `/pmemcsacls` | Toggle announcements for Auto-Cleanups (Alias: `/pmemcsacleanup`) |
+| `/pmemscan` | Start the silent Auto-Scan sequence (Alias: `/pmemautolearn`) |
+| `/pmemlist` | List all learned mementos and durations (Alias: `/pmemlearned`) |
 | `/pmemplay <name>` | Force loop a learned memento (Alias: `/pmemactivatelearned`) |
-| `/pmemwipe` | Wipe all learned data permanently (Alias: `/pmemdeletealllearned`) |
-| `/pmempause` | Pause/Resume the current loop (Alias: `/pmemtogglepause`) |
-| `/pmemcombat` | Toggle Loop in Combat (Alias: `/pmemloopincombat`) |
-| `/pmemperf` | Toggle Performance Mode (Alias: `/pmemperformancemode`) |
-| `/pmemautoclean` | Toggle Auto Lua Cleanup (Alias: `/pmemautocleanup`) |
-| `/pmemacct` | Toggle Account-Wide Settings (Alias: `/pmemuseaccountsettings`) |
-| `/pmemwipefav` | Clear all favorites (Alias: `/pmemdeleteallfavorites`) |
-| `/pmemreset` | Reset settings to default (Alias: `/pmemresetdefaults`) |
-| `/pmemhudscale <val>` | Set HUD UI scale [0.5 to 2.0] (Alias: `/pmemsethudscale`) |
-| `/pmemmenuscale <val>`| Set Menu UI scale [0.5 to 2.0] (Alias: `/pmemsetmenuscale`) |
-| `/pmemlogs` | **(PC Only)** Toggle Chat Logs (Alias: `/pmemchatlogs`) |
-| `/pmemnospin` | **(PC Only)** Toggle Stop Spinning in Menus (Alias: `/pmemstopspinning`) |
-| `/pmsyncon` | **(PC Only)** Toggle Sync Listening (Alias: `/pmemsyncenable`) |
-| `/pmsyncdelay` | **(PC Only)** Toggle Random Sync Delay (Alias: `/pmemsyncrandomdelay`) |
+| `/pmemwipe` | Permanently wipe all learned data (Alias: `/pmemdeletealllearned`) |
+| `/pmemwipefav` | Clear your entire favorites list (Alias: `/pmemdeleteallfavorites`) |
+| `/pmemui` | Toggle status display visibility (Alias: `/pmemtoggleui`) |
+| `/pmemhud` | Toggle between HUD mode and Menu-only mode (Alias: `/pmemuimode`) |
+| `/pmemlock` | Lock or Unlock UI dragging (Alias: `/pmemuilock`) |
+| `/pmemresetui` | Reset UI scale and position to default (Alias: `/pmemuireset`) |
+| `/pmemhudscale <val>` | Set HUD UI scale (0.5 to 2.0) (Alias: `/pmemsethudscale`) |
+| `/pmemmenuscale <val>` | Set Menu UI scale (0.5 to 2.0) (Alias: `/pmemsetmenuscale`) |
+| `/pmemcsa` | Toggle all screen announcements (Alias: `/pmemtogglecsa`) |
+| `/pmemfree` | Toggle Unrestricted Mode to loop any memento (Alias: `/pmemunrestrict`) |
+| `/pmemcombat` | Toggle Looping while in Combat (Alias: `/pmemloopincombat`) |
+| `/pmemacct` | Toggle Account-Wide vs Character settings (Alias: `/pmemuseaccountsettings`) |
+| `/pmemreset` | Reset all settings to default (Alias: `/pmemresetdefaults`) |
+| `/pmsyncon` | (PC Only) Master toggle for Group Sync Listener (Alias: `/pmemsyncenable`) |
+| `/pmsync <name>` | (PC Only) Send party sync request (Alias: `/permmementosync`) |
+| `/pmsyncrand` | (PC Only) Send random party sync (Alias: `/permmementosyncrandom`) |
+| `/pmsyncstop` | (PC Only) Send party stop request (Alias: `/permmementosyncstop`) |
+| `/pmsyncdelay` | (PC Only) Toggle random delay for syncs (Alias: `/pmemsyncrandomdelay`) |
+| `/pmemlogs` | (PC Only) Toggle Chat Logs (Alias: `/pmemchatlogs`) |
+| `/pmemnospin` | (PC Only) Toggle Camera Spin Lock in menus (Alias: `/pmemstopspinning`) |
 
----
+### 🎭 Current Native Supported Mementos (No Scan Required)
+* [Almalexia's Enchanted Lantern](https://en.uesp.net/wiki/Online:Almalexia%27s_Enchanted_Lantern)
+* [Astral Aurora Projector](https://en.uesp.net/wiki/Online:Astral_Aurora_Projector)
+* [Blossom Bloom](https://en.uesp.net/wiki/Online:Blossom_Bloom)
+* [Dwemervamidium Mirage](https://en.uesp.net/wiki/Online:Dwemervamidium_Mirage)
+* [Dwarven Tonal Forks](https://en.uesp.net/wiki/Online:Dwarven_Tonal_Forks)
+* [Fargrave Occult Curio](https://en.uesp.net/wiki/Online:Fargrave_Occult_Curio)
+* [Fetish of Anger](https://en.uesp.net/wiki/Online:Fetish_of_Anger)
+* [Finvir's Trinket](https://en.uesp.net/wiki/Online:Finvir%27s_Trinket)
+* [Floral Swirl Aura](https://en.uesp.net/wiki/Online:Floral_Swirl_Aura)
+* [Inferno Cleats](https://en.uesp.net/wiki/Online:Inferno_Cleats)
+* [Mariner's Nimbus Stone](https://en.uesp.net/wiki/Online:Mariner%27s_Nimbus_Stone)
+* [Remnant of Meridia's Light](https://en.uesp.net/wiki/Online:Remnant_of_Meridia's_Light)
+* [Soul Crystals of the Returned](https://en.uesp.net/wiki/Online:Soul_Crystals_of_the_Returned)
+* [Storm Atronach Aura](https://en.uesp.net/wiki/Online:Storm_Atronach_Aura)
+* [Storm Atronach Transform](https://en.uesp.net/wiki/Online:Storm_Atronach_Transform)
+* [Summoned Booknado](https://en.uesp.net/wiki/Online:Summoned_Booknado)
+* [Surprising Snowglobe](https://en.uesp.net/wiki/Online:Surprising_Snowglobe)
+* [Shimmering Gala Gown Veil](https://en.uesp.net/wiki/Online:Shimmering_Gala_Gown_Veil)
+* [Swarm of Crows](https://en.uesp.net/wiki/Online:Swarm_of_Crows)
+* [The Pie of Misrule](https://en.uesp.net/wiki/Online:The_Pie_of_Misrule)
+* [Token of Root Sunder](https://en.uesp.net/wiki/Online:Token_of_Root_Sunder)
+* [Wild Hunt Leaf-Dance Aura](https://en.uesp.net/wiki/Online:Wild_Hunt_Leaf-Dance_Aura)
+* [Wild Hunt Transform](https://en.uesp.net/wiki/Online:Wild_Hunt_Transform)
 
-> **Current Supported Mementos:**
-
-| Memento Name | Collectible ID | Duration |
-| :--- | :--- | :--- |
-| [**Almalexia's Enchanted Lantern**](https://en.uesp.net/wiki/Online:Almalexia's_Enchanted_Lantern) | 341 | 30s |
-| [**Astral Aurora Projector**](https://en.uesp.net/wiki/Online:Astral_Aurora_Projector) | 9862 | 180s |
-| [**Blossom Bloom**](https://en.uesp.net/wiki/Online:Blossom_Bloom) | 10706 | 180s |
-| [**Dwemervamidium Mirage**](https://en.uesp.net/wiki/Online:Dwemervamidium_Mirage) | 1183 | 36s |
-| [**Dwarven Tonal Forks**](https://en.uesp.net/wiki/Online:Dwarven_Tonal_Forks) | 1182 | 10s |
-| [**Fargrave Occult Curio**](https://en.uesp.net/wiki/Online:Fargrave_Occult_Curio) | 10371 | 30s |
-| [**Fetish of Anger**](https://en.uesp.net/wiki/Online:Fetish_of_Anger) | 347 | 33s |
-| [**Finvir's Trinket**](https://en.uesp.net/wiki/Online:Finvir's_Trinket) | 336 | 13s |
-| [**Floral Swirl Aura**](https://en.uesp.net/wiki/Online:Floral_Swirl_Aura) | 758 | 180s |
-| [**Inferno Cleats**](https://en.uesp.net/wiki/Online:Inferno_Cleats) | 9361 | 18s |
-| [**Mariner's Nimbus Stone**](https://en.uesp.net/wiki/Online:Mariner's_Nimbus_Stone) | 10236 | 30s |
-| [**Remnant of Meridia's Light**](https://en.uesp.net/wiki/Online:Remnant_of_Meridia's_Light) | 13092 | 69s |
-| [**Soul Crystals of the Returned**](https://en.uesp.net/wiki/Online:Soul_Crystals_of_the_Returned) | 10652 | 180s |
-| [**Storm Atronach Aura**](https://en.uesp.net/wiki/Online:Storm_Atronach_Aura) | 594 | 180s |
-| [**Storm Atronach Transform**](https://en.uesp.net/wiki/Online:Storm_Atronach_Transform) | 596 | 18s |
-| [**Summoned Booknado**](https://en.uesp.net/wiki/Online:Summoned_Booknado) | 11480 | 18s |
-| [**Surprising Snowglobe**](https://en.uesp.net/wiki/Online:Surprising_Snowglobe) | 13105 | 18s |
-| [**Shimmering Gala Gown Veil**](https://en.uesp.net/wiki/Online:Shimmering_Gala_Gown_Veil) | 13105 | 18s |
-| [**Swarm of Crows**](https://en.uesp.net/wiki/Online:Swarm_of_Crows) | 1384 | 18s |
-| [**The Pie of Misrule**](https://en.uesp.net/wiki/Online:The_Pie_of_Misrule) | 1167 | 30s |
-| [**Token of Root Sunder**](https://en.uesp.net/wiki/Online:Token_of_Root_Sunder) | 349 | 30s |
-| [**Wild Hunt Leaf-Dance Aura**](https://en.uesp.net/wiki/Online:Wild_Hunt_Leaf-Dance_Aura) | 760 | 180s |
-| [**Wild Hunt Transform**](https://en.uesp.net/wiki/Online:Wild_Hunt_Transform) | 759 | 180s |
-
-> If the memento you want is not supported feel free to request.
-
----
-
-> ⚠️ **Console Flow Mode Warning:** If you use the "Force Console Mode" toggle on PC to test and get stuck, type the following into your chat box to revert it:
-> `/script SetCVar("ForceConsoleFlow.2", "0")`
-> Then type `/reloadui`
+> [!IMPORTANT]
+> **Console Flow Mode Warning:** If you use the "Force Console Mode" toggle on PC and get stuck, use: `/script SetCVar("ForceConsoleFlow.2", "0")` followed by `/reloadui`.
 
 <div align="center">
 
-> ### ⚠️ **CONSOLE TESTING NOTES** ⚠️
-> This addon was developed and tested on **PC / Steam Deck** (using Force Console Flow for gamepad testing).
-> The **Group Sync** feature has not yet been fully tested on actual Console hardware. If you are on Xbox/PlayStation, please report if this feature works for you!
+### ⚠️ CONSOLE TESTING NOTES ⚠️
+This addon was developed and tested on **PC / Steam Deck** (using Force Console Flow for gamepad testing). The **Group Sync** feature is built using the official ZOS chat listener and is pending full verification on actual console hardware. 
+
+If you are on Xbox or PlayStation, please report your results on the [ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs) or the GitHub issue tracker! While the core looping logic is verified, console-specific hardware constraints for group chat syncing require community feedback.
 
 </div>
+
+## 📜 LICENSE
+
+Copyright 2025-2026 @APHONlC
+
+Licensed under the **Apache License, Version 2.0** (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, **WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+*For permissions or inquiries, contact @APHONlC on ESOUI or GitHub.*
+
+### How to Attribute This Work
+If you use, redistribute, or modify this script in your own project, please use the following attribution format:
+* **Project Name:** Permanent Memento
+* **Author:** @APHONlC
+* **License:** Apache License 2.0
+* **Original Source:** [Permanent Memento](https://www.esoui.com/downloads/info4116)
+
+## 📂 Check out my other addons/projects
+* [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/fileinfo.php?id=4388#info) - Intelligent, low footprint event based LUA memory garbage collection for PC and Console.
+* [Permanent Memento](https://www.esoui.com/downloads/fileinfo.php?id=4116#info) - Automate and loop or share your favorite mementos.
+* [Tamriel Trade Center, HarvestMap & ESO-Hub Auto-Updater (Linux, macOS, SteamDeck, & Windows)](https://www.esoui.com/downloads/fileinfo.php?id=3249#info) - Cross-platform data updater for Linux, macOS, SteamDeck, and Windows.
 
 <div align="center">
 
-> ### 🐞 **BUG REPORTS (PC & CONSOLE)**
-> If you encounter any issues, please submit a report here:
-> * [ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs)
-> * [GitHub Issue Tracker](https://github.com/MPHONlC/PermMemento/issues)
+## 🐛 BUG REPORTS
+If you encounter any issues, please submit a report here:
+[ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs) | [GitHub Issue Tracker](https://github.com/MPHONlC/PermMemento/issues)
 
-</div>
 
 ## Support
 
 If this project has been useful to you, consider supporting its development:
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/aph0nlc)
+
+</div>
