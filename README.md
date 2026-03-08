@@ -102,10 +102,10 @@ This addon requires the following optional library to access the settings GUI me
 
 <div align="center">
 
-### ⚠️ CONSOLE TESTING NOTES ⚠️
-This addon was developed and tested on **PC / Steam Deck** (using Force Console Flow for gamepad testing). The **Group Sync** feature is built using the official ZOS chat listener and is pending full verification on actual console hardware. 
-
-If you are on Xbox or PlayStation, please report your results on the [ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs) or the GitHub issue tracker! While the core looping logic is verified, console-specific hardware constraints for group chat syncing require community feedback.
+> ### ⚠️ CONSOLE TESTING NOTES ⚠️
+> This addon was developed and tested on **PC / Steam Deck** (using Force Console Flow for gamepad testing).
+> 
+> The **Group Sync** feature has not yet been fully tested on actual Console hardware. If you are on Xbox/PlayStation, please report if this feature works for you!
 
 </div>
 
