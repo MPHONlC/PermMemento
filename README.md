@@ -1,4 +1,6 @@
-# PermMemento 🎭
+<div align="center">
+
+# [Permanent Memento](https://www.esoui.com/downloads/info4116)
 
 [![ESOUI](https://img.shields.io/badge/PC-ESOUI-orange.svg?style=for-the-badge)](https://www.esoui.com/downloads/fileinfo.php?id=4116)
 [![Bethesda Mods](https://img.shields.io/badge/Console-Bethesda.net-black.svg?style=for-the-badge&logo=bethesda&logoColor=white)](https://mods.bethesda.net/en/elderscrollsonline/details/2aa223e9-ba88-45f7-90d3-0a47002c720c/Permanent_Memento)
@@ -11,68 +13,102 @@ Keep your chosen memento effects active permanently.
   <br>
   <img src="https://cdn-eso.mmoui.com/preview/pvw15319.png" alt="Permanent Memento UI 2" />
 </p>
+</div>
 
-### 🛠️ Optional Dependencies
+---
+
+<a id="install-title"></a>
+<div align="center">
+
+[![INSTALLATION & USAGE](https://img.shields.io/badge/INSTALLATION%20%26%20USAGE-purple?style=for-the-badge)](#install-title)
+</div>
+
+**Optional Dependencies:**
 This addon requires the following optional library to access the settings GUI menu:
 * [LibAddonMenu-2.0](https://www.esoui.com/downloads/info7-LibAddonMenu-2.0.html)
 
-**Without the Dependencies:** you can still run the addon entirely independent and control its settings via built-in slash commands as a standalone control.
+> [!NOTE]
+> **Without the Dependencies:** You can still run the addon entirely independent, and control its 
+> settings via built-in slash commands as a standalone utility.
 
-### ✨ Features
-* **Permanent Mementos:** Automates memento effects like Finvir's Trinket, Almalexia’s Lantern, or Wild Hunt Transform. Intelligently pauses during combat, crafting, or specific menus to ensure zero gameplay interruption.
-* **Auto Lua Cleanup Integration:** background memory cleaner. Automatically runs when memory hits 400MB (PC) or 85MB (Console) to prevent performance stuttering. Only triggers outside combat. For more control use [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/info4388.html) addon.
-* **Auto-Scanner & Learned Data:** No longer restricted to hardcoded mementos. Use the **LEARN: Auto-Scan** button to learn the durations and Effect IDs of any memento you own.
-* **Favorites Manager:** Build a curated list of your favorite effects. All "Randomize" features will prioritize your favorites pool.
-* **Live Statistics Panel:** A real-time dashboard displaying Addon Memory footprint, Total/Session loops, and your Top 5 most used mementos.
-* **Character Profiles:** Easily Copy or Delete settings profiles between different characters.
-* **Group Sync (PC):** Synchronize your memento with your party. Supports every memento in the game, as long as you have it unlocked/owned!
-* **Status UI:** A draggable UI label shows current memento, player state, and settings status.
-* **Delay Settings:** Specific settings for Idle, Casting, Resurrecting, Teleporting, Menus etc.
+**Usage & Settings:**
+* **AUTO-LOOP:** Activate any supported memento via Collections. The addon detects it and begins 
+  the loop automatically.
+* **MODULE MANAGER:** Use the Settings Toggles to put unused modules to sleep.
 
-### ⌨️ Slash Commands
+---
 
-| Command | Description |
-| :--- | :--- |
-| `/pmem` | Displays the help menu and supported memento list (Alias: `/permmemento`) |
-| `/pmem <name>` | Force loop a specific memento |
-| `/pmemstop` | Stops current loop and any active Auto-Scan (Alias: `/permmementostop`) |
-| `/pmempause` | Pause or Resume the current loop (Alias: `/pmemtogglepause`) |
-| `/pmemcur` | Print the name of the currently looping memento (Alias: `/pmemcurrent`) |
-| `/pmemrand` | Activate a random memento (Alias: `/pmemrandom`) |
-| `/pmemrandzone` | Toggle randomizing every time you change zones (Alias: `/pmemrandomzonechange`) |
-| `/pmemrandlog` | Toggle randomizing every time you login (Alias: `/pmemrandomlogin`) |
-| `/pmemstats` | Master toggle for the Stats Tracker module |
-| `/pmemrandfav` | Master toggle for Randomization & Favorites logic |
-| `/pmemlearn` | Master toggle for Learning Mode & Auto-Scan hooks |
-| `/pmemperf` | Toggle Performance Mode for UI refresh optimization (Alias: `/pmemperformancemode`) |
-| `/pmemclean` | Run manual Lua memory cleanup sweep (Alias: `/pmemcleanup`) |
-| `/pmemautoclean` | Toggle background Auto Lua Cleanup (Alias: `/pmemautocleanup`) |
-| `/pmemcsacls` | Toggle announcements for Auto-Cleanups (Alias: `/pmemcsacleanup`) |
-| `/pmemscan` | Start the silent Auto-Scan sequence (Alias: `/pmemautolearn`) |
-| `/pmemlist` | List all learned mementos and durations (Alias: `/pmemlearned`) |
-| `/pmemplay <name>` | Force loop a learned memento (Alias: `/pmemactivatelearned`) |
-| `/pmemwipe` | Permanently wipe all learned data (Alias: `/pmemdeletealllearned`) |
-| `/pmemwipefav` | Clear your entire favorites list (Alias: `/pmemdeleteallfavorites`) |
-| `/pmemui` | Toggle status display visibility (Alias: `/pmemtoggleui`) |
-| `/pmemhud` | Toggle between HUD mode and Menu-only mode (Alias: `/pmemuimode`) |
-| `/pmemlock` | Lock or Unlock UI dragging (Alias: `/pmemuilock`) |
-| `/pmemresetui` | Reset UI scale and position to default (Alias: `/pmemuireset`) |
-| `/pmemhudscale <val>` | Set HUD UI scale (0.5 to 2.0) (Alias: `/pmemsethudscale`) |
-| `/pmemmenuscale <val>` | Set Menu UI scale (0.5 to 2.0) (Alias: `/pmemsetmenuscale`) |
-| `/pmemcsa` | Toggle all screen announcements (Alias: `/pmemtogglecsa`) |
-| `/pmemfree` | Toggle Unrestricted Mode to loop any memento (Alias: `/pmemunrestrict`) |
-| `/pmemcombat` | Toggle Looping while in Combat (Alias: `/pmemloopincombat`) |
-| `/pmemacct` | Toggle Account-Wide vs Character settings (Alias: `/pmemuseaccountsettings`) |
-| `/pmemreset` | Reset all settings to default (Alias: `/pmemresetdefaults`) |
-| `/pmsyncon` | (PC Only) Master toggle for Group Sync Listener (Alias: `/pmemsyncenable`) |
-| `/pmsync <name>` | (PC Only) Send party sync request (Alias: `/permmementosync`) |
-| `/pmsyncrand` | (PC Only) Send random party sync (Alias: `/permmementosyncrandom`) |
-| `/pmsyncstop` | (PC Only) Send party stop request (Alias: `/permmementosyncstop`) |
-| `/pmsyncdelay` | (PC Only) Toggle random delay for syncs (Alias: `/pmemsyncrandomdelay`) |
-| `/pmemlogs` | (PC Only) Toggle Chat Logs (Alias: `/pmemchatlogs`) |
-| `/pmemnospin` | (PC Only) Toggle Camera Spin Lock in menus (Alias: `/pmemstopspinning`) |
+<a id="features-title"></a>
+<div align="center">
 
-### 🎭 Current Native Supported Mementos (No Scan Required)
+[![FEATURES](https://img.shields.io/badge/FEATURES-D4A017?style=for-the-badge)](#features-title)
+</div>
+
+* <a id="feat-perm"></a>[![Permanent Mementos](https://img.shields.io/badge/Permanent%20Mementos-forestgreen?style=flat-square)](#feat-perm) : Automates memento effects like Finvir's Trinket, Almalexia’s Lantern, or Wild Hunt Transform. Intelligently pauses during combat, crafting, or specific menus to avoid gameplay interruption.
+* <a id="feat-scan"></a>[![Auto Scanner & Learned Data](https://img.shields.io/badge/Auto%20Scanner%20%26%20Learned%20Data-forestgreen?style=flat-square)](#feat-scan) : No longer restricted to hardcoded mementos. Use the **LEARN: Auto-Scan** button to safely scan through all your unlocked mementos, and saves the data gathered.
+* <a id="feat-fav"></a>[![Favorites Manager](https://img.shields.io/badge/Favorites%20Manager-forestgreen?style=flat-square)](#feat-fav) : Build a curated list of your favorite effects. All "Randomize" features will prioritize your favorites pool.
+* <a id="feat-stats"></a>[![Live Statistics Panel](https://img.shields.io/badge/Live%20Statistics%20Panel-forestgreen?style=flat-square)](#feat-stats) : A real-time dashboard displaying Addon Memory footprint, Total/Session loops, and your Top 5 most used mementos.
+* <a id="feat-char"></a>[![Character Profiles](https://img.shields.io/badge/Character%20Profiles-forestgreen?style=flat-square)](#feat-char) : Easily Copy or Delete settings profiles between different characters.
+* <a id="feat-sync"></a>[![Group Sync (PC)](https://img.shields.io/badge/Group%20Sync%20%28PC%29-forestgreen?style=flat-square)](#feat-sync) : Synchronize your memento with your party. Supports every memento in the game, as long as you have it unlocked/owned!
+* <a id="feat-ui"></a>[![Status UI](https://img.shields.io/badge/Status%20UI-forestgreen?style=flat-square)](#feat-ui) : A draggable UI label shows current memento, player state, and settings status.
+* <a id="feat-delay"></a>[![Delay Settings](https://img.shields.io/badge/Delay%20Settings-forestgreen?style=flat-square)](#feat-delay) : Specific settings for Idle, Casting, Resurrecting, Teleporting, Menus etc.
+* <a id="feat-alc"></a>[![Auto Lua Cleanup Integration](https://img.shields.io/badge/Auto%20Lua%20Cleanup%20Integration-forestgreen?style=flat-square)](#feat-alc) : Background memory cleaner. Automatically runs when memory hits 400MB <sub>*(PC)*</sub> or 85MB <sub>*(Console)*</sub> to prevent performance stuttering. Only triggers outside combat. For more control use [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/info4388.html) addon.
+
+---
+
+<a id="cmd-title"></a>
+<div align="center">
+
+[![SLASH COMMANDS (PC & Console)](https://img.shields.io/badge/SLASH%20COMMANDS%20%28PC%20%26%20Console%29-orange?style=for-the-badge)](#cmd-title)
+</div>
+
+* <kbd>/pmem</kbd> <sub>*(or <kbd>/permmemento</kbd>)*</sub> : Help menu and supported memento list.
+* <kbd>/pmem [name]</kbd> : Force loop a specific memento.
+* <kbd>/pmemstop</kbd> : Stops current loop and any active Auto-Scan.
+* <kbd>/pmempause</kbd> : Pause or Resume the current loop.
+* <kbd>/pmemcur</kbd> : Print the name of the currently looping memento.
+* <kbd>/pmemrand</kbd> : Activate a random memento <sub>*(favors your Favorites list)*</sub>.
+* <kbd>/pmemrandzone</kbd> : Toggle randomizing every time you change zones.
+* <kbd>/pmemrandlog</kbd> : Toggle randomizing every time you login.
+* <kbd>/pmemstats</kbd> : Toggle for the Stats Tracker module.
+* <kbd>/pmemrandfav</kbd> : Toggle for Randomization & Favorites logic.
+* <kbd>/pmemlearn</kbd> : Toggle for Learning Mode & Auto-Scan hooks.
+* <kbd>/pmemperf</kbd> : Toggle Performance Mode <sub>*(Throttles UI refresh from 0.25s to 1.0s)*</sub>.
+* <kbd>/pmemclean</kbd> : Run manual Lua memory cleanup sweep.
+* <kbd>/pmemautoclean</kbd> : Toggle background Auto Lua Cleanup.
+* <kbd>/pmemcsacls</kbd> : Toggle announcements for Auto-Cleanups.
+* <kbd>/pmemscan</kbd> : Start the silent Auto-Scan sequence.
+* <kbd>/pmemlist</kbd> : List all learned mementos and durations.
+* <kbd>/pmemplay [name]</kbd> : Force loop a learned memento.
+* <kbd>/pmemwipe</kbd> : Permanently wipe all learned data.
+* <kbd>/pmemwipefav</kbd> : Clear your entire favorites list.
+* <kbd>/pmemui</kbd> : Toggle status display visibility.
+* <kbd>/pmemhud</kbd> : Toggle between HUD mode and Menu-only mode.
+* <kbd>/pmemlock</kbd> : Lock/unlock UI dragging.
+* <kbd>/pmemresetui</kbd> : Reset UI scale and position to default.
+* <kbd>/pmemhudscale [val]</kbd> : Set HUD UI scale <sub>*(0.5 to 2.0)*</sub>.
+* <kbd>/pmemmenuscale [val]</kbd> : Set Menu UI scale <sub>*(0.5 to 2.0)*</sub>.
+* <kbd>/pmemcsa</kbd> : Toggle all screen announcements.
+* <kbd>/pmemfree</kbd> : Toggle Unrestricted Mode <sub>*(loop any memento)*</sub>.
+* <kbd>/pmemcombat</kbd> : Toggle Looping while in Combat.
+* <kbd>/pmemacct</kbd> : Toggle Account-Wide vs Character settings.
+* <kbd>/pmemreset</kbd> : Reset all settings to 0.8.6 defaults.
+* <kbd>/pmsyncon</kbd> <sub>*(PC Only)*</sub> : Master toggle for the Group Sync Listener.
+* <kbd>/pmsync [name]</kbd> <sub>*(PC Only)*</sub> : Send party sync request.
+* <kbd>/pmsyncrand</kbd> <sub>*(PC Only)*</sub> : Send random party sync.
+* <kbd>/pmsyncstop</kbd> <sub>*(PC Only)*</sub> : Send party stop request.
+* <kbd>/pmsyncdelay</kbd> <sub>*(PC Only)*</sub> : Toggle random delay for syncs.
+* <kbd>/pmemlogs</kbd> <sub>*(PC Only)*</sub> : Toggle Chat Logs.
+* <kbd>/pmemnospin</kbd> <sub>*(PC Only)*</sub> : Toggle Camera Spin Lock in menus.
+
+---
+
+<a id="mementos-title"></a>
+<div align="center">
+
+[![CURRENT SUPPORTED MEMENTOS (No Scan Required)](https://img.shields.io/badge/CURRENT%20SUPPORTED%20MEMENTOS%20%28No%20Scan%20Required%29-D4A017?style=for-the-badge)](#mementos-title)
+</div>
+
 * [Almalexia's Enchanted Lantern](https://en.uesp.net/wiki/Online:Almalexia%27s_Enchanted_Lantern)
 * [Astral Aurora Projector](https://en.uesp.net/wiki/Online:Astral_Aurora_Projector)
 * [Blossom Bloom](https://en.uesp.net/wiki/Online:Blossom_Bloom)
@@ -97,51 +133,71 @@ This addon requires the following optional library to access the settings GUI me
 * [Wild Hunt Leaf-Dance Aura](https://en.uesp.net/wiki/Online:Wild_Hunt_Leaf-Dance_Aura)
 * [Wild Hunt Transform](https://en.uesp.net/wiki/Online:Wild_Hunt_Transform)
 
-> [!IMPORTANT]
-> **Console Flow Mode Warning:** If you use the "Force Console Mode" toggle on PC and get stuck, use: `/script SetCVar("ForceConsoleFlow.2", "0")` followed by `/reloadui`.
+---
 
+<a id="trouble-title"></a>
 <div align="center">
 
-> ### ⚠️ CONSOLE TESTING NOTES ⚠️
-> This addon was developed and tested on **PC / Steam Deck** (using Force Console Flow for gamepad testing).
-> 
-> The **Group Sync** feature has not yet been fully tested on actual Console hardware. If you are on Xbox/PlayStation, please report if this feature works for you!
-
+[![TROUBLESHOOTING & SYSTEM LIMITS](https://img.shields.io/badge/TROUBLESHOOTING%20%26%20SYSTEM%20LIMITS-red?style=for-the-badge)](#trouble-title)
 </div>
 
-## 📜 LICENSE
+> [!WARNING]
+> **Console Flow Mode Warning:**
+> If you use the "Force Console Mode" toggle on PC and get stuck, type:
+> <kbd>/script SetCVar("ForceConsoleFlow.2", "0")</kbd> followed by <kbd>/reloadui</kbd>
 
-Copyright 2025-2026 @APHONlC
+> [!IMPORTANT]
+> **⚠️ CONSOLE TESTING NOTES ⚠️**
+> This addon was developed and tested on **PC / Steam Deck** <sub>*(using Force Console Flow for gamepad testing)*</sub>.
+> The **Group Sync** feature has not yet been fully tested on actual Console hardware. 
+> If you are on Xbox/PlayStation, please report if this feature works for you!
 
-Licensed under the **Apache License, Version 2.0** (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
+---
 
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, **WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+<a id="license-title"></a>
+<div align="center">
 
-*For permissions or inquiries, contact @APHONlC on ESOUI or GitHub.*
+[![LICENSE & USAGE](https://img.shields.io/badge/LICENSE%20%26%20USAGE-red?style=for-the-badge)](#license-title)
+</div>
 
-### How to Attribute This Work
-If you use, redistribute, or modify this script in your own project, please use the following attribution format:
-* **Project Name:** Permanent Memento
-* **Author:** @APHONlC
+**Copyright (c) 2025-2026 @APHONlC. All rights reserved.**
+
+* Don't re-upload or mirror this on ESOUI/Nexus/etc without asking me first.
+* Don't release modified versions of this code publicly.
+* You're 100% free to tweak the code for your own private use on your machine.
+
+Licensed under the **Apache License, Version 2.0**.
+
+<sub>*(For permissions or inquiries, contact @APHONlC on ESOUI or GitHub.)*</sub>
+
+**How to Attribute This Work:**
+If you use, redistribute, or modify this script in your own project, please attribute it:<br>
+* **Project Name:** Permanent Memento<br>
+* **Author:** @APHONlC<br>
 * **License:** Apache License 2.0
 * **Original Source:** [Permanent Memento](https://www.esoui.com/downloads/info4116)
 
-## 📂 Check out my other addons/projects
-* [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/fileinfo.php?id=4388#info) - Intelligent, low footprint event based LUA memory garbage collection for PC and Console.
-* [Permanent Memento](https://www.esoui.com/downloads/fileinfo.php?id=4116#info) - Automate and loop or share your favorite mementos.
-* [Tamriel Trade Center, HarvestMap & ESO-Hub Auto-Updater (Linux, macOS, SteamDeck, & Windows)](https://www.esoui.com/downloads/fileinfo.php?id=3249#info) - Cross-platform data updater for Linux, macOS, SteamDeck, and Windows.
+---
 
 <div align="center">
 
-## 🐛 BUG REPORTS
+**Check out my other addons/projects:**
+
+• [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/fileinfo.php?id=4388#info) 
+• [Permanent Memento](https://www.esoui.com/downloads/fileinfo.php?id=4116#info) 
+• [Tamriel Trade Center, HarvestMap & ESO-Hub Auto-Updater <sub>*(Linux, macOS, SteamDeck, & Windows)*</sub>](https://www.esoui.com/downloads/fileinfo.php?id=3249#info)
+
+<br>
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/aph0nlc)
+
+<br>
+
+<a id="bug-title"></a>
+[![BUG REPORTS](https://img.shields.io/badge/BUG%20REPORTS-ff3300?style=for-the-badge)](#bug-title)
+
 If you encounter any issues, please submit a report here:
-[ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs) | [GitHub Issue Tracker](https://github.com/MPHONlC/PermMemento/issues)
 
-
-## Support
-
-If this project has been useful to you, consider supporting its development:
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/aph0nlc)
+**[ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs)** • **[GitHub Issue Tracker](https://github.com/MPHONlC/PermMemento/issues)**
 
 </div>
