@@ -1987,7 +1987,9 @@ if is_pad then
             tooltip = "ON: Shows during normal gameplay (HUD).\nOFF: Shows ONLY in Collections.",
             getFunc = function() return PM.settings.show_in_hud end,
             setFunc = function(v)
-                PM.settings.show_in_hud = v; PM:update_ui_scenes()
+                PM.settings.show_in_hud = v
+                if PM.settings.ui then PM.settings.ui.is_hidden = not v end
+                PM:update_ui_scenes()
                 PM:log_msg("UI Mode: " .. (v and "HUD Only" or "Menu Only"), true, "ui")
             end,
             disabled = function() return PM.settings.ui.is_hidden end
@@ -2484,7 +2486,6 @@ if is_pad then
         }
         table.insert(b_data, live_stats)
         
-        -- The pc_cmds array was too long, so we define it right here before insertion
         local cmd_txt = "" ..
             "|c00FFFF/pmem <name>|r |cFFD700- Force loop a specific memento|r\n" ..
             "|c00FFFF/pmemstop|r |cFFD700- Stops current loop & Auto-Scan|r\n" ..
@@ -2580,6 +2581,32 @@ function PM:init(eventCode, addOnName)
     if self.char_saved.use_account_settings == nil then
         self.char_saved.use_account_settings = self.defaults.use_account_settings
     end
+
+    local sv_tables = {self.acct_saved, self.char_saved}
+    for _, sv in ipairs(sv_tables) do
+        if sv.showInHUD ~= nil then
+            sv.show_in_hud = sv.showInHUD
+            sv.showInHUD = nil
+        end
+        if sv.ui and sv.ui.hidden ~= nil then
+            sv.ui.is_hidden = sv.ui.hidden
+            sv.ui.hidden = nil
+        end
+    end
+    
+    self.settings = self.char_saved.use_account_settings and self.acct_saved or self.char_saved
+    
+    EVENT_MANAGER:RegisterForEvent(self.name .. "_UIRefresh", EVENT_PLAYER_ACTIVATED, function()
+        EVENT_MANAGER:UnregisterForEvent(self.name .. "_UIRefresh", EVENT_PLAYER_ACTIVATED)
+        
+        if self.settings.show_in_hud and self.settings.ui then
+            self.settings.ui.is_hidden = false
+        end
+
+        zo_callLater(function()
+            self:toggle_ui_update()
+        end, 1000)
+    end)
     
     self:update_settings_reference(); self:migrate_data() 
 
