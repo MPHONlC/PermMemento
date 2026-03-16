@@ -52,6 +52,7 @@ This addon requires the following optional library to access the settings GUI me
 * <a id="feat-sync"></a>[![Group Sync (PC)](https://img.shields.io/badge/Group%20Sync%20%28PC%29-forestgreen?style=flat-square)](#feat-sync) : Synchronize your memento with your party. Supports every memento in the game, as long as you have it unlocked/owned!
 * <a id="feat-ui"></a>[![Status UI](https://img.shields.io/badge/Status%20UI-forestgreen?style=flat-square)](#feat-ui) : A draggable UI label shows current memento, player state, and settings status.
 * <a id="feat-delay"></a>[![Delay Settings](https://img.shields.io/badge/Delay%20Settings-forestgreen?style=flat-square)](#feat-delay) : Specific settings for Idle, Casting, Resurrecting, Teleporting, Menus etc.
+* <a id="feat-ux"></a>[![Performance & UX Controls](https://img.shields.io/badge/Performance%20%26%20UX%20Controls-forestgreen?style=flat-square)](#feat-ux) : Toggle "Performance Mode" to reduce UI updates and save CPU, or enable "Stop Character Spinning" to prevent the camera from shifting while you are inside menus.
 * <a id="feat-alc"></a>[![Auto Lua Cleanup Integration](https://img.shields.io/badge/Auto%20Lua%20Cleanup%20Integration-forestgreen?style=flat-square)](#feat-alc) : Background memory cleaner. Automatically runs when memory hits 400MB <sub>*(PC)*</sub> or 85MB <sub>*(Console)*</sub> to prevent performance stuttering. Only triggers outside combat. For more control use [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/info4388.html) addon.
 
 ---
@@ -68,6 +69,7 @@ This addon requires the following optional library to access the settings GUI me
 * <kbd>/pmempause</kbd> : Pause or Resume the current loop.
 * <kbd>/pmemcur</kbd> : Print the name of the currently looping memento.
 * <kbd>/pmemrand</kbd> : Activate a random memento <sub>*(favors your Favorites list)*</sub>.
+* <kbd>/pmemrandlrn</kbd> : Activate a random memento specifically from your Learned Data list.
 * <kbd>/pmemrandzone</kbd> : Toggle randomizing every time you change zones.
 * <kbd>/pmemrandlog</kbd> : Toggle randomizing every time you login.
 * <kbd>/pmemstats</kbd> : Toggle for the Stats Tracker module.
