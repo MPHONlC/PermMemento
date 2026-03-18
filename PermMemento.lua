@@ -787,15 +787,17 @@ function PM.update_ui_scenes()
         if s and s:HasFragment(PM.menuFragment) then s:RemoveFragment(PM.menuFragment) end
     end
     
-    if PM.settings.show_in_hud then
-        for _, nm in ipairs(hud_arr) do
-            local s = SCENE_MANAGER:GetScene(nm)
-            if s then s:AddFragment(PM.hudFragment) end
-        end
-    else
-        for _, nm in ipairs(menu_arr) do
-            local s = SCENE_MANAGER:GetScene(nm)
-            if s then s:AddFragment(PM.menuFragment) end
+    if not PM.settings.ui.is_hidden then
+        if PM.settings.show_in_hud then
+            for _, nm in ipairs(hud_arr) do
+                local s = SCENE_MANAGER:GetScene(nm)
+                if s then s:AddFragment(PM.hudFragment) end
+            end
+        else
+            for _, nm in ipairs(menu_arr) do
+                local s = SCENE_MANAGER:GetScene(nm)
+                if s then s:AddFragment(PM.menuFragment) end
+            end
         end
     end
     PM.update_ui_anchor()
