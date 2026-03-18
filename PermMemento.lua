@@ -1989,7 +1989,6 @@ if is_pad then
             getFunc = function() return PM.settings.show_in_hud end,
             setFunc = function(v)
                 PM.settings.show_in_hud = v
-                if PM.settings.ui then PM.settings.ui.is_hidden = not v end
                 PM.update_ui_scenes()
                 PM.log_msg("UI Mode: " .. (v and "HUD Only" or "Menu Only"), true, "ui")
             end,
