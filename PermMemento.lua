@@ -3,8 +3,8 @@
 -- Copyright 2025-2026 @APHONlC
 -- Licensed under the Apache License, Version 2.0.
 
--- TESTED: 2026-03-11 | Release v0.8.6 | APIVersion: 101049 | LAM2 v41
-local is_release_build = true
+-- NOT TESTED: 2026-03-18 | Pre-Release v0.8.7 | APIVersion: 101049 | LAM2 v41
+local is_release_build = false
 local REQUIRED_LAM_VERSION = 41
 
 local PM = {
@@ -140,7 +140,7 @@ PM.memento_data = {
     [13736] = { id = 13736, ref_id = 242404, dur = 195000,  name = "Shimmering Gala Gown Veil" }
 }
 
-function PM:get_settings_library()
+function PM.get_settings_library()
     local am = GetAddOnManager()
     local lam_ver = 0
     for i = 1, am:GetNumAddOns() do
@@ -153,7 +153,7 @@ function PM:get_settings_library()
     return "NONE", 0
 end
 
-function PM:show_missing_library_warning()
+function PM.show_missing_library_warning()
     local dialog_id = "PM_MISSING_LIBRARY_WARN"
     local popup_title = "|cFF0000Permanent Memento - Missing Dependency|r"
     local popup_body = "To configure Permanent Memento via Settings UI, " ..
@@ -205,60 +205,60 @@ local function is_alc_enabled()
     return false
 end
 
-function PM:format_memory(value_mb)
+function PM.format_memory(value_mb)
     if value_mb >= 1048576 then return string.format("%.2f TB", value_mb / 1048576)
     elseif value_mb >= 1024 then return string.format("%.2f GB", value_mb / 1024)
     elseif value_mb >= 1 then return string.format("%.2f MB", value_mb)
     else return string.format("%d KB", math.floor(value_mb * 1024)) end
 end
 
-function PM:toggle_core_events()
+function PM.toggle_core_events()
 end
 
-function PM:toggle_cleanup_events()
-    local should_be_active = self.settings.is_auto_cleanup and not is_alc_enabled()
+function PM.toggle_cleanup_events()
+    local should_be_active = PM.settings.is_auto_cleanup and not is_alc_enabled()
     
     if should_be_active then
-        EVENT_MANAGER:RegisterForEvent(self.name .. "_CombatState", EVENT_PLAYER_COMBAT_STATE,
+        EVENT_MANAGER:RegisterForEvent(PM.name .. "_CombatState", EVENT_PLAYER_COMBAT_STATE,
             function(event_code, in_combat)
-                if not in_combat then self:trigger_memory_check("CombatEnd", 3000) end
+                if not in_combat then PM.trigger_memory_check("CombatEnd", 3000) end
             end)
 
-        if SCENE_MANAGER and not self.is_scene_callback_registered then
-            self.scene_callback_fn = function(scene, old_state, new_state)
+        if SCENE_MANAGER and not PM.is_scene_callback_registered then
+            PM.scene_callback_fn = function(scene, old_state, new_state)
                 if new_state == SCENE_SHOWN and scene.name ~= "hud" and scene.name ~= "hudui" then
-                    self:trigger_memory_check("Menu", 6000)
+                    PM.trigger_memory_check("Menu", 6000)
                 end
             end
-            SCENE_MANAGER:RegisterCallback("SceneStateChanged", self.scene_callback_fn)
-            self.is_scene_callback_registered = true
+            SCENE_MANAGER:RegisterCallback("SceneStateChanged", PM.scene_callback_fn)
+            PM.is_scene_callback_registered = true
         end
 
-        if self.settings.enable_stats_ui then
-            EVENT_MANAGER:RegisterForEvent(self.name .. "_LowMem", EVENT_LUA_LOW_MEMORY,
-                function() self:run_manual_cleanup(true, true) end)
+        if PM.settings.enable_stats_ui then
+            EVENT_MANAGER:RegisterForEvent(PM.name .. "_LowMem", EVENT_LUA_LOW_MEMORY,
+                function() PM.run_manual_cleanup(true, true) end)
         else
-            EVENT_MANAGER:UnregisterForEvent(self.name .. "_LowMem", EVENT_LUA_LOW_MEMORY)
+            EVENT_MANAGER:UnregisterForEvent(PM.name .. "_LowMem", EVENT_LUA_LOW_MEMORY)
         end
     else
-        EVENT_MANAGER:UnregisterForEvent(self.name .. "_CombatState", EVENT_PLAYER_COMBAT_STATE)
-        EVENT_MANAGER:UnregisterForEvent(self.name .. "_LowMem", EVENT_LUA_LOW_MEMORY)
-        if SCENE_MANAGER and self.is_scene_callback_registered then
-            SCENE_MANAGER:UnregisterCallback("SceneStateChanged", self.scene_callback_fn)
-            self.is_scene_callback_registered = false
+        EVENT_MANAGER:UnregisterForEvent(PM.name .. "_CombatState", EVENT_PLAYER_COMBAT_STATE)
+        EVENT_MANAGER:UnregisterForEvent(PM.name .. "_LowMem", EVENT_LUA_LOW_MEMORY)
+        if SCENE_MANAGER and PM.is_scene_callback_registered then
+            SCENE_MANAGER:UnregisterCallback("SceneStateChanged", PM.scene_callback_fn)
+            PM.is_scene_callback_registered = false
         end
         EVENT_MANAGER:UnregisterForUpdate(PM.name .. "_MemFallback")
-        self.mem_state = 0; self.is_mem_check_queued = false
+        PM.mem_state = 0; PM.is_mem_check_queued = false
     end
 end
 
-function PM:toggle_stats_ui_tracker()
-    if not self.settings then return end
-    if self.settings.enable_stats_ui then
+function PM.toggle_stats_ui_tracker()
+    if not PM.settings then return end
+    if PM.settings.enable_stats_ui then
         EVENT_MANAGER:RegisterForUpdate(PM.name .. "_StatsUpdate", 1000, function()
             local s_ctrl = _G["PM_StatsText"]
             if s_ctrl and s_ctrl.desc and not s_ctrl:IsHidden() then
-                s_ctrl.desc:SetText(PM:get_stats_text())
+                s_ctrl.desc:SetText(PM.get_stats_text())
             end
         end)
     else
@@ -266,9 +266,9 @@ function PM:toggle_stats_ui_tracker()
     end
 end
 
-function PM:toggle_sync_listener()
-    if not self.settings then return end
-    if self.settings.sync_module.is_enabled then
+function PM.toggle_sync_listener()
+    if not PM.settings then return end
+    if PM.settings.sync_module.is_enabled then
         EVENT_MANAGER:RegisterForEvent(PM.name .. "_Sync", EVENT_CHAT_MESSAGE_CHANNEL,
             PM.on_sync_chat_message)
     else
@@ -276,23 +276,23 @@ function PM:toggle_sync_listener()
     end
 end
 
-function PM:trigger_priority_save()
-    if not self.settings.enable_stats_ui then return end
+function PM.trigger_priority_save()
+    if not PM.settings.enable_stats_ui then return end
     local tick_ms = GetGameTimeMilliseconds()
-    if (tick_ms - self.last_priority_save_time) >= 900000 then
-        GetAddOnManager():RequestAddOnSavedVariablesPrioritySave(self.name)
-        self.last_priority_save_time = tick_ms
+    if (tick_ms - PM.last_priority_save_time) >= 900000 then
+        GetAddOnManager():RequestAddOnSavedVariablesPrioritySave(PM.name)
+        PM.last_priority_save_time = tick_ms
     end
 end
 
-function PM:get_data(target_id)
-    if self.memento_data[target_id] then return self.memento_data[target_id] end
-    if self.acct_saved and self.acct_saved.learned_data then
-        if self.acct_saved.learned_data[target_id] then
-            return self.acct_saved.learned_data[target_id]
+function PM.get_data(target_id)
+    if PM.memento_data[target_id] then return PM.memento_data[target_id] end
+    if PM.acct_saved and PM.acct_saved.learned_data then
+        if PM.acct_saved.learned_data[target_id] then
+            return PM.acct_saved.learned_data[target_id]
         end
     end
-    if self.settings.is_unrestricted then
+    if PM.settings.is_unrestricted then
         return {
             id = target_id, ref_id = 0, dur = 10000,
             name = (GetCollectibleName(target_id) or "Unknown")
@@ -301,7 +301,7 @@ function PM:get_data(target_id)
     return nil
 end
 
-function PM:estimate_table_size(t, seen_map)
+function PM.estimate_table_size(t, seen_map)
     if type(t) ~= "table" then return 0 end
     seen_map = seen_map or {}; if seen_map[t] then return 0 end; seen_map[t] = true
     local est_size = 0
@@ -313,16 +313,16 @@ function PM:estimate_table_size(t, seen_map)
         elseif type(v) == "number" then est_size = est_size + 8
         elseif type(v) == "boolean" then est_size = est_size + 4
         elseif type(v) == "table" then
-            est_size = est_size + self:estimate_table_size(v, seen_map)
+            est_size = est_size + PM.estimate_table_size(v, seen_map)
         end
     end
     return est_size
 end
 
-function PM:get_top_mementos()
-    if not self.acct_saved or not self.acct_saved.memento_usage then return "\n  None" end
+function PM.get_top_mementos()
+    if not PM.acct_saved or not PM.acct_saved.memento_usage then return "\n  None" end
     local sort_list = {}
-    for t_id, t_count in pairs(self.acct_saved.memento_usage) do
+    for t_id, t_count in pairs(PM.acct_saved.memento_usage) do
         table.insert(sort_list, {id = t_id, count = t_count})
     end
     table.sort(sort_list, function(a, b) return a.count > b.count end)
@@ -336,12 +336,12 @@ function PM:get_top_mementos()
     return out_str
 end
 
-function PM:get_stats_text()
-    if not self.settings.enable_stats_ui then
+function PM.get_stats_text()
+    if not PM.settings.enable_stats_ui then
         return "Statistics Tracking is currently DISABLED to save memory."
     end
     local c_mem = IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
-    local pm_mem = PM:estimate_table_size(PM) / (1024 * 1024)
+    local pm_mem = PM.estimate_table_size(PM) / (1024 * 1024)
     local warn_str = ""; local limit_str = ""
     
     if IsConsoleUI() then
@@ -371,7 +371,7 @@ function PM:get_stats_text()
         else sv_warn = "|c00FF00(Safe)|r" end
     end
     
-    local lib_type, lam_ver = PM:get_settings_library()
+    local lib_type, lam_ver = PM.get_settings_library()
     local lib_str = "Not Installed"
     if lib_type == "LAM2" then lib_str = string.format("LibAddonMenu (v%d)", lam_ver) end
     
@@ -383,70 +383,70 @@ function PM:get_stats_text()
 
     return string.format(
         format_str,
-        install_d, v_hist_str, lib_str, limit_str, PM:format_memory(c_mem),
+        install_d, v_hist_str, lib_str, limit_str, PM.format_memory(c_mem),
         warn_str, pm_mem, sv_size, sv_status, sv_warn, PM.session_loops,
-        tot_loops, f_count, PM.learned_count, PM:get_top_mementos()
+        tot_loops, f_count, PM.learned_count, PM.get_top_mementos()
     )
 end
 
-function PM:update_learned_count()
+function PM.update_learned_count()
     local cc = 0
-    if self.acct_saved and self.acct_saved.learned_data then
-        for _ in pairs(self.acct_saved.learned_data) do cc = cc + 1 end
+    if PM.acct_saved and PM.acct_saved.learned_data then
+        for _ in pairs(PM.acct_saved.learned_data) do cc = cc + 1 end
     end
-    self.learned_count = cc
+    PM.learned_count = cc
 end
 
-function PM:update_fav_count()
+function PM.update_fav_count()
     local cc = 0
-    if self.settings and self.settings.favorites then
-        for k, v in pairs(self.settings.favorites) do if v then cc = cc + 1 end end
+    if PM.settings and PM.settings.favorites then
+        for k, v in pairs(PM.settings.favorites) do if v then cc = cc + 1 end end
     end
-    self.current_fav_count = cc
+    PM.current_fav_count = cc
 end
 
-function PM:update_settings_reference()
-    if self.char_saved and self.char_saved.use_account_settings then
-        self.settings = self.acct_saved
+function PM.update_settings_reference()
+    if PM.char_saved and PM.char_saved.use_account_settings then
+        PM.settings = PM.acct_saved
     else
-        self.settings = self.char_saved
+        PM.settings = PM.char_saved
     end
     
-    if not self.settings then return end
+    if not PM.settings then return end
     
-    if type(self.settings.ui) ~= "table" then
-        self.settings.ui = ZO_DeepTableCopy(self.defaults.ui)
+    if type(PM.settings.ui) ~= "table" then
+        PM.settings.ui = ZO_ShallowTableCopy(PM.defaults.ui)
     end
-    if type(self.settings.ui_menu) ~= "table" then
-        self.settings.ui_menu = ZO_DeepTableCopy(self.defaults.ui_menu)
+    if type(PM.settings.ui_menu) ~= "table" then
+        PM.settings.ui_menu = ZO_ShallowTableCopy(PM.defaults.ui_menu)
     end
-    if type(self.settings.sync_module) ~= "table" then
-        self.settings.sync_module = ZO_DeepTableCopy(self.defaults.sync_module)
+    if type(PM.settings.sync_module) ~= "table" then
+        PM.settings.sync_module = ZO_ShallowTableCopy(PM.defaults.sync_module)
     end
-    if type(self.settings.csa_durations) ~= "table" then
-        self.settings.csa_durations = ZO_DeepTableCopy(self.defaults.csa_durations)
+    if type(PM.settings.csa_durations) ~= "table" then
+        PM.settings.csa_durations = ZO_ShallowTableCopy(PM.defaults.csa_durations)
     end
-    if self.acct_saved and type(self.acct_saved.learned_data) ~= "table" then
-        self.acct_saved.learned_data = {}
+    if PM.acct_saved and type(PM.acct_saved.learned_data) ~= "table" then
+        PM.acct_saved.learned_data = {}
     end
-    if self.settings.favorites == nil then self.settings.favorites = {} end
+    if PM.settings.favorites == nil then PM.settings.favorites = {} end
     
-    if self.settings.ui.scale == nil then
-        self.settings.ui.scale = (IsConsoleUI() and 1.0 or 1.0)
+    if PM.settings.ui.scale == nil then
+        PM.settings.ui.scale = (IsConsoleUI() and 1.0 or 1.0)
     end
-    if self.settings.ui_menu.scale == nil then
-        self.settings.ui_menu.scale = (IsConsoleUI() and 1.2 or 1.0)
+    if PM.settings.ui_menu.scale == nil then
+        PM.settings.ui_menu.scale = (IsConsoleUI() and 1.2 or 1.0)
     end
 
-    self:update_learned_count()
-    self:update_ui_anchor()
-    self:toggle_ui_update()
-    self:update_favorites_choices()
-    PM:apply_spin_stop()
+    PM.update_learned_count()
+    PM.update_ui_anchor()
+    PM.toggle_ui_update()
+    PM.update_favorites_choices()
+    PM.apply_spin_stop()
 end
 
-function PM:migrate_data()
-    if self.settings then
+function PM.migrate_data()
+    if PM.settings then
         local c_map = {
             activeId = "active_id", paused = "is_paused", logEnabled = "is_log_enabled",
             csaEnabled = "is_csa_enabled", csaCleanupEnabled = "is_csa_cleanup_enabled",
@@ -468,46 +468,46 @@ function PM:migrate_data()
             csaDurations = "csa_durations", uiMenu = "ui_menu", sync = "sync_module"
         }
         for old_k, new_k in pairs(c_map) do
-            if self.settings[old_k] ~= nil then
-                self.settings[new_k] = self.settings[old_k]
-                self.settings[old_k] = nil
+            if PM.settings[old_k] ~= nil then
+                PM.settings[new_k] = PM.settings[old_k]
+                PM.settings[old_k] = nil
             end
         end
-        if self.settings.ui then
-            if self.settings.ui.locked ~= nil then
-                self.settings.ui.is_locked = self.settings.ui.locked
-                self.settings.ui.locked = nil
+        if PM.settings.ui then
+            if PM.settings.ui.locked ~= nil then
+                PM.settings.ui.is_locked = PM.settings.ui.locked
+                PM.settings.ui.locked = nil
             end
-            if self.settings.ui.hidden ~= nil then
-                self.settings.ui.is_hidden = self.settings.ui.hidden
-                self.settings.ui.hidden = nil
+            if PM.settings.ui.hidden ~= nil then
+                PM.settings.ui.is_hidden = PM.settings.ui.hidden
+                PM.settings.ui.hidden = nil
             end
         end
-        if self.settings.sync_module then
-            if self.settings.sync_module.random ~= nil then
-                self.settings.sync_module.is_random = self.settings.sync_module.random
-                self.settings.sync_module.random = nil
+        if PM.settings.sync_module then
+            if PM.settings.sync_module.random ~= nil then
+                PM.settings.sync_module.is_random = PM.settings.sync_module.random
+                PM.settings.sync_module.random = nil
             end
-            if self.settings.sync_module.ignoreInCombat ~= nil then
-                self.settings.sync_module.ignore_in_combat = self.settings.sync_module.ignoreInCombat
-                self.settings.sync_module.ignoreInCombat = nil
+            if PM.settings.sync_module.ignoreInCombat ~= nil then
+                PM.settings.sync_module.ignore_in_combat = PM.settings.sync_module.ignoreInCombat
+                PM.settings.sync_module.ignoreInCombat = nil
             end
-            if self.settings.sync_module.enabled ~= nil then
-                self.settings.sync_module.is_enabled = self.settings.sync_module.enabled
-                self.settings.sync_module.enabled = nil
+            if PM.settings.sync_module.enabled ~= nil then
+                PM.settings.sync_module.is_enabled = PM.settings.sync_module.enabled
+                PM.settings.sync_module.enabled = nil
             end
         end
 
-        if not self.settings.is_migrated_086 then
-            self.settings.ui.is_hidden = true; self.settings.show_in_hud = false
-            self.settings.enable_stats_ui = false; self.settings.is_log_enabled = false
-            self.settings.is_auto_cleanup = true; self.settings.is_csa_cleanup_enabled = true
-            self.settings.is_csa_enabled = true; self.settings.enable_random_fav = false
-            self.settings.enable_learning = false; self.settings.is_unrestricted = false
-            self.settings.is_loop_in_combat = false; self.settings.is_performance_mode = true
-            self.settings.is_random_on_login = false; self.settings.is_random_on_zone = false
-            self.settings.is_stop_spinning = false; self.settings.sync_module.is_enabled = false
-            self.settings.is_migrated_086 = true
+        if not PM.settings.is_migrated_086 then
+            PM.settings.ui.is_hidden = true; PM.settings.show_in_hud = false
+            PM.settings.enable_stats_ui = false; PM.settings.is_log_enabled = false
+            PM.settings.is_auto_cleanup = true; PM.settings.is_csa_cleanup_enabled = true
+            PM.settings.is_csa_enabled = true; PM.settings.enable_random_fav = false
+            PM.settings.enable_learning = false; PM.settings.is_unrestricted = false
+            PM.settings.is_loop_in_combat = false; PM.settings.is_performance_mode = true
+            PM.settings.is_random_on_login = false; PM.settings.is_random_on_zone = false
+            PM.settings.is_stop_spinning = false; PM.settings.sync_module.is_enabled = false
+            PM.settings.is_migrated_086 = true
         end
 
         local delays_to_fix = {
@@ -516,22 +516,22 @@ function PM:migrate_data()
             "delay_in_menu", "delay_combat_end"
         }
         for _, k in ipairs(delays_to_fix) do
-            if self.settings[k] and self.settings[k] > 20 then
-                self.settings[k] = self.settings[k] / 1000
+            if PM.settings[k] and PM.settings[k] > 20 then
+                PM.settings[k] = PM.settings[k] / 1000
             end
         end
-        for k, v in pairs(self.settings.csa_durations) do
-            if v > 10 then self.settings.csa_durations[k] = v / 1000 end
+        for k, v in pairs(PM.settings.csa_durations) do
+            if v > 10 then PM.settings.csa_durations[k] = v / 1000 end
         end
-        if self.settings.sync_module and self.settings.sync_module.delay then
-            if self.settings.sync_module.delay > 20 then
-                self.settings.sync_module.delay = self.settings.sync_module.delay / 1000
+        if PM.settings.sync_module and PM.settings.sync_module.delay then
+            if PM.settings.sync_module.delay > 20 then
+                PM.settings.sync_module.delay = PM.settings.sync_module.delay / 1000
             end
         end
     end
 
-    if self.acct_saved and self.acct_saved.learned_data then
-        for id, data in pairs(self.acct_saved.learned_data) do
+    if PM.acct_saved and PM.acct_saved.learned_data then
+        for id, data in pairs(PM.acct_saved.learned_data) do
             if data.aid and not data.ref_id then data.ref_id = data.aid; data.aid = nil end
             if data.refID and not data.ref_id then data.ref_id = data.refID; data.refID = nil end
         end
@@ -556,13 +556,13 @@ function PM:migrate_data()
             end
         end
     end
-    if self.acct_saved then self.acct_saved.autoResumeScan = nil end
-    if self.char_saved then self.char_saved.autoResumeScan = nil end
+    if PM.acct_saved then PM.acct_saved.autoResumeScan = nil end
+    if PM.char_saved then PM.char_saved.autoResumeScan = nil end
 end
 
-function PM:safe_csa(text, dur_key, limit_override)
-    if not self.settings.is_csa_enabled or not CENTER_SCREEN_ANNOUNCE then return end
-    local d_sec = (dur_key and self.settings.csa_durations[dur_key]) or 6
+function PM.safe_csa(text, dur_key, limit_override)
+    if not PM.settings.is_csa_enabled or not CENTER_SCREEN_ANNOUNCE then return end
+    local d_sec = (dur_key and PM.settings.csa_durations[dur_key]) or 6
     local str_limit = limit_override or 70 
     
     if string.len(text) <= str_limit then
@@ -619,70 +619,70 @@ function PM:safe_csa(text, dur_key, limit_override)
     end
 end
 
-function PM:log_msg(msg, is_csa, dur_key, limit_override)
-    if not self.settings then return end
-    if self.settings.is_csa_enabled and is_csa then
-        self:safe_csa("|cFFD700" .. tostring(msg) .. "|r", dur_key, limit_override)
+function PM.log_msg(msg, is_csa, dur_key, limit_override)
+    if not PM.settings then return end
+    if PM.settings.is_csa_enabled and is_csa then
+        PM.safe_csa("|cFFD700" .. tostring(msg) .. "|r", dur_key, limit_override)
     end
-    if self.settings.is_log_enabled then
+    if PM.settings.is_log_enabled then
         local f_msg = "|cFF9900[PM]|r " .. string.gsub(tostring(msg), "\n", " ")
         if CHAT_SYSTEM then CHAT_SYSTEM:AddMessage(f_msg) end
     end
 end
 
-function PM:apply_spin_stop()
+function PM.apply_spin_stop()
     if IsConsoleUI() then return end
     local scene_list = { "character", "stats", "interact" }
     for _, s_name in ipairs(scene_list) do
         local scene_obj = SCENE_MANAGER:GetScene(s_name)
         if scene_obj then
             local has_frag = scene_obj:HasFragment(FRAME_PLAYER_FRAGMENT)
-            if self.settings.is_stop_spinning and has_frag then
+            if PM.settings.is_stop_spinning and has_frag then
                 scene_obj:RemoveFragment(FRAME_PLAYER_FRAGMENT)
-            elseif not self.settings.is_stop_spinning and not has_frag then
+            elseif not PM.settings.is_stop_spinning and not has_frag then
                 scene_obj:AddFragment(FRAME_PLAYER_FRAGMENT)
             end
         end
     end
 end
 
-function PM:get_random_supported()
-    if not self.settings.enable_random_fav then return nil end
+function PM.get_random_supported()
+    if not PM.settings.enable_random_fav then return nil end
     local avail = {}
-    if self.settings.favorites then
-        for f_id, is_fav in pairs(self.settings.favorites) do
+    if PM.settings.favorites then
+        for f_id, is_fav in pairs(PM.settings.favorites) do
             if is_fav and IsCollectibleUnlocked(f_id) then
-                local is_hardcoded = (self.memento_data[f_id] ~= nil)
-                if self.settings.is_unrestricted or is_hardcoded then table.insert(avail, f_id) end
+                local is_hardcoded = (PM.memento_data[f_id] ~= nil)
+                if PM.settings.is_unrestricted or is_hardcoded then table.insert(avail, f_id) end
             end
         end
     end
     if #avail > 0 then return avail[math.random(#avail)] end
     
-    for f_id, _ in pairs(self.memento_data) do
+    for f_id, _ in pairs(PM.memento_data) do
         if IsCollectibleUnlocked(f_id) then table.insert(avail, f_id) end
     end
     
-    if self.settings.is_unrestricted and self.acct_saved and self.acct_saved.learned_data then
-        for f_id, _ in pairs(self.acct_saved.learned_data) do
+    if PM.settings.is_unrestricted and PM.acct_saved and PM.acct_saved.learned_data then
+        for f_id, _ in pairs(PM.acct_saved.learned_data) do
             if IsCollectibleUnlocked(f_id) then table.insert(avail, f_id) end
         end
     end
     return #avail > 0 and avail[math.random(#avail)] or nil
 end
 
-function PM:get_random_learned()
-    if not self.settings.enable_random_fav then return nil end
-    if not self.acct_saved or not self.acct_saved.learned_data then return nil end
+function PM.get_random_learned()
+    if not PM.settings.enable_random_fav then return nil end
+    if not PM.acct_saved or not PM.acct_saved.learned_data then return nil end
     local avail = {}
-    for f_id, _ in pairs(self.acct_saved.learned_data) do
+    for f_id, _ in pairs(PM.acct_saved.learned_data) do
         if IsCollectibleUnlocked(f_id) then table.insert(avail, f_id) end
     end
     return #avail > 0 and avail[math.random(#avail)] or nil
 end
 
-function PM:get_random_any()
-    if not self.settings.enable_random_fav then return nil end
+function PM.get_random_any()
+    if not PM.settings.enable_random_fav then return nil end
     local avail = {}
     for i = 1, GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO) do
         local f_id = GetCollectibleIdFromType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO, i)
@@ -691,28 +691,28 @@ function PM:get_random_any()
     return #avail > 0 and avail[math.random(#avail)] or nil
 end
 
-function PM:update_movement_state()
+function PM.update_movement_state()
     if not GetUnitRawWorldPosition then return end
     local p_x, _, p_z = GetUnitRawWorldPosition("player")
     local tick_ms = GetGameTimeMilliseconds()
     
-    if self.last_pos.t == 0 then
-        self.last_pos = {x=p_x, z=p_z, t=tick_ms}; self.is_moving = false; return
+    if PM.last_pos.t == 0 then
+        PM.last_pos = {x=p_x, z=p_z, t=tick_ms}; PM.is_moving = false; return
     end
     
-    if (tick_ms - self.last_pos.t) > 100 then 
-        local dist = zo_sqrt((p_x - self.last_pos.x)^2 + (p_z - self.last_pos.z)^2)
-        self.is_moving = (dist > 0.5)
-        self.last_pos = {x=p_x, z=p_z, t=tick_ms}
+    if (tick_ms - PM.last_pos.t) > 100 then 
+        local dist = zo_sqrt((p_x - PM.last_pos.x)^2 + (p_z - PM.last_pos.z)^2)
+        PM.is_moving = (dist > 0.5)
+        PM.last_pos = {x=p_x, z=p_z, t=tick_ms}
     end
 end
 
-function PM:get_action_state()
+function PM.get_action_state()
     if IsResurrecting and IsResurrecting() then
-        return true, "|cFF0000(Resurrecting)|r", (self.settings.delay_resurrect or 5) * 1000
+        return true, "|cFF0000(Resurrecting)|r", (PM.settings.delay_resurrect or 5) * 1000
     end
     if IsUnitReincarnating and IsUnitReincarnating("player") then
-        return true, "|cFF0000(Reviving)|r", (self.settings.delay_resurrect or 5) * 1000
+        return true, "|cFF0000(Reviving)|r", (PM.settings.delay_resurrect or 5) * 1000
     end
     
     local is_blocking = false
@@ -720,106 +720,106 @@ function PM:get_action_state()
     elseif IsUnitBlocking and IsUnitBlocking("player") then is_blocking = true end
     
     if is_blocking then
-        return true, "|cFF4500(Blocking)|r", (self.settings.delay_block or 5) * 1000
+        return true, "|cFF4500(Blocking)|r", (PM.settings.delay_block or 5) * 1000
     end
     if IsSprinting and IsSprinting() then
-        return true, "|c00CED1(Sprinting)|r", (self.settings.delay_sprint or 5) * 1000
+        return true, "|c00CED1(Sprinting)|r", (PM.settings.delay_sprint or 5) * 1000
     end
     if IsUnitSwimming and IsUnitSwimming("player") then
-        return true, "|c0064D2(Swimming)|r", (self.settings.delay_swim or 5) * 1000
+        return true, "|c0064D2(Swimming)|r", (PM.settings.delay_swim or 5) * 1000
     end
     if IsMounted and IsMounted("player") then
-        return true, "|cFFF000(Mounted)|r", (self.settings.delay_mount or 5) * 1000
+        return true, "|cFFF000(Mounted)|r", (PM.settings.delay_mount or 5) * 1000
     end
     
     local is_sneaking = GetUnitStealthState and GetUnitStealthState("player") ~= STEALTH_STATE_NONE
     if is_sneaking then
-        return true, "|c1EBEA5(Sneaking)|r", (self.settings.delay_sneak or 5) * 1000
+        return true, "|c1EBEA5(Sneaking)|r", (PM.settings.delay_sneak or 5) * 1000
     end
-    if self.is_moving then
-        return true, "|c00CED1(Moving)|r", (self.settings.delay_move or 5) * 1000
+    if PM.is_moving then
+        return true, "|c00CED1(Moving)|r", (PM.settings.delay_move or 5) * 1000
     end
     return false, "", 0
 end
 
-function PM:update_ui_anchor()
-    if not self.ui_window or not self.settings then return end
-    self.ui_window:ClearAnchors(); self.ui_window:SetMovable(not self.settings.ui.is_locked)
+function PM.update_ui_anchor()
+    if not PM.ui_window or not PM.settings then return end
+    PM.ui_window:ClearAnchors(); PM.ui_window:SetMovable(not PM.settings.ui.is_locked)
     local x_offset = 0; if _G["PP"] then x_offset = 0.5 end 
     local is_pad = IsConsoleUI() or IsInGamepadPreferredMode()
     
-    if self.settings.show_in_hud then
-        self.ui_window:SetScale(self.settings.ui.scale or (is_pad and 1.0 or 1.0))
-        if self.settings.ui.left == self.defaults.ui.left and self.settings.ui.top == self.defaults.ui.top then
-            if is_pad then self.ui_window:SetAnchor(LEFT, ZO_Compass, RIGHT, 15, 0)
-            else self.ui_window:SetAnchor(LEFT, ZO_Compass, RIGHT, 25 + x_offset, -5) end
+    if PM.settings.show_in_hud then
+        PM.ui_window:SetScale(PM.settings.ui.scale or (is_pad and 1.0 or 1.0))
+        if PM.settings.ui.left == PM.defaults.ui.left and PM.settings.ui.top == PM.defaults.ui.top then
+            if is_pad then PM.ui_window:SetAnchor(LEFT, ZO_Compass, RIGHT, 15, 0)
+            else PM.ui_window:SetAnchor(LEFT, ZO_Compass, RIGHT, 25 + x_offset, -5) end
         else
-            self.ui_window:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.settings.ui.left, self.settings.ui.top)
+            PM.ui_window:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, PM.settings.ui.left, PM.settings.ui.top)
         end
     else
-        self.ui_window:SetScale(self.settings.ui_menu.scale or (is_pad and 1.2 or 1.0))
-        local d_left, d_top = self.defaults.ui_menu.left, self.defaults.ui_menu.top
-        if self.settings.ui_menu.left == d_left and self.settings.ui_menu.top == d_top then
+        PM.ui_window:SetScale(PM.settings.ui_menu.scale or (is_pad and 1.2 or 1.0))
+        local d_left, d_top = PM.defaults.ui_menu.left, PM.defaults.ui_menu.top
+        if PM.settings.ui_menu.left == d_left and PM.settings.ui_menu.top == d_top then
             if is_pad then
-                self.ui_window:SetAnchor(TOPRIGHT, GuiRoot, TOPRIGHT, -50, 50)
+                PM.ui_window:SetAnchor(TOPRIGHT, GuiRoot, TOPRIGHT, -50, 50)
             else
                 if ZO_CollectionsBook_TopLevelSearchBox then
-                    self.ui_window:SetAnchor(LEFT, ZO_CollectionsBook_TopLevelSearchBox, RIGHT, 10 + x_offset, 0)
-                else self.ui_window:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, 100 + x_offset, 100) end
+                    PM.ui_window:SetAnchor(LEFT, ZO_CollectionsBook_TopLevelSearchBox, RIGHT, 10 + x_offset, 0)
+                else PM.ui_window:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, 100 + x_offset, 100) end
             end
         else
-            self.ui_window:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.settings.ui_menu.left, self.settings.ui_menu.top)
+            PM.ui_window:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, PM.settings.ui_menu.left, PM.settings.ui_menu.top)
         end
     end
 end
 
-function PM:update_ui_scenes()
-    if not self.hudFragment or not self.menuFragment then return end
+function PM.update_ui_scenes()
+    if not PM.hudFragment or not PM.menuFragment then return end
     local hud_arr = {"hud", "hudui", "gamepad_hud", "interact"}
     local menu_arr = {"collectionsBook", "gamepad_collections_book", "gamepadCollectionsBook"}
     
     for _, nm in ipairs(hud_arr) do
         local s = SCENE_MANAGER:GetScene(nm)
-        if s and s:HasFragment(self.hudFragment) then s:RemoveFragment(self.hudFragment) end
+        if s and s:HasFragment(PM.hudFragment) then s:RemoveFragment(PM.hudFragment) end
     end
     for _, nm in ipairs(menu_arr) do
         local s = SCENE_MANAGER:GetScene(nm)
-        if s and s:HasFragment(self.menuFragment) then s:RemoveFragment(self.menuFragment) end
+        if s and s:HasFragment(PM.menuFragment) then s:RemoveFragment(PM.menuFragment) end
     end
     
-    if self.settings.show_in_hud then
+    if PM.settings.show_in_hud then
         for _, nm in ipairs(hud_arr) do
             local s = SCENE_MANAGER:GetScene(nm)
-            if s then s:AddFragment(self.hudFragment) end
+            if s then s:AddFragment(PM.hudFragment) end
         end
     else
         for _, nm in ipairs(menu_arr) do
             local s = SCENE_MANAGER:GetScene(nm)
-            if s then s:AddFragment(self.menuFragment) end
+            if s then s:AddFragment(PM.menuFragment) end
         end
     end
-    self:update_ui_anchor()
+    PM.update_ui_anchor()
 end
 
-function PM:toggle_ui_update()
-    if not self.ui_window then return end
-    if self.settings.ui.is_hidden then
-        self.ui_window:SetHandler("OnUpdate", nil)
-        self.ui_window:SetHidden(true)
-        self:update_ui_scenes()
+function PM.toggle_ui_update()
+    if not PM.ui_window then return end
+    if PM.settings.ui.is_hidden then
+        PM.ui_window:SetHandler("OnUpdate", nil)
+        PM.ui_window:SetHidden(true)
+        PM.update_ui_scenes()
     else
-        self.ui_window:SetHandler("OnUpdate", self.ui_update_fn)
-        self.ui_window:SetHidden(false)
-        self:update_ui_scenes()
+        PM.ui_window:SetHandler("OnUpdate", PM.ui_update_fn)
+        PM.ui_window:SetHidden(false)
+        PM.update_ui_scenes()
     end
 end
 
-function PM:create_ui()
+function PM.create_ui()
     local win = WINDOW_MANAGER:CreateControl("PermMementoUI", GuiRoot, CT_TOPLEVELCONTROL)
     win:SetClampedToScreen(true); win:SetMouseEnabled(true)
     win:SetDrawTier(DT_OVERLAY); win:SetDrawLayer(DL_OVERLAY)
     win:SetDrawLevel(100); win:SetHidden(true)
-    self.ui_window = win
+    PM.ui_window = win
     
     win:SetHandler("OnMoveStop", function(ctrl) 
         if not PM.settings then return end 
@@ -849,14 +849,14 @@ function PM:create_ui()
     end
     local last_tick = 0
     
-    self.ui_update_fn = function(ctrl, f_time)
-        PM:update_movement_state()
+    PM.ui_update_fn = function(ctrl, f_time)
+        PM.update_movement_state()
         if not PM.settings then return end 
         local r_rate = PM.settings.is_performance_mode and 1.0 or 0.25
         if (f_time - last_tick < r_rate) then return end
         last_tick = f_time
 
-        local md = PM:get_data(PM.settings.active_id)
+        local md = PM.get_data(PM.settings.active_id)
         if not PM.settings.active_id or not md then 
             local idle_txt = "[PM] Inactive"
             local l2 = ""
@@ -865,7 +865,7 @@ function PM:create_ui()
             
             if PM.mem_state == 1 then l2 = l2 .. "|cFFFF00[Cleaning LUA Memory...]|r "
             elseif PM.mem_state == 2 then
-                l2 = l2 .. string.format("|c00FF00[%s Freed]|r ", PM:format_memory(PM.mem_freed))
+                l2 = l2 .. string.format("|c00FF00[%s Freed]|r ", PM.format_memory(PM.mem_freed))
             elseif PM.mem_state == 3 then 
                 local diff = math.floor((PM.mem_next_sweep - GetGameTimeMilliseconds()) / 1000)
                 l2 = l2 .. string.format("|cAAAAAA[Next Memory Sweep %ds]|r ", math.max(0, diff))
@@ -886,7 +886,7 @@ function PM:create_ui()
         elseif IsUnitInCombat and IsUnitInCombat("player") and not PM.settings.is_loop_in_combat then
             st_info = "|cEF008C(Combat)|r"
         else
-            local is_busy, act_txt, _ = PM:get_action_state()
+            local is_busy, act_txt, _ = PM.get_action_state()
             if is_busy then
                 st_info = act_txt 
             elseif (IsInteracting and IsInteracting()) or
@@ -941,7 +941,7 @@ function PM:create_ui()
         
         if PM.mem_state == 1 then l2 = l2 .. "|cFFFF00[Cleaning LUA Memory...]|r "
         elseif PM.mem_state == 2 then
-            l2 = l2 .. string.format("|c00FF00[%s Freed]|r ", PM:format_memory(PM.mem_freed))
+            l2 = l2 .. string.format("|c00FF00[%s Freed]|r ", PM.format_memory(PM.mem_freed))
         elseif PM.mem_state == 3 then 
             local diff = math.floor((PM.mem_next_sweep - GetGameTimeMilliseconds()) / 1000)
             l2 = l2 .. string.format("|cAAAAAA[Next Memory Sweep %ds]|r ", math.max(0, diff))
@@ -953,23 +953,23 @@ function PM:create_ui()
         text_lbl:SetText(f_str); force_resize()
     end
     
-    self.uiLabel = text_lbl
-    self.hudFragment = ZO_HUDFadeSceneFragment:New(win)
-    self.menuFragment = ZO_FadeSceneFragment:New(win)
+    PM.uiLabel = text_lbl
+    PM.hudFragment = ZO_HUDFadeSceneFragment:New(win)
+    PM.menuFragment = ZO_FadeSceneFragment:New(win)
 end
 
-function PM:run_manual_cleanup(is_auto, is_emergency)
-    self.mem_state = 1
+function PM.run_manual_cleanup(is_auto, is_emergency)
+    PM.mem_state = 1
     zo_callLater(function()
         local before = collectgarbage("count") / 1024
         collectgarbage("collect")
         if is_emergency then collectgarbage("collect") end
         local after = collectgarbage("count") / 1024
-        self.mem_freed = before - after
-        self.mem_state = 0
+        PM.mem_freed = before - after
+        PM.mem_state = 0
         
-        if self.mem_freed > 0.01 then
-            local msg = string.format("Memory Freed %s", PM:format_memory(self.mem_freed))
+        if PM.mem_freed > 0.01 then
+            local msg = string.format("Memory Freed %s", PM.format_memory(PM.mem_freed))
             if PM.settings.is_log_enabled and CHAT_SYSTEM then
                 CHAT_SYSTEM:AddMessage("|cFF9900[PM]|r " .. msg)
             end
@@ -989,10 +989,10 @@ function PM:run_manual_cleanup(is_auto, is_emergency)
     end, 500)
 end
 
-function PM:trigger_memory_check(check_type, delay)
-    if not self.settings.enable_stats_ui and not self.settings.is_auto_cleanup then return end
+function PM.trigger_memory_check(check_type, delay)
+    if not PM.settings.enable_stats_ui and not PM.settings.is_auto_cleanup then return end
     if is_alc_enabled() then return end
-    if self.mem_state == 1 or self.is_mem_check_queued then return end 
+    if PM.mem_state == 1 or PM.is_mem_check_queued then return end 
     
     local is_con = IsConsoleUI()
     local current_mb = is_con and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
@@ -1001,11 +1001,11 @@ function PM:trigger_memory_check(check_type, delay)
     if current_mb >= limit_threshold then
         local in_combat = IsUnitInCombat and IsUnitInCombat("player")
         if in_combat or IsUnitDead("player") then return end
-        self.is_mem_check_queued = true 
+        PM.is_mem_check_queued = true 
 
         zo_callLater(function()
-            self.is_mem_check_queued = false
-            if self.mem_state == 1 then return end
+            PM.is_mem_check_queued = false
+            if PM.mem_state == 1 then return end
             
             local still_in_combat = IsUnitInCombat and IsUnitInCombat("player")
             if still_in_combat or IsUnitDead("player") then return end
@@ -1019,27 +1019,27 @@ function PM:trigger_memory_check(check_type, delay)
 
             local recheck_mb = is_con and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
             if recheck_mb >= limit_threshold then
-                self:run_manual_cleanup(true)
+                PM.run_manual_cleanup(true)
                 EVENT_MANAGER:UnregisterForUpdate(PM.name .. "_MemFallback")
                 EVENT_MANAGER:RegisterForUpdate(PM.name .. "_MemFallback", 300000, function()
-                    PM:trigger_memory_check("Fallback", 0)
+                    PM.trigger_memory_check("Fallback", 0)
                 end)
             end
         end, delay)
     else
         EVENT_MANAGER:UnregisterForUpdate(PM.name .. "_MemFallback")
-        self.mem_state = 0
+        PM.mem_state = 0
     end
 end
 
-function PM:is_busy()
-    if not IsPlayerActivated() then return true, (self.settings.delay_teleport or 5) * 1000 end
+function PM.is_busy()
+    if not IsPlayerActivated() then return true, (PM.settings.delay_teleport or 5) * 1000 end
     if IsUnitDead and IsUnitDead("player") then return true, 2000 end
     
     local in_combat = IsUnitInCombat and IsUnitInCombat("player")
     if in_combat then
-        if not self.settings.is_loop_in_combat then
-            return true, (self.settings.delay_combat_end or 5) * 1000
+        if not PM.settings.is_loop_in_combat then
+            return true, (PM.settings.delay_combat_end or 5) * 1000
         end
     end
     
@@ -1055,240 +1055,240 @@ function PM:is_busy()
     if is_interact or get_interact or is_obj_interact then return true, 1000 end
     
     if SCENE_MANAGER and not (SCENE_MANAGER:IsShowing("hud") or SCENE_MANAGER:IsShowing("hudui")) then
-        return true, (self.settings.delay_in_menu or 5) * 1000
+        return true, (PM.settings.delay_in_menu or 5) * 1000
     end
     
-    local is_act_busy, _, act_delay = self:get_action_state()
+    local is_act_busy, _, act_delay = PM.get_action_state()
     if is_act_busy then return true, act_delay end
     
     return false, 0
 end
 
-function PM:on_effect_changed(eventCode, changeType, effectSlot, effectName, unitTag, beginTime,
+function PM.on_effect_changed(eventCode, changeType, effectSlot, effectName, unitTag, beginTime,
                               endTime, stackCount, iconName, buffType, effectType, abilityType,
                               statusEffectType, unitName, unitId, abilityId, sourceUnitId)
-    if not self.settings or not self.settings.active_id then return end
-    if not self.settings.enable_learning then return end
+    if not PM.settings or not PM.settings.active_id then return end
+    if not PM.settings.enable_learning then return end
     
     local is_gain = (changeType == EFFECT_RESULT_GAINED)
-    if (self.settings.is_unrestricted or self.is_scanning) and is_gain then
-         local act_id = self.settings.active_id
-         local is_unlearned = (self.acct_saved and self.acct_saved.learned_data and
-                               not self.acct_saved.learned_data[act_id])
+    if (PM.settings.is_unrestricted or PM.is_scanning) and is_gain then
+         local act_id = PM.settings.active_id
+         local is_unlearned = (PM.acct_saved and PM.acct_saved.learned_data and
+                               not PM.acct_saved.learned_data[act_id])
                                
-         if not self.memento_data[act_id] and is_unlearned then
+         if not PM.memento_data[act_id] and is_unlearned then
              local cd_rem = 0; local cd_dur = 10000
              if GetCollectibleCooldownAndDuration then
                  cd_rem, cd_dur = GetCollectibleCooldownAndDuration(act_id)
              end
              local s_dur = (cd_dur > 0) and cd_dur or 10000 
              local c_name = GetCollectibleName(act_id)
-             if not self.acct_saved.learned_data then self.acct_saved.learned_data = {} end
+             if not PM.acct_saved.learned_data then PM.acct_saved.learned_data = {} end
              
              local r_id = 0
              local c_data = ZO_COLLECTIBLE_DATA_MANAGER:GetCollectibleDataById(act_id)
              if c_data and c_data.GetReferenceId then r_id = c_data:GetReferenceId() end
              if r_id == 0 then r_id = abilityId end 
 
-             self.acct_saved.learned_data[act_id] = {
+             PM.acct_saved.learned_data[act_id] = {
                  id = act_id, ref_id = r_id, dur = s_dur, name = c_name
              }
-             self:update_learned_count()
+             PM.update_learned_count()
              
              local out_msg = string.format(
                  "Saved: %s\nID: %d | RefID: %d | Dur: %dms | Total Learned: %d",
-                 c_name, act_id, r_id, s_dur, self.learned_count
+                 c_name, act_id, r_id, s_dur, PM.learned_count
              )
-             PM:log_msg(out_msg, true, "settings", 70)
+             PM.log_msg(out_msg, true, "settings", 70)
          end
     end
     
-    local md = PM:get_data(self.settings.active_id)
+    local md = PM.get_data(PM.settings.active_id)
     local is_match = false
     if md and md.ref_id > 0 and abilityId == md.ref_id then is_match = true end
     
     if is_match and changeType == EFFECT_RESULT_FADED then
-        self.loop_token = (self.loop_token or 0) + 1
-        self:run_loop(self.loop_token)
+        PM.loop_token = (PM.loop_token or 0) + 1
+        PM.run_loop(PM.loop_token)
     end
 end
 
-function PM:auto_scan_mementos()
-    if not self.settings.enable_learning then
-        PM:log_msg("Learning Mode is currently DISABLED.", true, "error"); return
+function PM.auto_scan_mementos()
+    if not PM.settings.enable_learning then
+        PM.log_msg("Learning Mode is currently DISABLED.", true, "error"); return
     end
-    if self.is_scanning then return end
-    self.is_scanning = true
+    if PM.is_scanning then return end
+    PM.is_scanning = true
     
     local c_count = 0
     local max_col = GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO)
     
-    self:log_msg("Auto-Scan...Reloading UI...", true, "settings", 90)
-    self.acct_saved.recentScans = {} 
+    PM.log_msg("Auto-Scan...Reloading UI...", true, "settings", 90)
+    PM.acct_saved.recentScans = {} 
     
     for i = 1, max_col do
         local m_id = GetCollectibleIdFromType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO, i)
         if m_id and IsCollectibleUnlocked(m_id) then
             local is_known = false
-            if self.acct_saved and self.acct_saved.learned_data then
-                if self.acct_saved.learned_data[m_id] then is_known = true end
+            if PM.acct_saved and PM.acct_saved.learned_data then
+                if PM.acct_saved.learned_data[m_id] then is_known = true end
             end
             
             if not is_known then 
                 local _, cd_dur = GetCollectibleCooldownAndDuration(m_id)
                 local s_dur = (cd_dur > 0) and cd_dur or 10000 
                 local c_name = GetCollectibleName(m_id)
-                if not self.acct_saved.learned_data then self.acct_saved.learned_data = {} end
+                if not PM.acct_saved.learned_data then PM.acct_saved.learned_data = {} end
                 
                 local r_id = 0
                 local c_data = ZO_COLLECTIBLE_DATA_MANAGER:GetCollectibleDataById(m_id)
                 if c_data and c_data.GetReferenceId then r_id = c_data:GetReferenceId() end
                 
-                self.acct_saved.learned_data[m_id] = {
+                PM.acct_saved.learned_data[m_id] = {
                     id = m_id, ref_id = r_id, dur = s_dur, name = c_name
                 }
-                table.insert(self.acct_saved.recentScans, m_id)
+                table.insert(PM.acct_saved.recentScans, m_id)
                 c_count = c_count + 1
             end
         end
     end
     
-    self.is_scanning = false
+    PM.is_scanning = false
     if c_count == 0 then
-        self:log_msg("All owned mementos have already been learned.", true, "settings", 90)
-        self.acct_saved.recentScans = nil 
+        PM.log_msg("All owned mementos have already been learned.", true, "settings", 90)
+        PM.acct_saved.recentScans = nil 
     else
-        self:update_learned_count()
-        self:log_msg("Successfully Learned " .. c_count .. " new mementos! Reloading UI...", false)
+        PM.update_learned_count()
+        PM.log_msg("Successfully Learned " .. c_count .. " new mementos! Reloading UI...", false)
         PM.is_menu_built = false; zo_callLater(function() ReloadUI("ingame") end, 3000)
     end
 end
 
-function PM:run_loop(req_token)
-    if not self.settings or self.settings.is_paused or not self.settings.active_id then return end
-    if req_token ~= self.loop_token then return end
+function PM.run_loop(req_token)
+    if not PM.settings or PM.settings.is_paused or not PM.settings.active_id then return end
+    if req_token ~= PM.loop_token then return end
     
-    local md = PM:get_data(self.settings.active_id)
-    if not md then self.settings.active_id = nil; return end
+    local md = PM.get_data(PM.settings.active_id)
+    if not md then PM.settings.active_id = nil; return end
     
-    local is_busy, w_delay = self:is_busy()
+    local is_busy, w_delay = PM.is_busy()
     if is_busy then 
-        local wait_ms = (w_delay > 0) and w_delay or ((self.settings.delay_idle or 0) * 1000)
+        local wait_ms = (w_delay > 0) and w_delay or ((PM.settings.delay_idle or 0) * 1000)
         if wait_ms < 100 then wait_ms = 100 end
         if GetGameTimeMilliseconds then
             PM.next_fire_time = GetGameTimeMilliseconds() + wait_ms
         end
-        zo_callLater(function() self:run_loop(req_token) end, wait_ms); return 
+        zo_callLater(function() PM.run_loop(req_token) end, wait_ms); return 
     end
-    self:trigger_memory_check("Loop", 0)
+    PM.trigger_memory_check("Loop", 0)
     
-    local cur_target = self.settings.active_id
-    if self.pending_sync_id then cur_target = self.pending_sync_id end
+    local cur_target = PM.settings.active_id
+    if PM.pending_sync_id then cur_target = PM.pending_sync_id end
     
     local cd_rem = 0
     if GetCollectibleCooldownAndDuration then
         cd_rem, _ = GetCollectibleCooldownAndDuration(cur_target)
     end
     if cd_rem and cd_rem > 500 then 
-        local wait_ms = cd_rem + ((self.settings.delay_idle or 0) * 1000)
+        local wait_ms = cd_rem + ((PM.settings.delay_idle or 0) * 1000)
         if wait_ms < 1000 then wait_ms = 1000 end
         if GetGameTimeMilliseconds then
             PM.next_fire_time = GetGameTimeMilliseconds() + wait_ms
         end
-        zo_callLater(function() self:run_loop(req_token) end, wait_ms); return 
+        zo_callLater(function() PM.run_loop(req_token) end, wait_ms); return 
     end
     
-    self.is_looping = true 
-    if self.pending_sync_id then
-         self.is_sync_firing = true; UseCollectible(self.pending_sync_id)
+    PM.is_looping = true 
+    if PM.pending_sync_id then
+         PM.is_sync_firing = true; UseCollectible(PM.pending_sync_id)
          zo_callLater(function()
-             if req_token ~= self.loop_token then return end
+             if req_token ~= PM.loop_token then return end
              local s_rem, s_dur = 0, 10000
              if GetCollectibleCooldownAndDuration then
-                 s_rem, s_dur = GetCollectibleCooldownAndDuration(self.pending_sync_id)
+                 s_rem, s_dur = GetCollectibleCooldownAndDuration(PM.pending_sync_id)
              end
              local wait_ms = (s_rem > 0) and s_rem or s_dur
-             PM:log_msg("Sync Finished...", true, "sync", 80)
-             self.pending_sync_id = nil; self.is_sync_firing = false; self.is_looping = false
+             PM.log_msg("Sync Finished...", true, "sync", 80)
+             PM.pending_sync_id = nil; PM.is_sync_firing = false; PM.is_looping = false
              if GetGameTimeMilliseconds then
                  PM.next_fire_time = GetGameTimeMilliseconds() + wait_ms + 1000
              end
-             zo_callLater(function() self:run_loop(req_token) end, wait_ms + 1000)
+             zo_callLater(function() PM.run_loop(req_token) end, wait_ms + 1000)
          end, 500); return 
     end
 
-    UseCollectible(self.settings.active_id) 
-    self.session_loops = self.session_loops + 1
-    if self.acct_saved then
-        self.acct_saved.total_loops = (self.acct_saved.total_loops or 0) + 1
-        if not self.acct_saved.memento_usage then self.acct_saved.memento_usage = {} end
-        local curr_use = self.acct_saved.memento_usage[self.settings.active_id] or 0
-        self.acct_saved.memento_usage[self.settings.active_id] = curr_use + 1
-        self:trigger_priority_save()
+    UseCollectible(PM.settings.active_id) 
+    PM.session_loops = PM.session_loops + 1
+    if PM.acct_saved then
+        PM.acct_saved.total_loops = (PM.acct_saved.total_loops or 0) + 1
+        if not PM.acct_saved.memento_usage then PM.acct_saved.memento_usage = {} end
+        local curr_use = PM.acct_saved.memento_usage[PM.settings.active_id] or 0
+        PM.acct_saved.memento_usage[PM.settings.active_id] = curr_use + 1
+        PM.trigger_priority_save()
     end
     
-    local rand_zone = self.settings.is_random_on_zone
-    local rand_log = self.settings.is_random_on_login
-    if (rand_zone or rand_log) and self.settings.enable_random_fav then
-        self.next_random_precalc = self:get_random_supported()
+    local rand_zone = PM.settings.is_random_on_zone
+    local rand_log = PM.settings.is_random_on_login
+    if (rand_zone or rand_log) and PM.settings.enable_random_fav then
+        PM.next_random_precalc = PM.get_random_supported()
     end
-    self.is_looping = false
+    PM.is_looping = false
     
-    local is_unres = self.settings.is_unrestricted
-    if not self.memento_data[self.settings.active_id] and not is_unres then
-        self.settings.active_id = nil; return
+    local is_unres = PM.settings.is_unrestricted
+    if not PM.memento_data[PM.settings.active_id] and not is_unres then
+        PM.settings.active_id = nil; return
     end
     
-    local wait_ms = md.dur + 1000 + ((self.settings.delay_idle or 0) * 1000)
+    local wait_ms = md.dur + 1000 + ((PM.settings.delay_idle or 0) * 1000)
     if GetGameTimeMilliseconds then PM.next_fire_time = GetGameTimeMilliseconds() + wait_ms end
-    zo_callLater(function() self:run_loop(req_token) end, wait_ms)
+    zo_callLater(function() PM.run_loop(req_token) end, wait_ms)
 end
 
-function PM:start_loop(c_id, bypass_res)
-    local md = PM:get_data(c_id)
+function PM.start_loop(c_id, bypass_res)
+    local md = PM.get_data(c_id)
     if not md then return end
     
-    if not self.memento_data[c_id] and not self.settings.is_unrestricted and not bypass_res then
-        PM:log_msg(
+    if not PM.memento_data[c_id] and not PM.settings.is_unrestricted and not bypass_res then
+        PM.log_msg(
             "Activating " .. md.name .. " (Looping Disabled - Unrestricted Mode Required)",
             true, "activation", 70
         )
         UseCollectible(c_id); return 
     end
 
-    self.settings.active_id = c_id; self.settings.is_paused = false
-    self.loop_token = (self.loop_token or 0) + 1
+    PM.settings.active_id = c_id; PM.settings.is_paused = false
+    PM.loop_token = (PM.loop_token or 0) + 1
     
-    local rand_zone = self.settings.is_random_on_zone
-    local rand_log = self.settings.is_random_on_login
-    if (rand_zone or rand_log) and self.settings.enable_random_fav then
-        self.next_random_precalc = self:get_random_supported()
+    local rand_zone = PM.settings.is_random_on_zone
+    local rand_log = PM.settings.is_random_on_login
+    if (rand_zone or rand_log) and PM.settings.enable_random_fav then
+        PM.next_random_precalc = PM.get_random_supported()
     end
     
-    local cur_token = self.loop_token 
-    local is_busy, w_delay = self:is_busy()
+    local cur_token = PM.loop_token 
+    local is_busy, w_delay = PM.is_busy()
     if is_busy then 
-        local wait_ms = (w_delay > 0) and w_delay or ((self.settings.delay_idle or 0) * 1000)
+        local wait_ms = (w_delay > 0) and w_delay or ((PM.settings.delay_idle or 0) * 1000)
         if wait_ms < 100 then wait_ms = 100 end
         if GetGameTimeMilliseconds then PM.next_fire_time = GetGameTimeMilliseconds() + wait_ms end
-        zo_callLater(function() self:run_loop(cur_token) end, wait_ms)
+        zo_callLater(function() PM.run_loop(cur_token) end, wait_ms)
     else 
-        self.is_looping = true; UseCollectible(c_id); self.is_looping = false
-        self.session_loops = self.session_loops + 1
-        if self.acct_saved then
-            self.acct_saved.total_loops = (self.acct_saved.total_loops or 0) + 1
-            if not self.acct_saved.memento_usage then self.acct_saved.memento_usage = {} end
-            local curr_use = self.acct_saved.memento_usage[c_id] or 0
-            self.acct_saved.memento_usage[c_id] = curr_use + 1
-            self:trigger_priority_save()
+        PM.is_looping = true; UseCollectible(c_id); PM.is_looping = false
+        PM.session_loops = PM.session_loops + 1
+        if PM.acct_saved then
+            PM.acct_saved.total_loops = (PM.acct_saved.total_loops or 0) + 1
+            if not PM.acct_saved.memento_usage then PM.acct_saved.memento_usage = {} end
+            local curr_use = PM.acct_saved.memento_usage[c_id] or 0
+            PM.acct_saved.memento_usage[c_id] = curr_use + 1
+            PM.trigger_priority_save()
         end
-        local wait_ms = md.dur + 1000 + ((self.settings.delay_idle or 0) * 1000)
+        local wait_ms = md.dur + 1000 + ((PM.settings.delay_idle or 0) * 1000)
         if GetGameTimeMilliseconds then PM.next_fire_time = GetGameTimeMilliseconds() + wait_ms end
-        zo_callLater(function() self:run_loop(cur_token) end, wait_ms) 
+        zo_callLater(function() PM.run_loop(cur_token) end, wait_ms) 
     end
 end
 
-function PM:get_character_list(skip_cur)
+function PM.get_character_list(skip_cur)
     local nm_list, id_list = {}, {}
     local sv_ref = _G["PermMementoSaved"]; local usr = GetDisplayName()
     local c_id = GetCurrentCharacterId(); local srv = GetWorldName() or "Default"
@@ -1311,9 +1311,9 @@ function PM:get_character_list(skip_cur)
     return nm_list, id_list
 end
 
-function PM:copy_character_settings(src_id)
+function PM.copy_character_settings(src_id)
     if not src_id or src_id == "" then
-        PM:log_msg("No character selected to copy.", true, "error"); return
+        PM.log_msg("No character selected to copy.", true, "error"); return
     end
     local usr = GetDisplayName(); local srv = GetWorldName() or "Default"
     local raw_src = _G["PermMementoSaved"][srv][usr][src_id]["Character"]
@@ -1324,12 +1324,12 @@ function PM:copy_character_settings(src_id)
     end
 end
 
-function PM:delete_character_settings(del_id)
+function PM.delete_character_settings(del_id)
     if not del_id or del_id == "" then
-        PM:log_msg("No character selected for deletion.", true, "error"); return
+        PM.log_msg("No character selected for deletion.", true, "error"); return
     end
     if del_id == GetCurrentCharacterId() then
-        PM:log_msg("Cannot delete current character's data while logged in.", true, "error"); return
+        PM.log_msg("Cannot delete current character's data while logged in.", true, "error"); return
     end
     local usr = GetDisplayName(); local srv = GetWorldName() or "Default"
     if _G["PermMementoSaved"][srv] and _G["PermMementoSaved"][srv][usr] then
@@ -1337,25 +1337,25 @@ function PM:delete_character_settings(del_id)
     end
 end
 
-function PM:delete_learned_data(del_id)
+function PM.delete_learned_data(del_id)
     if not del_id or del_id == 0 then return end
-    if self.acct_saved and self.acct_saved.learned_data then
-        self.acct_saved.learned_data[del_id] = nil
-        PM:log_msg("Learned data deleted.", true, "settings", 90)
+    if PM.acct_saved and PM.acct_saved.learned_data then
+        PM.acct_saved.learned_data[del_id] = nil
+        PM.log_msg("Learned data deleted.", true, "settings", 90)
         PM.is_menu_built = false; ReloadUI("ingame")
     end
 end
 
-function PM:delete_all_learned_data()
-    if self.acct_saved and self.acct_saved.learned_data then
-        self.acct_saved.learned_data = {}
-        PM:log_msg("ALL Learned data deleted.", true, "settings", 90)
+function PM.delete_all_learned_data()
+    if PM.acct_saved and PM.acct_saved.learned_data then
+        PM.acct_saved.learned_data = {}
+        PM.log_msg("ALL Learned data deleted.", true, "settings", 90)
         PM.is_menu_built = false; ReloadUI("ingame")
     end
 end
 
-function PM:update_favorites_choices()
-    PM:update_fav_count()
+function PM.update_favorites_choices()
+    PM.update_fav_count()
     PM.fav_all_names, PM.fav_all_ids = {}, {}
     PM.fav_current_names, PM.fav_current_ids = {"None"}, {0}
     
@@ -1369,15 +1369,15 @@ function PM:update_favorites_choices()
     end
     table.sort(arr_all, function(a,b) return a.name < b.name end)
     for _, t in ipairs(arr_all) do
-        local f_str = t.name; local md = PM:get_data(t.id)
+        local f_str = t.name; local md = PM.get_data(t.id)
         if md then f_str = f_str .. string.format(" (%ds)", md.dur / 1000) end
         if PM.settings.favorites[t.id] then f_str = "|c00FF00" .. f_str .. " (Fav)|r" end
         table.insert(PM.fav_all_names, f_str); table.insert(PM.fav_all_ids, t.id)
     end
     
     local arr_fav = {}
-    if self.settings and self.settings.favorites then
-        for f_id, is_fav in pairs(self.settings.favorites) do
+    if PM.settings and PM.settings.favorites then
+        for f_id, is_fav in pairs(PM.settings.favorites) do
             if is_fav and IsCollectibleUnlocked(f_id) then
                 table.insert(arr_fav, {name=GetCollectibleName(f_id), id=f_id})
             end
@@ -1385,7 +1385,7 @@ function PM:update_favorites_choices()
     end
     table.sort(arr_fav, function(a,b) return a.name < b.name end)
     for _, t in ipairs(arr_fav) do 
-        local f_str = t.name; local md = PM:get_data(t.id)
+        local f_str = t.name; local md = PM.get_data(t.id)
         if md then f_str = f_str .. string.format(" (%ds)", md.dur / 1000) end
         table.insert(PM.fav_current_names, f_str); table.insert(PM.fav_current_ids, t.id) 
     end
@@ -1400,28 +1400,29 @@ function PM:update_favorites_choices()
     end
 end
 
-function PM:toggle_favorite(f_id)
+function PM.toggle_favorite(f_id)
     if not f_id or f_id == 0 then return end
-    if not self.settings.favorites then self.settings.favorites = {} end
-    if self.settings.favorites[f_id] then
-        self.settings.favorites[f_id] = nil
-        PM:log_msg("Removed from Favorites: " .. GetCollectibleName(f_id), true, "settings", 90)
+    if not PM.settings.favorites then PM.settings.favorites = {} end
+    if PM.settings.favorites[f_id] then
+        PM.settings.favorites[f_id] = nil
+        PM.log_msg("Removed from Favorites: " .. GetCollectibleName(f_id), true, "settings", 90)
     else
-        self.settings.favorites[f_id] = true
-        PM:log_msg("Added to Favorites: " .. GetCollectibleName(f_id), true, "settings", 90)
+        PM.settings.favorites[f_id] = true
+        PM.log_msg("Added to Favorites: " .. GetCollectibleName(f_id), true, "settings", 90)
     end
-    PM:update_favorites_choices()
+    PM.update_favorites_choices()
 end
 
-function PM:delete_all_favorites()
-    if self.settings then self.settings.favorites = {} end
-    PM:log_msg("All Favorites Cleared.", true, "settings", 90); PM:update_favorites_choices()
+function PM.delete_all_favorites()
+    if PM.settings then PM.settings.favorites = {} end
+    PM.log_msg("All Favorites Cleared.", true, "settings", 90)
+    PM.update_favorites_choices()
 end
 
-function PM:update_menu_choices()
+function PM.update_menu_choices()
     PM.active_names, PM.active_ids = {"None"}, {0}
     local arr_act = {}
-    for f_id, md in pairs(self.memento_data) do
+    for f_id, md in pairs(PM.memento_data) do
         if IsCollectibleUnlocked(f_id) then
             table.insert(arr_act, {name=md.name, id=f_id, dur=md.dur, stat=md.stationary})
         end
@@ -1447,7 +1448,7 @@ function PM:update_menu_choices()
     end
     table.sort(arr_sync, function(a,b) return a.name < b.name end)
     for i, t in ipairs(arr_sync) do 
-        local f_str = t.name; local md = PM:get_data(t.id)
+        local f_str = t.name; local md = PM.get_data(t.id)
         if md then f_str = f_str .. string.format(" (%ds)", md.dur / 1000) end
         table.insert(PM.sync_names, f_str); table.insert(PM.sync_ids, t.id) 
     end
@@ -1456,9 +1457,9 @@ function PM:update_menu_choices()
     end
     
     PM.learned_list_names, PM.learned_list_values = {"None"}, {0}
-    if self.acct_saved and self.acct_saved.learned_data then
+    if PM.acct_saved and PM.acct_saved.learned_data then
         local arr_lrn = {}
-        for f_id, md in pairs(self.acct_saved.learned_data) do table.insert(arr_lrn, md) end
+        for f_id, md in pairs(PM.acct_saved.learned_data) do table.insert(arr_lrn, md) end
         table.sort(arr_lrn, function(a,b) return a.name < b.name end)
         for i, md in ipairs(arr_lrn) do 
             local f_str = md.name .. string.format(" (%ds)", md.dur / 1000)
@@ -1470,16 +1471,16 @@ function PM:update_menu_choices()
     end
 end
 
-function PM:on_combat_event(eventCode, result, isError, abilityName, abilityGraphic,
+function PM.on_combat_event(eventCode, result, isError, abilityName, abilityGraphic,
                             actionSlotType, sourceName, sourceType, targetName, targetType,
                             hitValue, powerType, damageType, log, sourceUnitId, targetUnitId,
                             abilityId, overflow)
-    if not self.settings or not self.settings.active_id then return end
+    if not PM.settings or not PM.settings.active_id then return end
     
     if result == ACTION_RESULT_BEGIN or result == ACTION_RESULT_BEGIN_CHANNEL then
-        self.loop_token = (self.loop_token or 0) + 1
-        local tkn = self.loop_token
-        local w_ms = (self.settings.delay_cast or 3) * 1000
+        PM.loop_token = (PM.loop_token or 0) + 1
+        local tkn = PM.loop_token
+        local w_ms = (PM.settings.delay_cast or 3) * 1000
         
         if GetAbilityCastInfo then
             local is_chan, c_time, chan_time = GetAbilityCastInfo(abilityId)
@@ -1490,26 +1491,26 @@ function PM:on_combat_event(eventCode, result, isError, abilityName, abilityGrap
         if GetGameTimeMilliseconds then
             PM.next_fire_time = GetGameTimeMilliseconds() + w_ms
         end
-        zo_callLater(function() self:run_loop(tkn) end, w_ms)
+        zo_callLater(function() PM.run_loop(tkn) end, w_ms)
     end
 end
 
-function PM:on_collectible_use_result(eventCode, result, isAttemptingActivation)
-    if not self.settings or not self.settings.active_id then return end
+function PM.on_collectible_use_result(eventCode, result, isAttemptingActivation)
+    if not PM.settings or not PM.settings.active_id then return end
     
     if isAttemptingActivation and result ~= 0 then
-        self.loop_token = (self.loop_token or 0) + 1
-        local tkn = self.loop_token
+        PM.loop_token = (PM.loop_token or 0) + 1
+        local tkn = PM.loop_token
         local w_ms = 2000 
         
         if GetGameTimeMilliseconds then
             PM.next_fire_time = GetGameTimeMilliseconds() + w_ms
         end
-        zo_callLater(function() self:run_loop(tkn) end, w_ms)
+        zo_callLater(function() PM.run_loop(tkn) end, w_ms)
     end
 end
 
-function PM:hook_game_ui()
+function PM.hook_game_ui()
     ZO_PreHook("UseCollectible", function(c_id)
         if not PM.settings then return end
         if PM.is_looping or PM.is_scanning then return end
@@ -1525,7 +1526,7 @@ function PM:hook_game_ui()
             if not is_col and not is_qs then return end
         end
         
-        local md = PM:get_data(c_id)
+        local md = PM.get_data(c_id)
         local is_col = SCENE_MANAGER and (
             SCENE_MANAGER:IsShowing("collectionsBook") or
             SCENE_MANAGER:IsShowing("gamepadCollectionsBook")
@@ -1548,19 +1549,19 @@ function PM:hook_game_ui()
                  PM.acct_saved.learned_data[c_id] = {
                      id = c_id, ref_id = r_id, dur = s_dur, name = c_name
                  }
-                 PM:update_learned_count()
+                 PM.update_learned_count()
                  local out_msg = string.format(
                      "Saved: %s\nID: %d | RefID: %d | Dur: %dms | Total Learned: %d",
                      c_name, c_id, r_id, s_dur, PM.learned_count
                  )
-                 PM:log_msg(out_msg, true, "settings", 70); PM.is_menu_built = false 
+                 PM.log_msg(out_msg, true, "settings", 70); PM.is_menu_built = false 
              end, 500)
         end
 
         if PM.settings.active_id == c_id then
              PM.settings.active_id = nil; PM.settings.is_paused = false
              PM.loop_token = (PM.loop_token or 0) + 1
-             PM:log_msg("Auto-loop Stopped", true, "stop", 90)
+             PM.log_msg("Auto-loop Stopped", true, "stop", 90)
              PM.pending_id = 0; PM.next_fire_time = 0; return
         end
         
@@ -1576,30 +1577,30 @@ function PM:hook_game_ui()
             PM.loop_token = (PM.loop_token or 0) + 1; PM.pending_id = c_id 
             
             if is_sw then
-                PM:log_msg("Memento switched to: " .. md.name, true, "activation", 90)
+                PM.log_msg("Memento switched to: " .. md.name, true, "activation", 90)
             else
-                PM:log_msg("Auto-loop started: " .. md.name, true, "activation", 90)
+                PM.log_msg("Auto-loop started: " .. md.name, true, "activation", 90)
             end
             
             local tkn = PM.loop_token
-            zo_callLater(function() PM:run_loop(tkn) end, 100)
+            zo_callLater(function() PM.run_loop(tkn) end, 100)
         else
             if PM.settings.active_id then
                 PM.settings.active_id = nil; PM.loop_token = (PM.loop_token or 0) + 1
                 PM.pending_id = 0; PM.next_fire_time = 0
-                PM:log_msg("Auto-loop Stopped", true, "stop", 90)
+                PM.log_msg("Auto-loop Stopped", true, "stop", 90)
             end
         end
     end)
 end
 
-function PM.sync_engine:initialize()
+function PM.sync_engine.initialize()
   SLASH_COMMANDS["/pmsync"] = function(arg_str)
     if not PM.settings.sync_module.is_enabled then
-        PM:log_msg("Group Sync is currently DISABLED.", true, "error"); return
+        PM.log_msg("Group Sync is currently DISABLED.", true, "error"); return
     end
     if not arg_str or string.len(arg_str) < 1 then
-        PM:log_msg("Usage: /pmsync <searchterm>, /pmsync random OR /pmsync stop", true, "error", 70)
+        PM.log_msg("Usage: /pmsync <searchterm>, /pmsync random OR /pmsync stop", true, "error", 70)
         return
     end
     local c_arg = string.lower(arg_str)
@@ -1612,7 +1613,7 @@ function PM.sync_engine:initialize()
          end
          PM.next_fire_time = 0; return
     elseif c_arg == "random" then 
-         local r_id = PM:get_random_any()
+         local r_id = PM.get_random_any()
          if r_id then
             local l_str = GetCollectibleLink(r_id, LINK_STYLE_BRACKETS)
             local function try_chat()
@@ -1621,7 +1622,7 @@ function PM.sync_engine:initialize()
             if not pcall(try_chat) and CHAT_SYSTEM then
                 CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
             end
-            PM:log_msg("Sent Random Sync Request", true, "sync", 90); return
+            PM.log_msg("Sent Random Sync Request", true, "sync", 90); return
          end
     end
     
@@ -1641,7 +1642,7 @@ function PM.sync_engine:initialize()
           end
       end
     end
-    PM:log_msg("Memento not found or not unlocked.", true, "error", 90)
+    PM.log_msg("Memento not found or not unlocked.", true, "error", 90)
   end
   SLASH_COMMANDS["/permmementosync"] = SLASH_COMMANDS["/pmsync"]
 
@@ -1653,17 +1654,17 @@ function PM.sync_engine:initialize()
     end
     
     if PM.settings.active_id then
-         PM:log_msg("Sync received! Queuing...", true, "sync", 70); PM.pending_sync_id = c_id
+         PM.log_msg("Sync received! Queuing...", true, "sync", 70); PM.pending_sync_id = c_id
     else
          local c_rem = 0
          if GetCollectibleCooldownAndDuration then
              c_rem, _ = GetCollectibleCooldownAndDuration(c_id)
          end
          if c_rem and c_rem > 0 then
-             PM:log_msg("Sync received but on cooldown...", true, "sync", 70)
+             PM.log_msg("Sync received but on cooldown...", true, "sync", 70)
              zo_callLater(function() attempt_col(c_id) end, c_rem + 1000)
          else
-             PM:log_msg("Sync received! Playing...", true, "sync", 80)
+             PM.log_msg("Sync received! Playing...", true, "sync", 80)
              PM.is_sync_firing = true; UseCollectible(c_id)
              zo_callLater(function() PM.is_sync_firing = false end, 1000)
          end
@@ -1675,12 +1676,12 @@ function PM.sync_engine:initialize()
     local cl_name = zo_strformat("<<1>>", fromName)
     if string.match(text, "^PM STOP") then
         if cl_name == GetUnitDisplayName("player") then
-            PM:log_msg("Sent Group Stop Command.", true, "sync", 90); return
+            PM.log_msg("Sent Group Stop Command.", true, "sync", 90); return
         end
         if PM.settings then
             PM.settings.active_id = nil; PM.loop_token = (PM.loop_token or 0) + 1
             PM.pending_sync_id = nil; PM.next_fire_time = 0
-            PM:log_msg("Group Stop received from " .. cl_name, true, "stop", 90)
+            PM.log_msg("Group Stop received from " .. cl_name, true, "stop", 90)
         end
         return
     end
@@ -1692,7 +1693,7 @@ function PM.sync_engine:initialize()
     end
     if not f_id or not IsCollectibleUnlocked(f_id) then return end
     if cl_name == GetUnitDisplayName("player") then
-        PM:log_msg("Sent Group Sync Command.", true, "sync", 90); return
+        PM.log_msg("Sent Group Sync Command.", true, "sync", 90); return
     end
     if not PM.settings then return end 
     
@@ -1704,15 +1705,15 @@ function PM.sync_engine:initialize()
         zo_callLater(function() attempt_col(f_id) end, s_delay * 1000)
     end
   end
-  PM:toggle_sync_listener()
+  PM.toggle_sync_listener()
 end
 
-function PM:build_menu()
+function PM.build_menu()
     if PM.is_menu_built then return end
     
-    local lib_type, lam_ver = self:get_settings_library()
-    if lib_type == "NONE" and not self.settings.has_shown_lib_warning_086 then
-        self:show_missing_library_warning()
+    local lib_type, lam_ver = PM.get_settings_library()
+    if lib_type == "NONE" and not PM.settings.has_shown_lib_warning_086 then
+        PM.show_missing_library_warning()
     end
     if lib_type == "NONE" then return end
 
@@ -1734,8 +1735,8 @@ function PM:build_menu()
     end
 
     PM.is_menu_built = true
-    PM:update_menu_choices(); PM:update_favorites_choices()
-    PM.char_list_names, PM.char_list_values = PM:get_character_list(false)
+    PM.update_menu_choices(); PM.update_favorites_choices()
+    PM.char_list_names, PM.char_list_values = PM.get_character_list(false)
 
     local is_eu = (GetWorldName() == "EU Megaserver")
     local is_pad = IsConsoleUI() or IsInGamepadPreferredMode()
@@ -1746,14 +1747,14 @@ function PM:build_menu()
         type = "panel", name = "Permanent Memento",
         displayName = "|c9CD04CPermanent Memento|r",
         author = "|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r",
-        version = self.version, registerForRefresh = true
+        version = PM.version, registerForRefresh = true
     }
     local b_data = {}
 
     if is_pad then
         table.insert(b_data, {
             type = "button", name = "|c00FF00PERMANENT MEMENTO STATS|r", width = "full",
-            tooltip = function() return PM:get_stats_text() end, func = function() end
+            tooltip = function() return PM.get_stats_text() end, func = function() end
         })
         table.insert(b_data, {
             type = "button", name = "|c00FF00COMMANDS INFO|r", width = "full",
@@ -1782,7 +1783,7 @@ function PM:build_menu()
         type = "button", name = "|c00FFFFMigrate SavedVariables|r", width = is_pad and "full" or "half",
         tooltip = "Manually triggers the data migration process.",
         func = function()
-            PM:migrate_data(); PM:log_msg("Data migration complete...", true, "settings", 80)
+            PM.migrate_data(); PM.log_msg("Data migration complete...", true, "settings", 80)
             zo_callLater(function() ReloadUI("ingame") end, 2000)
         end
     })
@@ -1794,7 +1795,7 @@ function PM:build_menu()
             getFunc = function() return PM.char_saved.use_account_settings end,
             setFunc = function(v)
                 PM.char_saved.use_account_settings = v
-                PM:update_settings_reference(); ReloadUI("ingame")
+                PM.update_settings_reference(); ReloadUI("ingame")
             end
         },
         {
@@ -1812,11 +1813,11 @@ function PM:build_menu()
             type = "button", name = "Activate Random Memento", width = "half",
             tooltip = "Immediately picks and starts a random supported memento.",
             func = function()
-                local r_id = PM:get_random_supported()
+                local r_id = PM.get_random_supported()
                 if r_id then
                     PM.settings.active_id = r_id
-                    PM:log_msg("Randomly Selected: " .. PM:get_data(r_id).name, true, "random", 90)
-                    PM:start_loop(r_id)
+                    PM.log_msg("Randomly Selected: " .. PM.get_data(r_id).name, true, "random", 90)
+                    PM.start_loop(r_id)
                 end
             end
         },
@@ -1826,12 +1827,12 @@ function PM:build_menu()
             func = function()
                 if PM.pending_id and PM.pending_id ~= 0 then
                     PM.settings.active_id = PM.pending_id
-                    local md = PM:get_data(PM.pending_id)
-                    PM:log_msg("Selected via Menu: " .. (md.name or "Unknown"), true, "activation")
-                    PM:start_loop(PM.pending_id); PM.pending_id = nil
+                    local md = PM.get_data(PM.pending_id)
+                    PM.log_msg("Selected via Menu: " .. (md.name or "Unknown"), true, "activation")
+                    PM.start_loop(PM.pending_id); PM.pending_id = nil
                 elseif PM.pending_id == 0 then
                     PM.settings.active_id = nil; PM.loop_token = (PM.loop_token or 0) + 1
-                    PM:log_msg("Auto-loop Stopped", true, "stop", 90)
+                    PM.log_msg("Auto-loop Stopped", true, "stop", 90)
                     PM.pending_id = nil; PM.next_fire_time = 0
                 end
             end
@@ -1843,7 +1844,7 @@ function PM:build_menu()
                 PM.settings.active_id = nil; PM.loop_token = (PM.loop_token or 0) + 1
                 PM.pending_id = 0; PM.settings.is_random_on_zone = false
                 PM.settings.is_random_on_login = false; PM.next_fire_time = 0
-                PM:log_msg("Auto-loop Stopped", true, "stop", 90)
+                PM.log_msg("Auto-loop Stopped", true, "stop", 90)
             end
         },
         {
@@ -1892,7 +1893,7 @@ function PM:build_menu()
             end,
             getFunc = function() return PM.settings.is_auto_cleanup end,
             setFunc = function(v)
-                PM.settings.is_auto_cleanup = v; PM:toggle_cleanup_events()
+                PM.settings.is_auto_cleanup = v; PM.toggle_cleanup_events()
             end,
             disabled = function() return is_alc_enabled() end
         }
@@ -1918,7 +1919,7 @@ if is_pad then
             tooltip = "Prevents camera from shifting in Stats/Inventory.",
             getFunc = function() return PM.settings.is_stop_spinning end,
             setFunc = function(v)
-                PM.settings.is_stop_spinning = v; PM:apply_spin_stop()
+                PM.settings.is_stop_spinning = v; PM.apply_spin_stop()
             end
         })
     end
@@ -1929,9 +1930,9 @@ if is_pad then
             tooltip = "ON: Tracks memory statistics.\nOFF: Stops Tracking memory statistics.",
             getFunc = function() return PM.settings.enable_stats_ui end,
             setFunc = function(v)
-                PM.settings.enable_stats_ui = v; PM:toggle_stats_ui_tracker()
-                PM:toggle_cleanup_events()
-                PM:log_msg("Stats Tracker: " .. (v and "ON" or "OFF"), true, "settings")
+                PM.settings.enable_stats_ui = v; PM.toggle_stats_ui_tracker()
+                PM.toggle_cleanup_events()
+                PM.log_msg("Stats Tracker: " .. (v and "ON" or "OFF"), true, "settings")
             end
         },
         {
@@ -1941,7 +1942,7 @@ if is_pad then
             getFunc = function() return PM.settings.enable_random_fav end,
             setFunc = function(v)
                 PM.settings.enable_random_fav = v
-                PM:log_msg("Random & Favorites: " .. (v and "ON" or "OFF"), true, "settings")
+                PM.log_msg("Random & Favorites: " .. (v and "ON" or "OFF"), true, "settings")
             end
         },
         {
@@ -1951,7 +1952,7 @@ if is_pad then
             getFunc = function() return PM.settings.enable_learning end,
             setFunc = function(v)
                 PM.settings.enable_learning = v
-                PM:log_msg("Learning Mode: " .. (v and "ON" or "OFF"), true, "settings")
+                PM.log_msg("Learning Mode: " .. (v and "ON" or "OFF"), true, "settings")
             end
         }
     }
@@ -1962,8 +1963,8 @@ if is_pad then
             tooltip = "ON: Listens to chat for party sync requests.\nOFF: Disables Sync menu.",
             getFunc = function() return PM.settings.sync_module.is_enabled end,
             setFunc = function(v)
-                PM.settings.sync_module.is_enabled = v; PM:toggle_sync_listener()
-                PM:log_msg("Sync Listening: " .. (v and "ON" or "OFF"), true, "settings")
+                PM.settings.sync_module.is_enabled = v; PM.toggle_sync_listener()
+                PM.log_msg("Sync Listening: " .. (v and "ON" or "OFF"), true, "settings")
             end
         })
     end
@@ -1978,8 +1979,8 @@ if is_pad then
             tooltip = "Shows or hides the status text completely.",
             getFunc = function() return not PM.settings.ui.is_hidden end,
             setFunc = function(v)
-                PM.settings.ui.is_hidden = not v; PM:toggle_ui_update()
-                PM:log_msg("UI Visibility...", true, "ui", 90)
+                PM.settings.ui.is_hidden = not v; PM.toggle_ui_update()
+                PM.log_msg("UI Visibility...", true, "ui", 90)
             end
         },
         {
@@ -1989,8 +1990,8 @@ if is_pad then
             setFunc = function(v)
                 PM.settings.show_in_hud = v
                 if PM.settings.ui then PM.settings.ui.is_hidden = not v end
-                PM:update_ui_scenes()
-                PM:log_msg("UI Mode: " .. (v and "HUD Only" or "Menu Only"), true, "ui")
+                PM.update_ui_scenes()
+                PM.log_msg("UI Mode: " .. (v and "HUD Only" or "Menu Only"), true, "ui")
             end,
             disabled = function() return PM.settings.ui.is_hidden end
         },
@@ -2008,14 +2009,14 @@ if is_pad then
             tooltip = "Adjusts the size of the status text UI in HUD mode.",
             min = 0.5, max = 2.0, step = 0.1, decimals = 1,
             getFunc = function() return PM.settings.ui.scale or (is_pad and 1.0 or 1.0) end,
-            setFunc = function(v) PM.settings.ui.scale = v; PM:update_ui_anchor() end
+            setFunc = function(v) PM.settings.ui.scale = v; PM.update_ui_anchor() end
         },
         {
             type = "slider", name = "Menu UI Scale",
             tooltip = "Adjusts the size of the status text UI in Menu mode.",
             min = 0.5, max = 2.0, step = 0.1, decimals = 1,
             getFunc = function() return PM.settings.ui_menu.scale or (is_pad and 1.2 or 1.0) end,
-            setFunc = function(v) PM.settings.ui_menu.scale = v; PM:update_ui_anchor() end
+            setFunc = function(v) PM.settings.ui_menu.scale = v; PM.update_ui_anchor() end
         },
         {
             type = "button", name = "|cFF0000RESET UI POSITION|r",
@@ -2025,7 +2026,7 @@ if is_pad then
                 PM.settings.ui.top = PM.defaults.ui.top
                 PM.settings.ui_menu.left = PM.defaults.ui_menu.left
                 PM.settings.ui_menu.top = PM.defaults.ui_menu.top
-                PM:update_ui_anchor(); PM:log_msg("UI Position Reset.", true, "ui", 90)
+                PM.update_ui_anchor(); PM.log_msg("UI Position Reset.", true, "ui", 90)
             end
         }
     }
@@ -2057,7 +2058,7 @@ if is_pad then
         {
             type = "button", name = "Apply to Favorites",
             tooltip = "Adds or Removes the selected memento above from your favorites.",
-            func = function() PM:toggle_favorite(PM.selected_fav_candidate) end,
+            func = function() PM.toggle_favorite(PM.selected_fav_candidate) end,
             disabled = function() return not PM.settings.enable_random_fav end
         },
         { type = "divider" },
@@ -2073,13 +2074,13 @@ if is_pad then
         {
             type = "button", name = "Remove Selected Favorite",
             tooltip = "Removes the memento selected in 'View Current Favorites'.",
-            func = function() PM:toggle_favorite(PM.selected_fav_removal) end,
+            func = function() PM.toggle_favorite(PM.selected_fav_removal) end,
             disabled = function() return not PM.settings.enable_random_fav end
         },
         {
             type = "button", name = "|cFF0000Clear All Favorites|r",
             tooltip = "|cFF0000Removes all mementos from your favorites list.|r",
-            func = function() PM:delete_all_favorites() end,
+            func = function() PM.delete_all_favorites() end,
             disabled = function() return not PM.settings.enable_random_fav end
         }
     }
@@ -2098,7 +2099,7 @@ if is_pad then
         {
             type = "button", name = "Copy Settings & Reload",
             tooltip = "Overwrites current settings with selected character's data & reloads.",
-            func = function() PM:copy_character_settings(PM.selected_char_copy) end
+            func = function() PM.copy_character_settings(PM.selected_char_copy) end
         },
         {
             type = "dropdown", name = "|cFF0000DELETE Data For...|r",
@@ -2109,7 +2110,7 @@ if is_pad then
         {
             type = "button", name = "|cFF0000DELETE Data & Reload|r",
             tooltip = "|cFF0000WARNING: PERMANENTLY deletes saved data for the selected char.|r",
-            func = function() PM:delete_character_settings(PM.selected_char_delete) end
+            func = function() PM.delete_character_settings(PM.selected_char_delete) end
         }
     }
     table.insert(b_data, {
@@ -2141,9 +2142,9 @@ if is_pad then
             func = function()
                 if PM.selected_learned_id and PM.selected_learned_id ~= 0 then
                     PM.settings.active_id = PM.selected_learned_id
-                    local md = PM:get_data(PM.selected_learned_id)
-                    PM:log_msg("Selected (Learned): " .. (md and md.name or "?"), true, "activation")
-                    PM:start_loop(PM.selected_learned_id)
+                    local md = PM.get_data(PM.selected_learned_id)
+                    PM.log_msg("Selected (Learned): " .. (md and md.name or "?"), true, "activation")
+                    PM.start_loop(PM.selected_learned_id)
                 end
             end,
             disabled = function() return not PM.settings.enable_learning end
@@ -2151,26 +2152,26 @@ if is_pad then
         {
             type = "button", name = "|cFFFF00LEARN: Auto-Scan|r", width = "half",
             tooltip = "|cFFFF00Scans all owned mementos, activates them to learn their IDs.|r",
-            func = function() PM:auto_scan_mementos() end,
+            func = function() PM.auto_scan_mementos() end,
             disabled = function() return not PM.settings.enable_learning end
         },
         {
             type = "button", name = "Delete Selected Memento", width = "half",
             tooltip = "Removes the selected memento from Learned Data and reloads UI.",
-            func = function() PM:delete_learned_data(PM.selected_learned_id) end,
+            func = function() PM.delete_learned_data(PM.selected_learned_id) end,
             disabled = function() return not PM.settings.enable_learning end
         },
         {
             type = "button", name = "Randomize Learned Memento", width = "half",
             tooltip = "Picks a random memento from your Learned Data list.",
             func = function()
-                local r_id = PM:get_random_learned()
+                local r_id = PM.get_random_learned()
                 if r_id then
                     PM.settings.active_id = r_id
-                    PM:log_msg("Randomly Selected: " .. PM:get_data(r_id).name, true, "random", 90)
-                    PM:start_loop(r_id)
+                    PM.log_msg("Randomly Selected: " .. PM.get_data(r_id).name, true, "random", 90)
+                    PM.start_loop(r_id)
                 else
-                    PM:log_msg("No learned data found.", true, "error")
+                    PM.log_msg("No learned data found.", true, "error")
                 end
             end,
             disabled = function() return not PM.settings.enable_learning end
@@ -2178,7 +2179,7 @@ if is_pad then
         {
             type = "button", name = "|cFF0000DELETE ALL LEARNED DATA|r", width = "half",
             tooltip = "|cFF0000WARNING: Deletes ALL manual and auto-scanned learned data.|r",
-            func = function() PM:delete_all_learned_data() end,
+            func = function() PM.delete_all_learned_data() end,
             disabled = function() return not PM.settings.enable_learning end
         }
     }
@@ -2272,7 +2273,7 @@ if is_pad then
                 type = "button", name = "Send Random Sync",
                 tooltip = "Picks a random unlocked memento and broadcasts it to group.",
                 func = function()
-                    local r_id = PM:get_random_any()
+                    local r_id = PM.get_random_any()
                     if r_id then
                         local l_str = GetCollectibleLink(r_id, LINK_STYLE_BRACKETS)
                         local function try_chat()
@@ -2420,13 +2421,13 @@ if is_pad then
         func = function()
             PM.settings.is_unrestricted = not PM.settings.is_unrestricted
             local s_txt = (PM.settings.is_unrestricted and "ON" or "OFF")
-            PM:log_msg("Unrestricted Mode: " .. s_txt, true, "settings")
+            PM.log_msg("Unrestricted Mode: " .. s_txt, true, "settings")
         end
     })
     table.insert(grp_cmd, {
         type = "button", name = "|c00FFFFCLEAN LUA MEMORY|r",
         tooltip = "Manually triggers Lua garbage collection to free unused memory.",
-        func = function() PM:run_manual_cleanup(false) end
+        func = function() PM.run_manual_cleanup(false) end
     })
     table.insert(grp_cmd, {
         type = "button", name = "Reload UI",
@@ -2461,11 +2462,11 @@ if is_pad then
             PM.settings.delay_resurrect = d.delay_resurrect
             PM.settings.delay_in_menu = d.delay_in_menu
             PM.settings.delay_combat_end = d.delay_combat_end
-            PM.settings.sync_module = ZO_DeepTableCopy(d.sync_module)
-            PM.settings.ui = ZO_DeepTableCopy(d.ui)
-            PM.settings.ui_menu = ZO_DeepTableCopy(d.ui_menu)
-            PM.settings.csa_durations = ZO_DeepTableCopy(d.csa_durations)
-            PM:toggle_cleanup_events(); ReloadUI("ingame")
+            PM.settings.sync_module = ZO_ShallowTableCopy(d.sync_module)
+            PM.settings.ui = ZO_ShallowTableCopy(d.ui)
+            PM.settings.ui_menu = ZO_ShallowTableCopy(d.ui_menu)
+            PM.settings.csa_durations = ZO_ShallowTableCopy(d.csa_durations)
+            PM.toggle_cleanup_events(); ReloadUI("ingame")
         end
     })
     table.insert(b_data, {
@@ -2567,22 +2568,22 @@ if is_pad then
     PM.ctrl_fav_remove_dropdown = _G["PM_FavRemoveDropdown"]
 end
 
-function PM:init(eventCode, addOnName)
-    if addOnName ~= self.name then return end
-    EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_ADD_ON_LOADED)
+function PM.init(eventCode, addOnName)
+    if addOnName ~= PM.name then return end
+    EVENT_MANAGER:UnregisterForEvent(PM.name, EVENT_ADD_ON_LOADED)
     
     local srv = GetWorldName() or "Default"
-    self.acct_saved = ZO_SavedVars:NewAccountWide(
-        "PermMementoSaved", 1, "AccountWide", self.defaults, srv
+    PM.acct_saved = ZO_SavedVars:NewAccountWide(
+        "PermMementoSaved", 1, "AccountWide", PM.defaults, srv
     )
-    self.char_saved = ZO_SavedVars:NewCharacterIdSettings(
-        "PermMementoSaved", 1, "Character", self.defaults, srv
+    PM.char_saved = ZO_SavedVars:NewCharacterIdSettings(
+        "PermMementoSaved", 1, "Character", PM.defaults, srv
     )
-    if self.char_saved.use_account_settings == nil then
-        self.char_saved.use_account_settings = self.defaults.use_account_settings
+    if PM.char_saved.use_account_settings == nil then
+        PM.char_saved.use_account_settings = PM.defaults.use_account_settings
     end
 
-    local sv_tables = {self.acct_saved, self.char_saved}
+    local sv_tables = {PM.acct_saved, PM.char_saved}
     for _, sv in ipairs(sv_tables) do
         if sv.showInHUD ~= nil then
             sv.show_in_hud = sv.showInHUD
@@ -2594,85 +2595,85 @@ function PM:init(eventCode, addOnName)
         end
     end
     
-    self.settings = self.char_saved.use_account_settings and self.acct_saved or self.char_saved
+    PM.settings = PM.char_saved.use_account_settings and PM.acct_saved or PM.char_saved
     
-    EVENT_MANAGER:RegisterForEvent(self.name .. "_UIRefresh", EVENT_PLAYER_ACTIVATED, function()
-        EVENT_MANAGER:UnregisterForEvent(self.name .. "_UIRefresh", EVENT_PLAYER_ACTIVATED)
+    EVENT_MANAGER:RegisterForEvent(PM.name .. "_UIRefresh", EVENT_PLAYER_ACTIVATED, function()
+        EVENT_MANAGER:UnregisterForEvent(PM.name .. "_UIRefresh", EVENT_PLAYER_ACTIVATED)
         
-        if self.settings.show_in_hud and self.settings.ui then
-            self.settings.ui.is_hidden = false
+        if PM.settings.show_in_hud and PM.settings.ui then
+            PM.settings.ui.is_hidden = false
         end
 
         zo_callLater(function()
-            self:toggle_ui_update()
+            PM.toggle_ui_update()
         end, 1000)
     end)
     
-    self:update_settings_reference(); self:migrate_data() 
+    PM.update_settings_reference(); PM.migrate_data() 
 
-    if not self.loop_token then self.loop_token = 0 end
+    if not PM.loop_token then PM.loop_token = 0 end
     
-    if not self.acct_saved.install_date then
+    if not PM.acct_saved.install_date then
         local d = GetDate()
         if d and type(d) == "number" then d = tostring(d) end
         if d and string.len(d) == 8 then
             local yyyy = string.sub(d, 1, 4)
             local mm = string.sub(d, 5, 6)
             local dd = string.sub(d, 7, 8)
-            self.acct_saved.install_date = yyyy .. "/" .. mm .. "/" .. dd
+            PM.acct_saved.install_date = yyyy .. "/" .. mm .. "/" .. dd
         else
-            self.acct_saved.install_date = GetDateStringFromTimestamp(GetTimeStamp())
+            PM.acct_saved.install_date = GetDateStringFromTimestamp(GetTimeStamp())
         end
     end
     
-    if not self.acct_saved.version_history then self.acct_saved.version_history = {} end
+    if not PM.acct_saved.version_history then PM.acct_saved.version_history = {} end
     
-    local no_hist = (#self.acct_saved.version_history == 0)
-    local diff_v = (self.acct_saved.last_version and self.acct_saved.last_version ~= self.version)
+    local no_hist = (#PM.acct_saved.version_history == 0)
+    local diff_v = (PM.acct_saved.last_version and PM.acct_saved.last_version ~= PM.version)
     if no_hist and diff_v then
-        table.insert(self.acct_saved.version_history, self.acct_saved.last_version)
+        table.insert(PM.acct_saved.version_history, PM.acct_saved.last_version)
     end
     
-    local v_len = #self.acct_saved.version_history
-    if v_len == 0 or self.acct_saved.version_history[v_len] ~= self.version then
-        table.insert(self.acct_saved.version_history, self.version)
-        if #self.acct_saved.version_history > 3 then
-            table.remove(self.acct_saved.version_history, 1)
+    local v_len = #PM.acct_saved.version_history
+    if v_len == 0 or PM.acct_saved.version_history[v_len] ~= PM.version then
+        table.insert(PM.acct_saved.version_history, PM.version)
+        if #PM.acct_saved.version_history > 3 then
+            table.remove(PM.acct_saved.version_history, 1)
         end
     end
-    self.acct_saved.last_version = self.version
-    PM.current_sv_size_kb = math.floor(PM:estimate_table_size(_G["PermMementoSaved"] or {}) / 1024)
+    PM.acct_saved.last_version = PM.version
+    PM.current_sv_size_kb = math.floor(PM.estimate_table_size(_G["PermMementoSaved"] or {}) / 1024)
     
-    self:create_ui(); self:hook_game_ui(); PM.sync_engine:initialize()
-    if not IsConsoleUI() then PM:toggle_stats_ui_tracker() end
+    PM.create_ui(); PM.hook_game_ui(); PM.sync_engine.initialize()
+    if not IsConsoleUI() then PM.toggle_stats_ui_tracker() end
     
-    EVENT_MANAGER:RegisterForEvent(self.name .. "_Combat", EVENT_COMBAT_EVENT, function(...)
-        self:on_combat_event(...)
+    EVENT_MANAGER:RegisterForEvent(PM.name .. "_Combat", EVENT_COMBAT_EVENT, function(...)
+        PM.on_combat_event(...)
     end)
     EVENT_MANAGER:AddFilterForEvent(
-        self.name .. "_Combat", EVENT_COMBAT_EVENT,
+        PM.name .. "_Combat", EVENT_COMBAT_EVENT,
         REGISTER_FILTER_SOURCE_COMBAT_UNIT_TYPE, COMBAT_UNIT_TYPE_PLAYER
     )
     
-    EVENT_MANAGER:RegisterForEvent(self.name .. "_Effect", EVENT_EFFECT_CHANGED, function(...)
-        self:on_effect_changed(...)
+    EVENT_MANAGER:RegisterForEvent(PM.name .. "_Effect", EVENT_EFFECT_CHANGED, function(...)
+        PM.on_effect_changed(...)
     end)
     EVENT_MANAGER:AddFilterForEvent(
-        self.name .. "_Effect", EVENT_EFFECT_CHANGED,
+        PM.name .. "_Effect", EVENT_EFFECT_CHANGED,
         REGISTER_FILTER_UNIT_TAG, "player"
     )
     
-    EVENT_MANAGER:RegisterForEvent(self.name .. "_UseResult", EVENT_COLLECTIBLE_USE_RESULT,
-        function(ev_code, res, is_act) self:on_collectible_use_result(ev_code, res, is_act) end
+    EVENT_MANAGER:RegisterForEvent(PM.name .. "_UseResult", EVENT_COLLECTIBLE_USE_RESULT,
+        function(ev_code, res, is_act) PM.on_collectible_use_result(ev_code, res, is_act) end
     )
 
-    self:toggle_cleanup_events()
-    EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_ACTIVATED, function()
-        self:on_player_activated(); self:build_menu(); self.pending_id = self.settings.active_id
+    PM.toggle_cleanup_events()
+    EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_PLAYER_ACTIVATED, function()
+        PM.on_player_activated(); PM.build_menu(); PM.pending_id = PM.settings.active_id
     end)
     
     SLASH_COMMANDS["/pmem"] = function(raw_arg)
-        if not self.settings then return end
+        if not PM.settings then return end
         local c_arg = raw_arg:lower()
         if c_arg == "" then
             local c1 = "" ..
@@ -2724,7 +2725,7 @@ function PM:init(eventCode, addOnName)
             
             local c_list = {"|c00FF00Supported Mementos:|r "}
             local arr_act = {}
-            for f_id, md in pairs(self.memento_data) do
+            for f_id, md in pairs(PM.memento_data) do
                 if IsCollectibleUnlocked(f_id) then table.insert(arr_act, md) end
             end
             table.sort(arr_act, function(a,b) return a.name < b.name end)
@@ -2744,46 +2745,46 @@ function PM:init(eventCode, addOnName)
         end
         
         local is_found = false
-        for f_id, md in pairs(self.memento_data) do 
+        for f_id, md in pairs(PM.memento_data) do 
             if string.find(string.lower(md.name), c_arg, 1, true) then 
                 if IsCollectibleUnlocked(f_id) then 
-                    self:log_msg("Auto-loop started: " .. md.name, true, "activation", 90)
-                    self:start_loop(f_id); is_found = true; break 
+                    PM.log_msg("Auto-loop started: " .. md.name, true, "activation", 90)
+                    PM.start_loop(f_id); is_found = true; break 
                 else
-                    self:log_msg("Memento found but NOT unlocked: " .. md.name, true, "error", 80)
+                    PM.log_msg("Memento found but NOT unlocked: " .. md.name, true, "error", 80)
                     is_found = true; break
                 end 
             end 
         end
         if not is_found then
-            self:log_msg("Memento not found or not supported.", true, "error", 90)
+            PM.log_msg("Memento not found or not supported.", true, "error", 90)
         end
     end
     SLASH_COMMANDS["/permmemento"] = SLASH_COMMANDS["/pmem"]
 
     SLASH_COMMANDS["/pmemstats"] = function()
-        self.settings.enable_stats_ui = not self.settings.enable_stats_ui
-        PM:toggle_stats_ui_tracker(); PM:toggle_cleanup_events()
-        local t_txt = self.settings.enable_stats_ui and "ON" or "OFF"
-        self:log_msg("Stats Tracker: " .. t_txt, true, "settings")
+        PM.settings.enable_stats_ui = not PM.settings.enable_stats_ui
+        PM.toggle_stats_ui_tracker(); PM.toggle_cleanup_events()
+        local t_txt = PM.settings.enable_stats_ui and "ON" or "OFF"
+        PM.log_msg("Stats Tracker: " .. t_txt, true, "settings")
     end
     
     SLASH_COMMANDS["/pmemrandfav"] = function()
-        self.settings.enable_random_fav = not self.settings.enable_random_fav
-        local t_txt = self.settings.enable_random_fav and "ON" or "OFF"
-        self:log_msg("Random & Favorites: " .. t_txt, true, "settings")
+        PM.settings.enable_random_fav = not PM.settings.enable_random_fav
+        local t_txt = PM.settings.enable_random_fav and "ON" or "OFF"
+        PM.log_msg("Random & Favorites: " .. t_txt, true, "settings")
     end
     
     SLASH_COMMANDS["/pmemlearn"] = function()
-        self.settings.enable_learning = not self.settings.enable_learning
-        local t_txt = self.settings.enable_learning and "ON" or "OFF"
-        self:log_msg("Learning Mode: " .. t_txt, true, "settings")
+        PM.settings.enable_learning = not PM.settings.enable_learning
+        local t_txt = PM.settings.enable_learning and "ON" or "OFF"
+        PM.log_msg("Learning Mode: " .. t_txt, true, "settings")
     end
 
     SLASH_COMMANDS["/pmemstop"] = function()
-        self.settings.active_id = nil; self.loop_token = (self.loop_token or 0) + 1
-        self:log_msg("Auto-loop Stopped", true, "stop", 90)
-        self.pending_id = 0; PM.next_fire_time = 0
+        PM.settings.active_id = nil; PM.loop_token = (PM.loop_token or 0) + 1
+        PM.log_msg("Auto-loop Stopped", true, "stop", 90)
+        PM.pending_id = 0; PM.next_fire_time = 0
     end
     SLASH_COMMANDS["/permmementostop"] = SLASH_COMMANDS["/pmemstop"]
 
@@ -2791,90 +2792,90 @@ function PM:init(eventCode, addOnName)
     SLASH_COMMANDS["/pmemcleanup"] = SLASH_COMMANDS["/pmemclean"]
 
     SLASH_COMMANDS["/pmemcsacls"] = function() 
-        self.settings.is_csa_cleanup_enabled = not self.settings.is_csa_cleanup_enabled
-        local t_txt = self.settings.is_csa_cleanup_enabled and "ON" or "OFF"
-        self:log_msg("Auto-Cleanup CSA: " .. t_txt, true, "settings") 
+        PM.settings.is_csa_cleanup_enabled = not PM.settings.is_csa_cleanup_enabled
+        local t_txt = PM.settings.is_csa_cleanup_enabled and "ON" or "OFF"
+        PM.log_msg("Auto-Cleanup CSA: " .. t_txt, true, "settings") 
     end
     SLASH_COMMANDS["/pmemcsacleanup"] = SLASH_COMMANDS["/pmemcsacls"]
 
     SLASH_COMMANDS["/pmemui"] = function() 
-        self.settings.ui.is_hidden = not self.settings.ui.is_hidden; PM:toggle_ui_update()
-        local t_txt = self.settings.ui.is_hidden and "HIDDEN" or "VISIBLE"
-        self:log_msg("UI Visibility: " .. t_txt, true, "ui") 
+        PM.settings.ui.is_hidden = not PM.settings.ui.is_hidden; PM.toggle_ui_update()
+        local t_txt = PM.settings.ui.is_hidden and "HIDDEN" or "VISIBLE"
+        PM.log_msg("UI Visibility: " .. t_txt, true, "ui") 
     end
     SLASH_COMMANDS["/pmemtoggleui"] = SLASH_COMMANDS["/pmemui"]
 
     SLASH_COMMANDS["/pmemhud"] = function() 
-        self.settings.show_in_hud = not self.settings.show_in_hud; PM:update_ui_scenes()
-        local t_txt = self.settings.show_in_hud and "HUD" or "Menu"
-        self:log_msg("UI Mode: " .. t_txt, true, "settings") 
+        PM.settings.show_in_hud = not PM.settings.show_in_hud; PM.update_ui_scenes()
+        local t_txt = PM.settings.show_in_hud and "HUD" or "Menu"
+        PM.log_msg("UI Mode: " .. t_txt, true, "settings") 
     end
     SLASH_COMMANDS["/pmemuimode"] = SLASH_COMMANDS["/pmemhud"]
 
     SLASH_COMMANDS["/pmemrandzone"] = function() 
-        self.settings.is_random_on_zone = not self.settings.is_random_on_zone
-        local t_txt = self.settings.is_random_on_zone and "ON" or "OFF"
-        self:log_msg("Random on Zone: " .. t_txt, true, "settings") 
+        PM.settings.is_random_on_zone = not PM.settings.is_random_on_zone
+        local t_txt = PM.settings.is_random_on_zone and "ON" or "OFF"
+        PM.log_msg("Random on Zone: " .. t_txt, true, "settings") 
     end
     SLASH_COMMANDS["/pmemrandomzonechange"] = SLASH_COMMANDS["/pmemrandzone"]
 
     SLASH_COMMANDS["/pmemrandlog"] = function() 
-        self.settings.is_random_on_login = not self.settings.is_random_on_login
-        local t_txt = self.settings.is_random_on_login and "ON" or "OFF"
-        self:log_msg("Random on Login: " .. t_txt, true, "settings") 
+        PM.settings.is_random_on_login = not PM.settings.is_random_on_login
+        local t_txt = PM.settings.is_random_on_login and "ON" or "OFF"
+        PM.log_msg("Random on Login: " .. t_txt, true, "settings") 
     end
     SLASH_COMMANDS["/pmemrandomlogin"] = SLASH_COMMANDS["/pmemrandlog"]
 
     SLASH_COMMANDS["/pmemrand"] = function() 
-        local r_id = self:get_random_supported()
+        local r_id = PM.get_random_supported()
         if r_id then
-            self.settings.active_id = r_id
-            PM:log_msg("Randomly Selected: " .. PM:get_data(r_id).name, true, "random")
-            self:start_loop(r_id)
+            PM.settings.active_id = r_id
+            PM.log_msg("Randomly Selected: " .. PM.get_data(r_id).name, true, "random")
+            PM.start_loop(r_id)
         end 
     end
     SLASH_COMMANDS["/pmemrandom"] = SLASH_COMMANDS["/pmemrand"]
 
     SLASH_COMMANDS["/pmemrandlrn"] = function() 
-        local r_id = self:get_random_learned()
+        local r_id = PM.get_random_learned()
         if r_id then
-            self.settings.active_id = r_id
-            PM:log_msg("Randomly Selected (Learned): " .. PM:get_data(r_id).name, true, "random")
-            self:start_loop(r_id) 
-        else self:log_msg("No learned data found.", true, "error") end 
+            PM.settings.active_id = r_id
+            PM.log_msg("Randomly Selected (Learned): " .. PM.get_data(r_id).name, true, "random")
+            PM.start_loop(r_id) 
+        else PM.log_msg("No learned data found.", true, "error") end 
     end
     SLASH_COMMANDS["/pmemrandomlearned"] = SLASH_COMMANDS["/pmemrandlrn"]
 
     SLASH_COMMANDS["/pmemcsa"] = function() 
-        self.settings.is_csa_enabled = not self.settings.is_csa_enabled
-        local t_txt = self.settings.is_csa_enabled and "ON" or "OFF"
-        self:log_msg("Screen Announcements: " .. t_txt, true, "settings") 
+        PM.settings.is_csa_enabled = not PM.settings.is_csa_enabled
+        local t_txt = PM.settings.is_csa_enabled and "ON" or "OFF"
+        PM.log_msg("Screen Announcements: " .. t_txt, true, "settings") 
     end
     SLASH_COMMANDS["/pmemtogglecsa"] = SLASH_COMMANDS["/pmemcsa"]
 
     SLASH_COMMANDS["/pmemfree"] = function() 
-        self.settings.is_unrestricted = not self.settings.is_unrestricted
-        local t_txt = self.settings.is_unrestricted and "ON" or "OFF"
-        self:log_msg("Unrestricted Mode: " .. t_txt, true, "settings") 
+        PM.settings.is_unrestricted = not PM.settings.is_unrestricted
+        local t_txt = PM.settings.is_unrestricted and "ON" or "OFF"
+        PM.log_msg("Unrestricted Mode: " .. t_txt, true, "settings") 
     end
     SLASH_COMMANDS["/pmemunrestrict"] = SLASH_COMMANDS["/pmemfree"]
 
     SLASH_COMMANDS["/pmemlock"] = function() 
-        self.settings.ui.is_locked = not self.settings.ui.is_locked
-        if self.ui_window then
-            self.ui_window:SetMovable(not self.settings.ui.is_locked)
+        PM.settings.ui.is_locked = not PM.settings.ui.is_locked
+        if PM.ui_window then
+            PM.ui_window:SetMovable(not PM.settings.ui.is_locked)
         end
-        local t_txt = self.settings.ui.is_locked and "Locked" or "Unlocked"
-        self:log_msg("UI " .. t_txt, true, "ui") 
+        local t_txt = PM.settings.ui.is_locked and "Locked" or "Unlocked"
+        PM.log_msg("UI " .. t_txt, true, "ui") 
     end
     SLASH_COMMANDS["/pmemuilock"] = SLASH_COMMANDS["/pmemlock"]
 
     SLASH_COMMANDS["/pmemresetui"] = function() 
-        self.settings.ui.left = self.defaults.ui.left
-        self.settings.ui.top = self.defaults.ui.top
-        self.settings.ui_menu.left = self.defaults.ui_menu.left
-        self.settings.ui_menu.top = self.defaults.ui_menu.top
-        self:update_ui_anchor(); self:log_msg("UI Position Reset.", true, "ui") 
+        PM.settings.ui.left = PM.defaults.ui.left
+        PM.settings.ui.top = PM.defaults.ui.top
+        PM.settings.ui_menu.left = PM.defaults.ui_menu.left
+        PM.settings.ui_menu.top = PM.defaults.ui_menu.top
+        PM.update_ui_anchor(); PM.log_msg("UI Position Reset.", true, "ui") 
     end
     SLASH_COMMANDS["/pmemuireset"] = SLASH_COMMANDS["/pmemresetui"]
 
@@ -2885,122 +2886,108 @@ function PM:init(eventCode, addOnName)
     SLASH_COMMANDS["/pmemautolearn"] = SLASH_COMMANDS["/pmemscan"]
 
     SLASH_COMMANDS["/pmemlist"] = function() 
-        if self.acct_saved and self.acct_saved.learned_data then 
+        if PM.acct_saved and PM.acct_saved.learned_data then 
             local out_msg = "Learned Data:\n"; local cc = 0
-            for _, md in pairs(self.acct_saved.learned_data) do
+            for _, md in pairs(PM.acct_saved.learned_data) do
                 out_msg = out_msg .. "- " .. md.name .. " (" .. (md.dur/1000) .. "s)\n"
                 cc = cc + 1
             end
-            if cc == 0 then PM:log_msg("Learned Data is empty.", false)
-            else PM:log_msg(out_msg, false) end
-        else PM:log_msg("Learned Data is empty.", false) end
+            if cc == 0 then PM.log_msg("Learned Data is empty.", false)
+            else PM.log_msg(out_msg, false) end
+        else PM.log_msg("Learned Data is empty.", false) end
     end
     SLASH_COMMANDS["/pmemlearned"] = SLASH_COMMANDS["/pmemlist"]
 
     SLASH_COMMANDS["/pmemplay"] = function(raw_arg) 
         local c_arg = raw_arg:lower()
         if c_arg and c_arg ~= "" then 
-            if self.acct_saved and self.acct_saved.learned_data then 
-                for f_id, md in pairs(self.acct_saved.learned_data) do 
+            if PM.acct_saved and PM.acct_saved.learned_data then 
+                for f_id, md in pairs(PM.acct_saved.learned_data) do 
                     if string.find(string.lower(md.name), c_arg, 1, true) then 
-                        self.settings.active_id = f_id
-                        PM:log_msg("Activated (Learned): " .. md.name, true, "activation")
-                        self:start_loop(f_id); return 
+                        PM.settings.active_id = f_id
+                        PM.log_msg("Activated (Learned): " .. md.name, true, "activation")
+                        PM.start_loop(f_id); return 
                     end 
                 end 
             end
-            self:log_msg("Learned Memento not found: " .. c_arg, true, "error") 
+            PM.log_msg("Learned Memento not found: " .. c_arg, true, "error") 
         end 
     end
     SLASH_COMMANDS["/pmemactivatelearned"] = SLASH_COMMANDS["/pmemplay"]
 
     SLASH_COMMANDS["/pmemcur"] = function() 
-        local md = PM:get_data(self.settings.active_id)
-        if self.settings.active_id and md then
-            PM:log_msg("Active: " .. (md.name or "Unknown"), false)
-        else PM:log_msg("Inactive", false) end 
+        local md = PM.get_data(PM.settings.active_id)
+        if PM.settings.active_id and md then
+            PM.log_msg("Active: " .. (md.name or "Unknown"), false)
+        else PM.log_msg("Inactive", false) end 
     end
     SLASH_COMMANDS["/pmemcurrent"] = SLASH_COMMANDS["/pmemcur"]
 
     SLASH_COMMANDS["/pmempause"] = function()
-        self.settings.is_paused = not self.settings.is_paused
-        if self.settings.is_paused then
-            self:log_msg("Auto-loop PAUSED.", true, "stop", 90)
+        PM.settings.is_paused = not PM.settings.is_paused
+        if PM.settings.is_paused then
+            PM.log_msg("Auto-loop PAUSED.", true, "stop", 90)
         else
-            self:log_msg("Auto-loop RESUMED.", true, "activation", 90)
-            if self.settings.active_id then self:run_loop(self.loop_token) end
+            PM.log_msg("Auto-loop RESUMED.", true, "activation", 90)
+            if PM.settings.active_id then PM.run_loop(PM.loop_token) end
         end
     end
     SLASH_COMMANDS["/pmemtogglepause"] = SLASH_COMMANDS["/pmempause"]
 
     SLASH_COMMANDS["/pmemcombat"] = function()
-        self.settings.is_loop_in_combat = not self.settings.is_loop_in_combat
-        local t_txt = self.settings.is_loop_in_combat and "ON" or "OFF"
-        self:log_msg("Loop In Combat: " .. t_txt, true, "settings")
+        PM.settings.is_loop_in_combat = not PM.settings.is_loop_in_combat
+        local t_txt = PM.settings.is_loop_in_combat and "ON" or "OFF"
+        PM.log_msg("Loop In Combat: " .. t_txt, true, "settings")
     end
     SLASH_COMMANDS["/pmemloopincombat"] = SLASH_COMMANDS["/pmemcombat"]
 
     SLASH_COMMANDS["/pmemperf"] = function()
-        self.settings.is_performance_mode = not self.settings.is_performance_mode
-        local t_txt = self.settings.is_performance_mode and "ON" or "OFF"
-        self:log_msg("Performance Mode: " .. t_txt, true, "settings")
+        PM.settings.is_performance_mode = not PM.settings.is_performance_mode
+        local t_txt = PM.settings.is_performance_mode and "ON" or "OFF"
+        PM.log_msg("Performance Mode: " .. t_txt, true, "settings")
     end
     SLASH_COMMANDS["/pmemperformancemode"] = SLASH_COMMANDS["/pmemperf"]
 
     SLASH_COMMANDS["/pmemautoclean"] = function()
         if is_alc_enabled() then
-            PM:log_msg("Auto Cleanup DISABLED because ALC Addon is running.", true, "error")
+            PM.log_msg("Auto Cleanup DISABLED because ALC Addon is running.", true, "error")
             return
         end
-        self.settings.is_auto_cleanup = not self.settings.is_auto_cleanup
-        PM:toggle_cleanup_events()
-        local t_txt = self.settings.is_auto_cleanup and "ON" or "OFF"
-        self:log_msg("Auto Lua Cleanup: " .. t_txt, true, "settings")
+        PM.settings.is_auto_cleanup = not PM.settings.is_auto_cleanup
+        PM.toggle_cleanup_events()
+        local t_txt = PM.settings.is_auto_cleanup and "ON" or "OFF"
+        PM.log_msg("Auto Lua Cleanup: " .. t_txt, true, "settings")
     end
     SLASH_COMMANDS["/pmemautocleanup"] = SLASH_COMMANDS["/pmemautoclean"]
 
     SLASH_COMMANDS["/pmemacct"] = function()
-        self.char_saved.use_account_settings = not self.char_saved.use_account_settings
-        self:update_settings_reference()
-        self:log_msg("Account-Wide Settings...", true, "settings", 80)
+        PM.char_saved.use_account_settings = not PM.char_saved.use_account_settings
+        PM.update_settings_reference()
+        PM.log_msg("Account-Wide Settings...", true, "settings", 80)
         zo_callLater(function() ReloadUI("ingame") end, 2000)
     end
     SLASH_COMMANDS["/pmemuseaccountsettings"] = SLASH_COMMANDS["/pmemacct"]
 
-    SLASH_COMMANDS["/pmemwipefav"] = function() self:delete_all_favorites() end
+    SLASH_COMMANDS["/pmemwipefav"] = function() PM.delete_all_favorites() end
     SLASH_COMMANDS["/pmemdeleteallfavorites"] = SLASH_COMMANDS["/pmemwipefav"]
 
     SLASH_COMMANDS["/pmemreset"] = function()
-        local d = self.defaults
-        self.settings.active_id = d.active_id
-        self.settings.is_paused = d.is_paused
-        self.settings.is_log_enabled = d.is_log_enabled
-        self.settings.is_csa_enabled = d.is_csa_enabled
-        self.settings.is_csa_cleanup_enabled = d.is_csa_cleanup_enabled
-        self.settings.is_random_on_login = d.is_random_on_login
-        self.settings.is_random_on_zone = d.is_random_on_zone
-        self.settings.is_loop_in_combat = d.is_loop_in_combat
-        self.settings.is_performance_mode = d.is_performance_mode
-        self.settings.show_in_hud = d.show_in_hud
-        self.settings.is_unrestricted = d.is_unrestricted
-        self.settings.is_auto_cleanup = d.is_auto_cleanup
-        self.settings.delay_move = d.delay_move
-        self.settings.delay_sprint = d.delay_sprint
-        self.settings.delay_block = d.delay_block
-        self.settings.delay_cast = d.delay_cast
-        self.settings.delay_swim = d.delay_swim
-        self.settings.delay_sneak = d.delay_sneak
-        self.settings.delay_mount = d.delay_mount
-        self.settings.delay_idle = d.delay_idle
-        self.settings.delay_teleport = d.delay_teleport
-        self.settings.delay_resurrect = d.delay_resurrect
-        self.settings.delay_in_menu = d.delay_in_menu
-        self.settings.delay_combat_end = d.delay_combat_end
+        local exclude = {
+            learned_data = true, favorites = true, total_loops = true,
+            memento_usage = true, install_date = true, version_history = true,
+            last_version = true, is_migrated_086 = true,
+            has_shown_lib_warning_086 = true, alc_disabled_pm = true
+        }
         
-        self.settings.sync_module = ZO_DeepTableCopy(d.sync_module)
-        self.settings.ui = ZO_DeepTableCopy(d.ui)
-        self.settings.ui_menu = ZO_DeepTableCopy(d.ui_menu)
-        self.settings.csa_durations = ZO_DeepTableCopy(d.csa_durations)
+        for k, v in pairs(PM.defaults) do
+            if not exclude[k] then
+                if type(v) == "table" then
+                    PM.settings[k] = ZO_ShallowTableCopy(v)
+                else
+                    PM.settings[k] = v
+                end
+            end
+        end
         
         PM:toggle_cleanup_events(); ReloadUI("ingame")
     end
@@ -3009,49 +2996,49 @@ function PM:init(eventCode, addOnName)
     SLASH_COMMANDS["/pmemhudscale"] = function(raw_arg)
         local n_val = tonumber(raw_arg)
         if n_val and n_val >= 0.5 and n_val <= 2.0 then
-            self.settings.ui.scale = n_val; self:update_ui_anchor()
-            self:log_msg("HUD Scale set to: " .. n_val, true, "ui")
-        else self:log_msg("Usage: /pmemhudscale <0.5 to 2.0>", true, "error", 90) end
+            PM.settings.ui.scale = n_val; PM.update_ui_anchor()
+            PM.log_msg("HUD Scale set to: " .. n_val, true, "ui")
+        else PM.log_msg("Usage: /pmemhudscale <0.5 to 2.0>", true, "error", 90) end
     end
     SLASH_COMMANDS["/pmemsethudscale"] = SLASH_COMMANDS["/pmemhudscale"]
 
     SLASH_COMMANDS["/pmemmenuscale"] = function(raw_arg)
         local n_val = tonumber(raw_arg)
         if n_val and n_val >= 0.5 and n_val <= 2.0 then
-            self.settings.ui_menu.scale = n_val; self:update_ui_anchor()
-            self:log_msg("Menu Scale set to: " .. n_val, true, "ui")
-        else self:log_msg("Usage: /pmemmenuscale <0.5 to 2.0>", true, "error", 90) end
+            PM.settings.ui_menu.scale = n_val; PM.update_ui_anchor()
+            PM.log_msg("Menu Scale set to: " .. n_val, true, "ui")
+        else PM.log_msg("Usage: /pmemmenuscale <0.5 to 2.0>", true, "error", 90) end
     end
     SLASH_COMMANDS["/pmemsetmenuscale"] = SLASH_COMMANDS["/pmemmenuscale"]
 
     if not IsConsoleUI() then
         SLASH_COMMANDS["/pmemlogs"] = function()
-            self.settings.is_log_enabled = not self.settings.is_log_enabled
-            local t_txt = self.settings.is_log_enabled and "ON" or "OFF"
-            self:log_msg("Chat Logs: " .. t_txt, true, "settings")
+            PM.settings.is_log_enabled = not PM.settings.is_log_enabled
+            local t_txt = PM.settings.is_log_enabled and "ON" or "OFF"
+            PM.log_msg("Chat Logs: " .. t_txt, true, "settings")
         end
         SLASH_COMMANDS["/pmemchatlogs"] = SLASH_COMMANDS["/pmemlogs"]
 
         SLASH_COMMANDS["/pmemnospin"] = function()
-            self.settings.is_stop_spinning = not self.settings.is_stop_spinning
-            self:apply_spin_stop()
-            local t_txt = self.settings.is_stop_spinning and "ON" or "OFF"
-            self:log_msg("Stop Spinning in Menus: " .. t_txt, true, "settings")
+            PM.settings.is_stop_spinning = not PM.settings.is_stop_spinning
+            PM.apply_spin_stop()
+            local t_txt = PM.settings.is_stop_spinning and "ON" or "OFF"
+            PM.log_msg("Stop Spinning in Menus: " .. t_txt, true, "settings")
         end
         SLASH_COMMANDS["/pmemstopspinning"] = SLASH_COMMANDS["/pmemnospin"]
 
         SLASH_COMMANDS["/pmsyncon"] = function()
-            self.settings.sync_module.is_enabled = not self.settings.sync_module.is_enabled
-            PM:toggle_sync_listener()
-            local t_txt = self.settings.sync_module.is_enabled and "ON" or "OFF"
-            self:log_msg("Sync Listening: " .. t_txt, true, "settings")
+            PM.settings.sync_module.is_enabled = not PM.settings.sync_module.is_enabled
+            PM.toggle_sync_listener()
+            local t_txt = PM.settings.sync_module.is_enabled and "ON" or "OFF"
+            PM.log_msg("Sync Listening: " .. t_txt, true, "settings")
         end
         SLASH_COMMANDS["/pmemsyncenable"] = SLASH_COMMANDS["/pmsyncon"]
 
         SLASH_COMMANDS["/pmsyncdelay"] = function()
-            self.settings.sync_module.is_random = not self.settings.sync_module.is_random
-            local t_txt = self.settings.sync_module.is_random and "ON" or "OFF"
-            self:log_msg("Random Sync Delay: " .. t_txt, true, "settings")
+            PM.settings.sync_module.is_random = not PM.settings.sync_module.is_random
+            local t_txt = PM.settings.sync_module.is_random and "ON" or "OFF"
+            PM.log_msg("Random Sync Delay: " .. t_txt, true, "settings")
         end
         SLASH_COMMANDS["/pmemsyncrandomdelay"] = SLASH_COMMANDS["/pmsyncdelay"]
     end
@@ -3059,15 +3046,15 @@ function PM:init(eventCode, addOnName)
     SLASH_COMMANDS["/pmsyncstop"] = function() 
         local function try_chat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
         if not pcall(try_chat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
-        if self.settings then
-            self.settings.active_id = nil; self.loop_token = (self.loop_token or 0) + 1
+        if PM.settings then
+            PM.settings.active_id = nil; PM.loop_token = (PM.loop_token or 0) + 1
         end
         PM.next_fire_time = 0 
     end
     SLASH_COMMANDS["/permmementosyncstop"] = SLASH_COMMANDS["/pmsyncstop"]
 
     SLASH_COMMANDS["/pmsyncrand"] = function() 
-        local r_id = self:get_random_any()
+        local r_id = PM.get_random_any()
         if r_id then
             local l_str = GetCollectibleLink(r_id, LINK_STYLE_BRACKETS)
             local function try_chat()
@@ -3076,76 +3063,76 @@ function PM:init(eventCode, addOnName)
             if not pcall(try_chat) and CHAT_SYSTEM then
                 CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
             end
-            self:log_msg("Sent Random Sync Request", true, "sync", 90)
+            PM.log_msg("Sent Random Sync Request", true, "sync", 90)
         end
     end
     SLASH_COMMANDS["/permmementosyncrandom"] = SLASH_COMMANDS["/pmsyncrand"]
 end
 
-function PM:on_player_activated()
+function PM.on_player_activated()
     local is_alc_running = is_alc_enabled()
     
-    if is_alc_running and self.settings.is_auto_cleanup and not self.settings.alc_disabled_pm then
-        self.settings.alc_disabled_pm = true
+    if is_alc_running and PM.settings.is_auto_cleanup and not PM.settings.alc_disabled_pm then
+        PM.settings.alc_disabled_pm = true
         local msg1 = "Auto Lua Memory Cleaner detected. "
         local msg2 = "PM's internal cleaner has been suspended to prevent conflicts."
-        self:log_msg(msg1 .. msg2, false, "settings", 90)
-    elseif not is_alc_running and self.settings.alc_disabled_pm then
-        self.settings.alc_disabled_pm = false
-        self.settings.is_auto_cleanup = true; self.settings.is_csa_cleanup_enabled = true
+        PM.log_msg(msg1 .. msg2, false, "settings", 90)
+    elseif not is_alc_running and PM.settings.alc_disabled_pm then
+        PM.settings.alc_disabled_pm = false
+        PM.settings.is_auto_cleanup = true; PM.settings.is_csa_cleanup_enabled = true
         local msg1 = "ALC Addon no longer detected. "
         local msg2 = "PM's internal cleaner has safely resumed."
-        self:log_msg(msg1 .. msg2, false, "settings", 90)
+        PM.log_msg(msg1 .. msg2, false, "settings", 90)
     end
     
-    PM:toggle_cleanup_events()
-    if self.settings.is_auto_cleanup and not is_alc_running then
-        PM:trigger_memory_check("ZoneLoad", 5000)
+    PM.toggle_cleanup_events()
+    if PM.settings.is_auto_cleanup and not is_alc_running then
+        PM.trigger_memory_check("ZoneLoad", 5000)
     end
     
-    if self.acct_saved and self.acct_saved.recentScans and #self.acct_saved.recentScans > 0 then
+    if PM.acct_saved and PM.acct_saved.recentScans and #PM.acct_saved.recentScans > 0 then
         zo_callLater(function()
-            PM:log_msg("Newly Learned Mementos from Auto-Scan:", false)
-            for _, f_id in ipairs(self.acct_saved.recentScans) do
-                local md = self.acct_saved.learned_data[f_id]
+            PM.log_msg("Newly Learned Mementos from Auto-Scan:", false)
+            for _, f_id in ipairs(PM.acct_saved.recentScans) do
+                local md = PM.acct_saved.learned_data[f_id]
                 if md then
                     local out_msg = string.format(
                         "- %s (ID: %d | RefID: %d | Dur: %dms)",
                         md.name, md.id, md.ref_id, md.dur
                     )
-                    PM:log_msg(out_msg, false)
+                    PM.log_msg(out_msg, false)
                 end
             end
-            self.acct_saved.recentScans = nil 
+            PM.acct_saved.recentScans = nil 
         end, 2000)
     end
 
-    local w_ms = (self.settings.delay_teleport or 5) * 1000
-    local r_zone = self.settings.is_random_on_zone
-    local r_log = self.settings.is_random_on_login
-    local r_fav = self.settings.enable_random_fav
+    local w_ms = (PM.settings.delay_teleport or 5) * 1000
+    local r_zone = PM.settings.is_random_on_zone
+    local r_log = PM.settings.is_random_on_login
+    local r_fav = PM.settings.enable_random_fav
     
     if r_zone and r_fav then 
-        local r_id = self:get_random_supported()
+        local r_id = PM.get_random_supported()
         if r_id then
-            self.settings.active_id = r_id
-            PM:log_msg("Zone Random: " .. PM:get_data(r_id).name, true, "random")
+            PM.settings.active_id = r_id
+            PM.log_msg("Zone Random: " .. PM.get_data(r_id).name, true, "random")
         end
-    elseif r_log and not self.settings.active_id and r_fav then 
-        local r_id = self:get_random_supported()
+    elseif r_log and not PM.settings.active_id and r_fav then 
+        local r_id = PM.get_random_supported()
         if r_id then
-            self.settings.active_id = r_id
-            PM:log_msg("Login Random: " .. PM:get_data(r_id).name, true, "random")
+            PM.settings.active_id = r_id
+            PM.log_msg("Login Random: " .. PM.get_data(r_id).name, true, "random")
         end 
     end
     
-    if self.settings and self.settings.active_id and not self.settings.is_paused then 
-        local tkn = self.loop_token
+    if PM.settings and PM.settings.active_id and not PM.settings.is_paused then 
+        local tkn = PM.loop_token
         zo_callLater(function()
-            if self.settings.active_id then PM:run_loop(tkn) end
+            if PM.settings.active_id then PM.run_loop(tkn) end
         end, w_ms) 
     end
 end
 
-EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_ADD_ON_LOADED, function(...) PM:init(...) end)
+EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_ADD_ON_LOADED, function(...) PM.init(...) end)
 _G.PermMementoCore = PM
