@@ -811,8 +811,20 @@ function PM.toggle_ui_update()
         PM.update_ui_scenes()
     else
         PM.ui_window:SetHandler("OnUpdate", PM.ui_update_fn)
-        PM.ui_window:SetHidden(false)
         PM.update_ui_scenes()
+        
+        local cur_scene = SCENE_MANAGER:GetCurrentScene()
+        local should_show = false
+        
+        if cur_scene then
+            if PM.settings.show_in_hud and cur_scene:HasFragment(PM.hudFragment) then
+                should_show = true
+            elseif not PM.settings.show_in_hud and cur_scene:HasFragment(PM.menuFragment) then
+                should_show = true
+            end
+        end
+        
+        PM.ui_window:SetHidden(not should_show)
     end
 end
 
