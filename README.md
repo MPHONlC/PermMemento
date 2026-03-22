@@ -24,8 +24,9 @@ Keep your chosen memento effects active permanently.
 </div>
 
 **Optional Dependencies:**
-This addon requires the following optional library to access the settings GUI menu:
-* [LibAddonMenu-2.0](https://www.esoui.com/downloads/info7-LibAddonMenu-2.0.html)
+This addon requires the following optional libraries:
+* [LibAddonMenu-2.0](https://www.esoui.com/downloads/info7-LibAddonMenu-2.0.html) <sub>*(Required for Settings Menu)*</sub>
+* [LibCombatAlerts](https://www.esoui.com/downloads/info2824-LibCombatAlerts.html) <sub>*(Required for Gamepad UI Movement)*</sub>
 
 > [!NOTE]
 > **Without the Dependencies:** You can still run the addon entirely independent, and control its 
@@ -48,9 +49,9 @@ This addon requires the following optional library to access the settings GUI me
 * <a id="feat-scan"></a>[![Auto Scanner & Learned Data](https://img.shields.io/badge/Auto%20Scanner%20%26%20Learned%20Data-forestgreen?style=flat-square)](#feat-scan) : No longer restricted to hardcoded mementos. Use the **LEARN: Auto-Scan** button to safely scan through all your unlocked mementos, and saves the data gathered.
 * <a id="feat-fav"></a>[![Favorites Manager](https://img.shields.io/badge/Favorites%20Manager-forestgreen?style=flat-square)](#feat-fav) : Build a curated list of your favorite effects. All "Randomize" features will prioritize your favorites pool.
 * <a id="feat-stats"></a>[![Live Statistics Panel](https://img.shields.io/badge/Live%20Statistics%20Panel-forestgreen?style=flat-square)](#feat-stats) : A real-time dashboard displaying Addon Memory footprint, Total/Session loops, and your Top 5 most used mementos.
-* <a id="feat-char"></a>[![Character Profiles](https://img.shields.io/badge/Character%20Profiles-forestgreen?style=flat-square)](#feat-char) : Easily Copy or Delete settings profiles between different characters.
+* <a id="feat-char"></a>[![Profile Manager](https://img.shields.io/badge/Profile%20Manager-forestgreen?style=flat-square)](#feat-char) : Easily create, save, load, and delete custom settings profiles.
 * <a id="feat-sync"></a>[![Group Sync (PC)](https://img.shields.io/badge/Group%20Sync%20%28PC%29-forestgreen?style=flat-square)](#feat-sync) : Synchronize your memento with your party. Supports every memento in the game, as long as you have it unlocked/owned!
-* <a id="feat-ui"></a>[![Status UI](https://img.shields.io/badge/Status%20UI-forestgreen?style=flat-square)](#feat-ui) : A draggable UI label shows current memento, player state, and settings status.
+* <a id="feat-ui"></a>[![Status UI](https://img.shields.io/badge/Status%20UI-forestgreen?style=flat-square)](#feat-ui) : A draggable UI label shows current memento, player state, and settings status. Supports D-Pad movement for console users.
 * <a id="feat-delay"></a>[![Delay Settings](https://img.shields.io/badge/Delay%20Settings-forestgreen?style=flat-square)](#feat-delay) : Specific settings for Idle, Casting, Resurrecting, Teleporting, Menus etc.
 * <a id="feat-ux"></a>[![Performance & UX Controls](https://img.shields.io/badge/Performance%20%26%20UX%20Controls-forestgreen?style=flat-square)](#feat-ux) : Toggle "Performance Mode" to reduce UI updates and save CPU, or enable "Stop Character Spinning" to prevent the camera from shifting while you are inside menus.
 * <a id="feat-alc"></a>[![Auto Lua Cleanup Integration](https://img.shields.io/badge/Auto%20Lua%20Cleanup%20Integration-forestgreen?style=flat-square)](#feat-alc) : Background memory cleaner. Automatically runs when memory hits 400MB <sub>*(PC)*</sub> or 85MB <sub>*(Console)*</sub> to prevent performance stuttering. Only triggers outside combat. For more control use [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/info4388.html) addon.
