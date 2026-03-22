@@ -6,6 +6,7 @@
 -- NOT TESTED: 2026-03-18 | Pre-Release v0.8.7 | APIVersion: 101049 | LAM2 v41
 local is_release_build = false
 local REQUIRED_LAM_VERSION = 41
+local REQUIRED_LCA_VERSION = 7060
 
 local PM = {
     name = "PermMemento",
@@ -142,24 +143,35 @@ PM.memento_data = {
 
 function PM.get_settings_library()
     local am = GetAddOnManager()
-    local lam_ver = 0
+    local lam_ver, lca_ver = 0, 0
     for i = 1, am:GetNumAddOns() do
-        local addon_name, _, _, _, _, state = am:GetAddOnInfo(i)
-        if addon_name == "LibAddonMenu-2.0" and state == ADDON_STATE_ENABLED then
-            lam_ver = am:GetAddOnVersion(i)
-            return "LAM2", lam_ver
+        local name, _, _, _, _, state = am:GetAddOnInfo(i)
+        if state == ADDON_STATE_ENABLED then
+            if name == "LibAddonMenu-2.0" then lam_ver = am:GetAddOnVersion(i) end
+            if name == "LibCombatAlerts" then lca_ver = am:GetAddOnVersion(i) end
         end
     end
-    return "NONE", 0
+    return lam_ver, lca_ver
 end
 
 function PM.show_missing_library_warning()
-    local dialog_id = "PM_MISSING_LIBRARY_WARN"
-    local popup_title = "|cFF0000Permanent Memento - Missing Dependency|r"
-    local popup_body = "To configure Permanent Memento via Settings UI, " ..
-                       "you MUST install the required library.\n\n" ..
-                       "Please install:\n|c00FFFFLibAddonMenu-2.0|r"
+    local alerts = {}
+    local lam_ver, lca_ver = PM.get_settings_library()
+    lam_ver = lam_ver or 0
+    lca_ver = lca_ver or 0
     
+    if lam_ver == 0 then table.insert(alerts, "|c00FFFFLibAddonMenu-2.0|r (Missing)")
+    elseif lam_ver < REQUIRED_LAM_VERSION then table.insert(alerts, "|c00FFFFLibAddonMenu-2.0|r (Outdated)") end
+    
+    if not LibCombatAlerts then table.insert(alerts, "|c00FFFFLibCombatAlerts|r (Missing)")
+    elseif lca_ver < REQUIRED_LCA_VERSION then table.insert(alerts, "|c00FFFFLibCombatAlerts|r (Outdated)") end
+    
+    if #alerts == 0 then return end
+    
+    local dialog_id = "PM_MISSING_LIBRARY_WARN"
+    local popup_title = "|cFF0000PM - Dependency Alert|r"
+    local popup_body = "For full functionality, please update or install:\n\n" .. table.concat(alerts, "\n")
+                       
     local function on_ack()
         PM.settings.has_shown_lib_warning_086 = true
         local tick_ms = GetGameTimeMilliseconds()
@@ -175,9 +187,7 @@ function PM.show_missing_library_warning()
             gamepadInfo = { dialogType = GAMEPAD_DIALOGS.BASIC },
             title = { text = popup_title },
             mainText = { text = popup_body },
-            buttons = {
-                { text = "Acknowledge / Close", keybind = "DIALOG_PRIMARY", callback = on_ack }
-            }
+            buttons = { { text = "Acknowledge / Close", keybind = "DIALOG_PRIMARY", callback = on_ack } }
         }
     end
 
@@ -189,10 +199,8 @@ function PM.show_missing_library_warning()
         end
     end, 2000)
 
-    if CHAT_SYSTEM then
-        CHAT_SYSTEM:AddMessage("|cFF0000[Permanent Memento Setup Warning]|r " ..
-                               "To configure via Settings UI please install " ..
-                               "|c00FFFFLibAddonMenu-2.0|r.")
+    if CHAT_SYSTEM then 
+        CHAT_SYSTEM:AddMessage("|cFF0000[PM Setup Warning]|r Please update your libraries.") 
     end
 end
 
@@ -828,21 +836,174 @@ function PM.toggle_ui_update()
     end
 end
 
-function PM.create_ui()
+function PM.create_mover(target, label_text)
+        local wasHidden = target:IsHidden()
+        target:SetHidden(false)
+        
+        local mover = WINDOW_MANAGER:CreateControl(nil, GuiRoot, CT_TOPLEVELCONTROL)
+        local t_scale = target:GetScale() or 1
+        local w, h = target:GetWidth() * t_scale, target:GetHeight() * t_scale
+        if w < 50 then w = 250 end
+        if h < 20 then h = 60 end
+        mover:SetDimensions(w, h)
+        
+        mover:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, target:GetLeft(), target:GetTop())
+        mover:SetDrawTier(DT_HIGH)
+        mover:SetDrawLayer(DL_OVERLAY)
+        
+        if wasHidden then target:SetHidden(true) end
+        mover:SetDrawLevel(9999)
+        mover:SetMouseEnabled(true)
+        mover:SetMovable(true)
+        mover:SetClampedToScreen(true)
+            
+        local bg = WINDOW_MANAGER:CreateControl(nil, mover, CT_BACKDROP)
+        bg:SetAnchorFill(mover)
+        bg:SetCenterColor(0, 0.5, 0.7, 0.32)
+        bg:SetEdgeColor(0, 0.5, 0.7, 1)
+        bg:SetEdgeTexture('', 8, 1, 0)
+        
+        local lbl = WINDOW_MANAGER:CreateControl(nil, mover, CT_LABEL)
+        lbl:SetAnchorFill(mover)
+        local font_mover = IsInGamepadPreferredMode() and "ZoFontGamepad27" or "ZoFontWinH5"
+        lbl:SetFont(font_mover)
+        lbl:SetColor(1, 0.82, 0, 0.9)
+        lbl:SetHorizontalAlignment(TEXT_ALIGN_CENTER)
+        lbl:SetVerticalAlignment(TEXT_ALIGN_CENTER)
+        lbl:SetText(label_text)
+        
+        mover.target = target
+        
+        mover:SetHandler("OnMoveStop", function(self)
+            self.target:ClearAnchors()
+            self.target:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self:GetLeft(), self:GetTop())
+        end)
+        
+        return mover
+    end
+
+    function PM.unlock_ui()
+        if PM.is_ui_unlocked then return end
+        PM.is_ui_unlocked = true
+        
+        if SCENE_MANAGER then SCENE_MANAGER:Show("hud") end
+        
+        PM.orig_pos = {
+            ui = {left = PM.settings.ui.left, top = PM.settings.ui.top},
+            ui_menu = {left = PM.settings.ui_menu.left, top = PM.settings.ui_menu.top}
+        }
+        
+        local cur_scene = SCENE_MANAGER:GetCurrentScene()
+        if cur_scene and PM.ui_window then
+            local t_frag = PM.settings.show_in_hud and PM.hudFragment or PM.menuFragment
+            if cur_scene:HasFragment(t_frag) then 
+                PM.ui_window:SetHidden(false) 
+            end
+        end
+        
+        PM.movers = {}
+        if PM.ui_window then 
+            table.insert(PM.movers, PM.create_mover(PM.ui_window, "PM UI")) 
+        end
+
+        local dialog_id = "PM_UI_UNLOCK_PROMPT"
+        if not ESO_Dialogs[dialog_id] then
+            ESO_Dialogs[dialog_id] = {
+                canQueue = true, 
+                gamepadInfo = { dialogType = GAMEPAD_DIALOGS.BASIC }, 
+                title = { text = "|c00FFFFPM UI Unlocked|r" }, 
+                mainText = { 
+                    text = "Move the UI elements to your desired locations.\n\n" ..
+                           "Press Accept to Save.\nPress Decline to Cancel." 
+                },
+                buttons = { 
+                    { 
+                        text = "Save", keybind = "DIALOG_PRIMARY", 
+                        callback = function() PM.lock_ui(true) end 
+                    },
+                    { 
+                        text = "Cancel", keybind = "DIALOG_NEGATIVE", 
+                        callback = function() PM.lock_ui(false) end 
+                    }
+                }
+            }
+        end
+
+        zo_callLater(function()
+            if IsInGamepadPreferredMode() then 
+                ZO_Dialogs_ShowGamepadDialog(dialog_id) 
+            else 
+                ZO_Dialogs_ShowDialog(dialog_id) 
+            end
+        end, 500)
+    end
+
+    function PM.lock_ui(save)
+        if not PM.is_ui_unlocked then return end
+        PM.is_ui_unlocked = false
+        
+        if PM.movers then
+            for _, mover in ipairs(PM.movers) do
+                mover:SetHidden(true)
+            end
+            PM.movers = {}
+        end
+        
+        if save then
+            if PM.ui_window then
+                if PM.settings.show_in_hud then
+                    PM.settings.ui.left = PM.ui_window:GetLeft()
+                    PM.settings.ui.top = PM.ui_window:GetTop()
+                else
+                    PM.settings.ui_menu.left = PM.ui_window:GetLeft()
+                    PM.settings.ui_menu.top = PM.ui_window:GetTop()
+                end
+            end
+            PM.log_msg("UI Positions Saved.", true, "ui", 90)
+        else
+            PM.settings.ui.left = PM.orig_pos.ui.left
+            PM.settings.ui.top = PM.orig_pos.ui.top
+            PM.settings.ui_menu.left = PM.orig_pos.ui_menu.left
+            PM.settings.ui_menu.top = PM.orig_pos.ui_menu.top
+            
+            PM.update_ui_anchor()
+            PM.log_msg("UI Positioning Cancelled.", true, "ui", 90)
+        end
+        
+        PM.toggle_ui_update()
+    end
+
+    function PM.create_ui()
     local win = WINDOW_MANAGER:CreateControl("PermMementoUI", GuiRoot, CT_TOPLEVELCONTROL)
     win:SetClampedToScreen(true); win:SetMouseEnabled(true)
     win:SetDrawTier(DT_OVERLAY); win:SetDrawLayer(DL_OVERLAY)
     win:SetDrawLevel(100); win:SetHidden(true)
     PM.ui_window = win
     
-    win:SetHandler("OnMoveStop", function(ctrl) 
-        if not PM.settings then return end 
-        if PM.settings.show_in_hud then
-            PM.settings.ui.left = ctrl:GetLeft(); PM.settings.ui.top = ctrl:GetTop()
-        else
-            PM.settings.ui_menu.left = ctrl:GetLeft(); PM.settings.ui_menu.top = ctrl:GetTop()
-        end
-    end)
+    if PM.is_lca_valid then
+        PM.ui_mover = LibCombatAlerts.MoveableControl:New(win)
+        PM.ui_mover:RegisterCallback(PM.name .. "_UI", 2, function(new_pos)
+            if not PM.settings then return end 
+            if type(new_pos.left) == "number" and type(new_pos.top) == "number" then
+                if PM.settings.show_in_hud then
+                    PM.settings.ui.left = new_pos.left
+                    PM.settings.ui.top = new_pos.top
+                else
+                    PM.settings.ui_menu.left = new_pos.left
+                    PM.settings.ui_menu.top = new_pos.top
+                end
+            end
+        end)
+    else
+        win:SetHandler("OnMoveStop", function(ctrl) 
+            if not PM.settings then return end 
+            if PM.settings.show_in_hud then
+                PM.settings.ui.left = ctrl:GetLeft(); PM.settings.ui.top = ctrl:GetTop()
+            else
+                PM.settings.ui_menu.left = ctrl:GetLeft(); PM.settings.ui_menu.top = ctrl:GetTop()
+            end
+        end)
+    end
     
     local tex_bg = WINDOW_MANAGER:CreateControl("PermMementoBG", win, CT_BACKDROP)
     tex_bg:SetAnchor(TOPLEFT, win, TOPLEFT, 0, 0)
@@ -1302,52 +1463,103 @@ function PM.start_loop(c_id, bypass_res)
     end
 end
 
-function PM.get_character_list(skip_cur)
-    local nm_list, id_list = {}, {}
-    local sv_ref = _G["PermMementoSaved"]; local usr = GetDisplayName()
-    local c_id = GetCurrentCharacterId(); local srv = GetWorldName() or "Default"
+function PM.update_profile_list()
+    PM.profile_list_names = {}
+    PM.profile_list_values = {}
+    local raw_names = {}
     
-    if sv_ref and sv_ref[srv] and sv_ref[srv][usr] then
-        for r_id, r_data in pairs(sv_ref[srv][usr]) do
-            if r_id ~= "$AccountWide" and type(r_data) == "table" and r_data["Character"] then
-                if not skip_cur or r_id ~= c_id then
-                    local char_nm = r_data["$LastCharacterName"]
-                    if not char_nm then
-                        char_nm = zo_strformat("<<1>>", GetCharacterNameById(r_id))
-                    end
-                    if not char_nm or char_nm == "" then char_nm = "Unknown ID: " .. r_id end
-                    table.insert(nm_list, char_nm); table.insert(id_list, r_id)
-                end
+    if PM.acct_saved and PM.acct_saved.profiles then
+        for p_name, _ in pairs(PM.acct_saved.profiles) do
+            table.insert(raw_names, p_name)
+        end
+    end
+    table.sort(raw_names)
+    
+    for _, p_name in ipairs(raw_names) do
+        local display_name = p_name
+        if PM.settings and PM.settings.active_profile == p_name then
+            display_name = "|c00FF00" .. p_name .. "|r"
+        end
+        table.insert(PM.profile_list_names, display_name)
+        table.insert(PM.profile_list_values, p_name)
+    end
+    
+    if #PM.profile_list_names == 0 then
+        table.insert(PM.profile_list_names, "None")
+        table.insert(PM.profile_list_values, "")
+    end
+    
+    local ddl = _G["PM_ProfileDropdown"]
+    if ddl and ddl.UpdateChoices then
+        ddl:UpdateChoices(PM.profile_list_names, PM.profile_list_values)
+        ddl:UpdateValue(false, PM.selected_profile_name or "")
+    end
+end
+
+function PM.save_profile(p_name)
+    if not p_name or p_name == "" then
+        PM.log_msg("Profile name cannot be empty.", true, "error"); return
+    end
+    if not PM.acct_saved.profiles then PM.acct_saved.profiles = {} end
+    
+    local exclude = {
+        learned_data = true, favorites = true, total_loops = true,
+        memento_usage = true, install_date = true, version_history = true,
+        last_version = true, is_migrated_087 = true,
+        has_shown_lib_warning_087 = true, alc_disabled_pm = true,
+        active_profile = true
+    }
+    
+    local new_prof = {}
+    for k, v in pairs(PM.settings) do
+        if not exclude[k] then
+            if type(v) == "table" then
+                new_prof[k] = ZO_DeepTableCopy(v)
+            else
+                new_prof[k] = v
             end
         end
     end
-    if #nm_list == 0 then return {"None"}, {""} end
-    return nm_list, id_list
+    
+    PM.settings.active_profile = p_name
+    PM.acct_saved.profiles[p_name] = new_prof
+    PM.log_msg("Profile Saved: " .. p_name, true, "settings", 90)
+    PM.profile_input_text = ""
+    PM.selected_profile_name = p_name
+    PM.update_profile_list()
 end
 
-function PM.copy_character_settings(src_id)
-    if not src_id or src_id == "" then
-        PM.log_msg("No character selected to copy.", true, "error"); return
+function PM.load_profile(p_name)
+    if not p_name or p_name == "" then
+        PM.log_msg("No profile selected to load.", true, "error"); return
     end
-    local usr = GetDisplayName(); local srv = GetWorldName() or "Default"
-    local raw_src = _G["PermMementoSaved"][srv][usr][src_id]["Character"]
-    if raw_src then 
-        local cur_id = GetCurrentCharacterId()
-        _G["PermMementoSaved"][srv][usr][cur_id]["Character"] = ZO_DeepTableCopy(raw_src)
-        ReloadUI("ingame") 
+    if PM.acct_saved.profiles and PM.acct_saved.profiles[p_name] then
+        local p_data = PM.acct_saved.profiles[p_name]
+        for k, v in pairs(p_data) do
+            if type(v) == "table" then
+                PM.settings[k] = ZO_DeepTableCopy(v)
+            else
+                PM.settings[k] = v
+            end
+        end
+        PM.settings.active_profile = p_name
+        PM.log_msg("Profile Loaded: " .. p_name, true, "settings", 90)
+        zo_callLater(function() ReloadUI("ingame") end, 1000)
     end
 end
 
-function PM.delete_character_settings(del_id)
-    if not del_id or del_id == "" then
-        PM.log_msg("No character selected for deletion.", true, "error"); return
+function PM.delete_profile(p_name)
+    if not p_name or p_name == "" then
+        PM.log_msg("No profile selected to delete.", true, "error"); return
     end
-    if del_id == GetCurrentCharacterId() then
-        PM.log_msg("Cannot delete current character's data while logged in.", true, "error"); return
-    end
-    local usr = GetDisplayName(); local srv = GetWorldName() or "Default"
-    if _G["PermMementoSaved"][srv] and _G["PermMementoSaved"][srv][usr] then
-        _G["PermMementoSaved"][srv][usr][del_id] = nil; ReloadUI("ingame")
+    if PM.acct_saved.profiles and PM.acct_saved.profiles[p_name] then
+        PM.acct_saved.profiles[p_name] = nil
+        if PM.settings.active_profile == p_name then
+            PM.settings.active_profile = nil
+        end
+        PM.log_msg("Profile Deleted: " .. p_name, true, "settings", 90)
+        if PM.selected_profile_name == p_name then PM.selected_profile_name = "" end
+        PM.update_profile_list()
     end
 end
 
@@ -1356,7 +1568,9 @@ function PM.delete_learned_data(del_id)
     if PM.acct_saved and PM.acct_saved.learned_data then
         PM.acct_saved.learned_data[del_id] = nil
         PM.log_msg("Learned data deleted.", true, "settings", 90)
-        PM.is_menu_built = false; ReloadUI("ingame")
+        PM.update_menu_choices()
+        local lrn_ddl = _G["PM_LearnedDropdown"]
+        if lrn_ddl then lrn_ddl:UpdateValue(false, 0) end
     end
 end
 
@@ -1364,7 +1578,9 @@ function PM.delete_all_learned_data()
     if PM.acct_saved and PM.acct_saved.learned_data then
         PM.acct_saved.learned_data = {}
         PM.log_msg("ALL Learned data deleted.", true, "settings", 90)
-        PM.is_menu_built = false; ReloadUI("ingame")
+        PM.update_menu_choices()
+        local lrn_ddl = _G["PM_LearnedDropdown"]
+        if lrn_ddl then lrn_ddl:UpdateValue(false, 0) end
     end
 end
 
@@ -1404,13 +1620,16 @@ function PM.update_favorites_choices()
         table.insert(PM.fav_current_names, f_str); table.insert(PM.fav_current_ids, t.id) 
     end
     
-    if PM.ctrl_fav_candidate_dropdown then 
-        PM.ctrl_fav_candidate_dropdown:UpdateChoices(PM.fav_all_names, PM.fav_all_ids)
-        PM.ctrl_fav_candidate_dropdown:UpdateValue()
+    local cand_ddl = _G["PM_FavCandidateDropdown"]
+    if cand_ddl and cand_ddl.UpdateChoices then
+        cand_ddl:UpdateChoices(PM.fav_all_names, PM.fav_all_ids)
+        cand_ddl:UpdateValue()
     end
-    if PM.ctrl_fav_remove_dropdown then 
-        PM.ctrl_fav_remove_dropdown:UpdateChoices(PM.fav_current_names, PM.fav_current_ids)
-        PM.ctrl_fav_remove_dropdown:UpdateValue()
+    
+    local rem_ddl = _G["PM_FavRemoveDropdown"]
+    if rem_ddl and rem_ddl.UpdateChoices then
+        rem_ddl:UpdateChoices(PM.fav_current_names, PM.fav_current_ids)
+        rem_ddl:UpdateValue()
     end
 end
 
@@ -1445,10 +1664,14 @@ function PM.update_menu_choices()
     for i, t in ipairs(arr_act) do
         local stat_str = t.stat and " (Stationary)" or ""
         local f_str = string.format("%s (%ds)%s", t.name, t.dur / 1000, stat_str)
+        if PM.settings and PM.settings.active_id == t.id then
+            f_str = "|c00FF00" .. f_str .. "|r"
+        end
         table.insert(PM.active_names, f_str); table.insert(PM.active_ids, t.id)
     end
-    if PM.ctrl_active_dropdown then
-        PM.ctrl_active_dropdown:UpdateChoices(PM.active_names, PM.active_ids)
+    local act_ddl = _G["PM_ActiveDropdown"]
+    if act_ddl and act_ddl.UpdateChoices then
+        act_ddl:UpdateChoices(PM.active_names, PM.active_ids)
     end
 
     PM.sync_names, PM.sync_ids = {"None"}, {0}
@@ -1466,8 +1689,9 @@ function PM.update_menu_choices()
         if md then f_str = f_str .. string.format(" (%ds)", md.dur / 1000) end
         table.insert(PM.sync_names, f_str); table.insert(PM.sync_ids, t.id) 
     end
-    if PM.ctrl_sync_dropdown then
-        PM.ctrl_sync_dropdown:UpdateChoices(PM.sync_names, PM.sync_ids)
+    local sync_ddl = _G["PM_SyncDropdown"]
+    if sync_ddl and sync_ddl.UpdateChoices then
+        sync_ddl:UpdateChoices(PM.sync_names, PM.sync_ids)
     end
     
     PM.learned_list_names, PM.learned_list_values = {"None"}, {0}
@@ -1480,8 +1704,9 @@ function PM.update_menu_choices()
             table.insert(PM.learned_list_names, f_str); table.insert(PM.learned_list_values, md.id) 
         end
     end
-    if PM.ctrl_learned_dropdown then
-        PM.ctrl_learned_dropdown:UpdateChoices(PM.learned_list_names, PM.learned_list_values)
+    local lrn_ddl = _G["PM_LearnedDropdown"]
+    if lrn_ddl and lrn_ddl.UpdateChoices then
+        lrn_ddl:UpdateChoices(PM.learned_list_names, PM.learned_list_values)
     end
 end
 
@@ -1581,7 +1806,7 @@ function PM.hook_game_ui()
         
         if md then
             if not PM.memento_data[c_id] and not PM.settings.is_unrestricted then
-                 PM:log_msg(
+                 PM.log_msg(
                      "Activating " .. md.name .. " (Looping Disabled - Unrestricted Required)",
                      true, "activation", 70
                  ); return
@@ -1620,8 +1845,11 @@ function PM.sync_engine.initialize()
     local c_arg = string.lower(arg_str)
     
     if c_arg == "stop" then
-         local function try_chat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
-         if not pcall(try_chat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
+         if StartChatInput then
+             StartChatInput("PM STOP", CHAT_CHANNEL_PARTY)
+         elseif CHAT_SYSTEM then
+             CHAT_SYSTEM:StartTextEntry("PM STOP")
+         end
          if PM.settings then
              PM.settings.active_id = nil; PM.loop_token = (PM.loop_token or 0) + 1
          end
@@ -1630,10 +1858,9 @@ function PM.sync_engine.initialize()
          local r_id = PM.get_random_any()
          if r_id then
             local l_str = GetCollectibleLink(r_id, LINK_STYLE_BRACKETS)
-            local function try_chat()
+            if StartChatInput then
                 StartChatInput(string.format("PM %s", l_str), CHAT_CHANNEL_PARTY)
-            end
-            if not pcall(try_chat) and CHAT_SYSTEM then
+            elseif CHAT_SYSTEM then
                 CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
             end
             PM.log_msg("Sent Random Sync Request", true, "sync", 90); return
@@ -1646,10 +1873,9 @@ function PM.sync_engine.initialize()
       if f_id and IsCollectibleUnlocked(f_id) then
           if string.find(string.lower(GetCollectibleName(f_id)), c_arg, 1, true) then
             local l_str = GetCollectibleLink(f_id, LINK_STYLE_BRACKETS)
-            local function try_chat()
+            if StartChatInput then
                 StartChatInput(string.format("PM %s", l_str), CHAT_CHANNEL_PARTY)
-            end
-            if not pcall(try_chat) and CHAT_SYSTEM then
+            elseif CHAT_SYSTEM then
                 CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
             end
             return
@@ -1725,13 +1951,16 @@ end
 function PM.build_menu()
     if PM.is_menu_built then return end
     
-    local lib_type, lam_ver = PM.get_settings_library()
-    if lib_type == "NONE" and not PM.settings.has_shown_lib_warning_086 then
+    local lam_ver, lca_ver = PM.get_settings_library()
+    lam_ver = lam_ver or 0
+    
+    local is_lam_ok = (lam_ver >= REQUIRED_LAM_VERSION)
+    if (not is_lam_ok or not PM.is_lca_valid) and not PM.settings.has_shown_lib_warning_086 then
         PM.show_missing_library_warning()
     end
-    if lib_type == "NONE" then return end
+    if lam_ver == 0 then return end
 
-    if lib_type == "LAM2" and lam_ver > 0 and lam_ver < REQUIRED_LAM_VERSION then
+    if lam_ver > 0 and lam_ver < REQUIRED_LAM_VERSION then
         zo_callLater(function()
             local warn_msg = string.format(
                 "|cFFFF00Warning: LibAddonMenu is outdated (v%d). Update to (v%d) for PM menu.|r",
@@ -1750,7 +1979,30 @@ function PM.build_menu()
 
     PM.is_menu_built = true
     PM.update_menu_choices(); PM.update_favorites_choices()
-    PM.char_list_names, PM.char_list_values = PM.get_character_list(false)
+    
+    if not PM.acct_saved.profiles then PM.acct_saved.profiles = {} end
+    
+    if not PM.acct_saved.is_profiles_migrated then
+        local usr = GetDisplayName(); local srv = GetWorldName() or "Default"
+        local raw_sv = _G["PermMementoSaved"]
+        if raw_sv and raw_sv[srv] and raw_sv[srv][usr] then
+            for r_id, r_data in pairs(raw_sv[srv][usr]) do
+                if r_id ~= "$AccountWide" and type(r_data) == "table" and r_data["Character"] then
+                    local char_nm = r_data["$LastCharacterName"]
+                    if not char_nm or char_nm == "" then
+                        char_nm = zo_strformat("<<1>>", GetCharacterNameById(r_id))
+                    end
+                    if char_nm and char_nm ~= "" and not PM.acct_saved.profiles[char_nm] then
+                        PM.acct_saved.profiles[char_nm] = ZO_DeepTableCopy(r_data["Character"])
+                    end
+                end
+            end
+        end
+        PM.acct_saved.is_profiles_migrated = true
+        PM.log_msg("Old character settings successfully migrated to Profiles.", true, "settings")
+    end
+
+    PM.update_profile_list()
 
     local is_eu = (GetWorldName() == "EU Megaserver")
     local is_pad = IsConsoleUI() or IsInGamepadPreferredMode()
@@ -1780,8 +2032,7 @@ function PM.build_menu()
         table.insert(b_data, {
             type = "button", width = "half",
             name = "|cFFD700DONATE|r to @|ca500f3A|r|cb400e6P|r|cc300daH|r|cd200cdO|r|ce100c1NlC|r",
-            tooltip = "Opens the in-game mail. Thank you! This donation will be used to buy " ..
-                      "new mementos to accurately input their data to the addon.",
+            tooltip = "Opens the in-game mail. Thank you! for your donation!",
             func = function()
                 SCENE_MANAGER:Show("mailSend")
                 zo_callLater(function()
@@ -1824,7 +2075,7 @@ function PM.build_menu()
             disabled = function() return PM.settings.is_random_on_zone end
         },
         {
-            type = "button", name = "Activate Random Memento", width = "half",
+            type = "button", name = "|cFFFF00Activate Random Memento|r", width = "half",
             tooltip = "Immediately picks and starts a random supported memento.",
             func = function()
                 local r_id = PM.get_random_supported()
@@ -1863,13 +2114,13 @@ function PM.build_menu()
         },
         {
             type = "checkbox", name = "Randomize on Zone Change",
-            tooltip = "Randomly picks a supported memento whenever you change zones.",
+            tooltip = "Picks and plays a random memento whenever you change zones.",
             getFunc = function() return PM.settings.is_random_on_zone end,
             setFunc = function(v) PM.settings.is_random_on_zone = v end
         },
         {
             type = "checkbox", name = "Randomize on Login",
-            tooltip = "Picks a random memento when you login.",
+            tooltip = "Picks and plays a random memento when you login.",
             getFunc = function() return PM.settings.is_random_on_login end,
             setFunc = function(v) PM.settings.is_random_on_login = v end
         },
@@ -1915,12 +2166,12 @@ function PM.build_menu()
 
 if is_pad then
         table.insert(b_data, {
-            type = "submenu", name = "General Settings",
+            type = "submenu", name = "|c00FF00General Settings|r",
             tooltip = "Core configuration and active memento selection.",
             controls = grp_gen
         })
     else
-        table.insert(b_data, { type = "header", name = "General Settings" })
+        table.insert(b_data, { type = "header", name = "|c00FF00General Settings|r" })
         for _, ctrl in ipairs(grp_gen) do table.insert(b_data, ctrl) end
         table.insert(b_data, {
             type = "checkbox", name = "Enable Chat Logs",
@@ -1952,7 +2203,7 @@ if is_pad then
         {
             type = "checkbox", name = "Enable Randomization & Favorites",
             tooltip = "ON: Enables Randomization features and Favorites selection.\n" ..
-                      "OFF: Disables Randomization and disables their submenu.",
+                      "OFF: Disables Randomization features and Favorites selection.",
             getFunc = function() return PM.settings.enable_random_fav end,
             setFunc = function(v)
                 PM.settings.enable_random_fav = v
@@ -1962,7 +2213,7 @@ if is_pad then
         {
             type = "checkbox", name = "Enable Learning Mode",
             tooltip = "ON: Enables Auto-Scan and learning of unknown mementos.\n" ..
-                      "OFF: Disables Auto-Scan and disables its submenu.",
+                      "OFF: Disables Auto-Scan and learning of unknown mementos.",
             getFunc = function() return PM.settings.enable_learning end,
             setFunc = function(v)
                 PM.settings.enable_learning = v
@@ -1973,8 +2224,8 @@ if is_pad then
     
     if not is_pad then
         table.insert(grp_pwr, {
-            type = "checkbox", name = "Enable Group Sync Listener",
-            tooltip = "ON: Listens to chat for party sync requests.\nOFF: Disables Sync menu.",
+            type = "checkbox", name = "Enable Party Sync Listener",
+            tooltip = "ON: Listens to chat for party sync requests.\nOFF: Disables party sync requests.",
             getFunc = function() return PM.settings.sync_module.is_enabled end,
             setFunc = function(v)
                 PM.settings.sync_module.is_enabled = v; PM.toggle_sync_listener()
@@ -1983,8 +2234,8 @@ if is_pad then
         })
     end
     table.insert(b_data, {
-        type = "submenu", name = "Module Manager",
-        tooltip = "Turn off modules entirely to save CPU.", controls = grp_pwr
+        type = "submenu", name = "|cFFA500Module Manager|r",
+        tooltip = "Turn off unused modules entirely.", controls = grp_pwr
     })
 
     local grp_ui = {
@@ -2009,15 +2260,6 @@ if is_pad then
             disabled = function() return PM.settings.ui.is_hidden end
         },
         {
-            type = "checkbox", name = "Lock UI Position",
-            tooltip = "Prevents the on-screen status text UI from being moved.",
-            getFunc = function() return PM.settings.ui.is_locked end,
-            setFunc = function(v)
-                PM.settings.ui.is_locked = v
-                if PM.ui_window then PM.ui_window:SetMovable(not v) end
-            end
-        },
-        {
             type = "slider", name = "HUD UI Scale",
             tooltip = "Adjusts the size of the status text UI in HUD mode.",
             min = 0.5, max = 2.0, step = 0.1, decimals = 1,
@@ -2030,23 +2272,158 @@ if is_pad then
             min = 0.5, max = 2.0, step = 0.1, decimals = 1,
             getFunc = function() return PM.settings.ui_menu.scale or (is_pad and 1.2 or 1.0) end,
             setFunc = function(v) PM.settings.ui_menu.scale = v; PM.update_ui_anchor() end
-        },
-        {
-            type = "button", name = "|cFF0000RESET UI POSITION|r",
-            tooltip = "Resets the status text UI position to default.",
-            func = function()
-                PM.settings.ui.left = PM.defaults.ui.left
-                PM.settings.ui.top = PM.defaults.ui.top
-                PM.settings.ui_menu.left = PM.defaults.ui_menu.left
-                PM.settings.ui_menu.top = PM.defaults.ui_menu.top
-                PM.update_ui_anchor(); PM.log_msg("UI Position Reset.", true, "ui", 90)
-            end
         }
     }
+    
     table.insert(b_data, {
-        type = "submenu", name = "UI Visibility Settings",
+        type = "submenu", name = "|c00FFFFUI Visibility Settings|r",
         tooltip = "Options for the on-screen status text.", controls = grp_ui
     })
+
+    local function preview_window(win_ctrl)
+        win_ctrl:SetHidden(false)
+    end
+
+    local ui_pos_controls = {}
+    
+    if not is_pad then
+        table.insert(ui_pos_controls, {
+            type = "button", name = "|cFFD700UNLOCK UI POSITIONING|r",
+            tooltip = "Allows you to freely drag the UI around the screen.",
+            func = function() PM.unlock_ui() end, width = "full"
+        })
+        table.insert(ui_pos_controls, {
+            type = "button", name = "|cFF0000LOCK UI POSITIONING|r",
+            tooltip = "Manually locks UI positioning and removes all highlights.",
+            func = function() PM.lock_ui(true) end, width = "full",
+            disabled = function() return not PM.is_ui_unlocked end
+        })
+    end
+
+    table.insert(ui_pos_controls, {
+        type = "checkbox", name = "Lock UI Position",
+        tooltip = "Prevents the on-screen status text UI from being moved.",
+        getFunc = function() return PM.settings.ui.is_locked end,
+        setFunc = function(v)
+            PM.settings.ui.is_locked = v
+            if PM.ui_window then PM.ui_window:SetMovable(not v) end
+        end
+    })
+
+    if is_pad and PM.is_lca_valid then
+        table.insert(ui_pos_controls, { 
+            type = "button", name = "Move UI (D-Pad)", width = "half",
+            func = function() 
+                preview_window(PM.ui_window)
+                if PM.ui_mover then PM.ui_mover:ToggleGamepadMove(true) end
+            end,
+            disabled = function() return PM.ui_mover == nil or PM.settings.ui.is_locked end
+        })
+    end
+
+    local reset_width = (is_pad and PM.is_lca_valid) and "half" or "full"
+    table.insert(ui_pos_controls, { 
+        type = "button", name = "|cFF0000RESET UI POSITION|r", width = reset_width,
+        func = function() 
+            PM.settings.ui.left = PM.defaults.ui.left
+            PM.settings.ui.top = PM.defaults.ui.top
+            PM.settings.ui_menu.left = PM.defaults.ui_menu.left
+            PM.settings.ui_menu.top = PM.defaults.ui_menu.top
+            PM.update_ui_anchor(); PM.log_msg("UI Position Reset.", true, "ui", 90)
+            
+            zo_callLater(function()
+                if PM.is_ui_unlocked and PM.movers and PM.movers[1] and PM.ui_window then
+                    PM.ui_window:SetHidden(false)
+                    PM.movers[1]:ClearAnchors()
+                    PM.movers[1]:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, PM.ui_window:GetLeft(), PM.ui_window:GetTop())
+                end
+            end, 50)
+        end 
+    })
+
+    table.insert(b_data, {
+        type = "submenu", name = "|c00FFFFConfigure UI Positions|r", controls = ui_pos_controls
+    })
+
+    if not is_pad then
+        local grp_sync = {
+            {
+                type = "description",
+                text = function()
+                    if not PM.settings.sync_module.is_enabled then
+                        return "|cFF0000Group Sync is DISABLED via Module Manager.|r"
+                    end
+                    return "Group synchronization options."
+                end
+            },
+            {
+                type = "dropdown", name = "Select Sync Request", reference = "PM_SyncDropdown",
+                tooltip = "Broadcasts a memento to your group to sync up animations.",
+                choices = PM.sync_names, choicesValues = PM.sync_ids,
+                getFunc = function() return 0 end,
+                setFunc = function(v)
+                    if v and v ~= 0 then
+                        local l_str = GetCollectibleLink(v, LINK_STYLE_BRACKETS)
+                        if StartChatInput then
+                            StartChatInput(string.format("PM %s", l_str), CHAT_CHANNEL_PARTY)
+                        elseif CHAT_SYSTEM then
+                            CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
+                        end
+                    end
+                end,
+                disabled = function() return not PM.settings.sync_module.is_enabled end
+            },
+            {
+                type = "button", name = "Send Random Sync",
+                tooltip = "Picks a random unlocked memento and broadcasts it to group.",
+                func = function()
+                    local r_id = PM.get_random_any()
+                    if r_id then
+                        local l_str = GetCollectibleLink(r_id, LINK_STYLE_BRACKETS)
+                        if StartChatInput then
+                            StartChatInput(string.format("PM %s", l_str), CHAT_CHANNEL_PARTY)
+                        elseif CHAT_SYSTEM then
+                            CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
+                        end
+                    end
+                end,
+                disabled = function() return not PM.settings.sync_module.is_enabled end
+            },
+            {
+                type = "button", name = "Send Stop Command",
+                tooltip = "Sends a STOP command to your group, halting their loops.",
+                func = function()
+                    if StartChatInput then
+                        StartChatInput("PM STOP", CHAT_CHANNEL_PARTY)
+                    elseif CHAT_SYSTEM then
+                        CHAT_SYSTEM:StartTextEntry("PM STOP")
+                    end
+                end,
+                disabled = function() return not PM.settings.sync_module.is_enabled end
+            },
+            {
+                type = "checkbox", name = "Randomize Sync Delay",
+                tooltip = "Adds random variation to the sync start time.",
+                getFunc = function() return PM.settings.sync_module.is_random end,
+                setFunc = function(v) PM.settings.sync_module.is_random = v end,
+                disabled = function() return not PM.settings.sync_module.is_enabled end
+            },
+            {
+                type = "slider", name = "Sync Delay (Seconds)",
+                tooltip = "Fixed delay before starting a synced memento.",
+                min = 0, max = 10, step = 1,
+                getFunc = function() return PM.settings.sync_module.delay end,
+                setFunc = function(v) PM.settings.sync_module.delay = v end,
+                disabled = function()
+                    return not PM.settings.sync_module.is_enabled or PM.settings.sync_module.is_random
+                end
+            }
+        }
+        table.insert(b_data, {
+            type = "submenu", name = "|c800080Sync Settings|r",
+            tooltip = "Group synchronization options.", controls = grp_sync
+        })
+    end
 
     local grp_fav = {
         {
@@ -2056,7 +2433,7 @@ if is_pad then
                     return "|cFF0000Favorites Manager is DISABLED via the Module Manager.|r"
                 end
                 return "If you have favorites in this list, 'Randomize' features will ONLY " ..
-                       "pick from here. If empty, they pick from all. (RELOAD UI)"
+                       "pick from here. If empty, they pick from all."
             end
         },
         {
@@ -2098,37 +2475,59 @@ if is_pad then
         }
     }
     table.insert(b_data, {
-        type = "submenu", name = "Favorites Manager",
+        type = "submenu", name = "|c9CD04CFavorites Manager|r",
         tooltip = "Manage your list of favorite mementos for randomization.", controls = grp_fav
     })
 
-    local grp_char = {
+    local grp_prof = {
         {
-            type = "dropdown", name = "Copy Settings From...",
-            tooltip = "Select a character to copy settings FROM to your CURRENT character.",
-            choices = PM.char_list_names, choicesValues = PM.char_list_values,
-            getFunc = function() return "" end, setFunc = function(v) PM.selected_char_copy = v end
+            type = "description",
+            text = function()
+                if PM.char_saved.use_account_settings then
+                    return "|cFF0000Profile Manager is DISABLED while 'Use Account-Wide Settings' is active.|r"
+                end
+                return "Create, load, or delete character-specific settings profiles."
+            end
         },
         {
-            type = "button", name = "Copy Settings & Reload",
-            tooltip = "Overwrites current settings with selected character's data & reloads.",
-            func = function() PM.copy_character_settings(PM.selected_char_copy) end
+            type = "editbox", name = "New Profile Name",
+            tooltip = "Enter a name for your new profile.",
+            isMultiline = false,
+            getFunc = function() return PM.profile_input_text or "" end,
+            setFunc = function(v) PM.profile_input_text = v end,
+            disabled = function() return PM.char_saved.use_account_settings end
         },
         {
-            type = "dropdown", name = "|cFF0000DELETE Data For...|r",
-            tooltip = "|cFF0000Select an obsolete character to delete their saved data.|r",
-            choices = PM.char_list_names, choicesValues = PM.char_list_values,
-            getFunc = function() return "" end, setFunc = function(v) PM.selected_char_delete = v end
+            type = "button", name = "|c00FF00SAVE AS NEW PROFILE|r", width = "full",
+            tooltip = "Deeply copies your current settings into the new profile.",
+            func = function() PM.save_profile(PM.profile_input_text) end,
+            disabled = function() return PM.char_saved.use_account_settings end
+        },
+        { type = "divider" },
+        {
+            type = "dropdown", name = "Select Profile", reference = "PM_ProfileDropdown",
+            tooltip = "Select an existing profile to load or delete.",
+            choices = PM.profile_list_names, choicesValues = PM.profile_list_values,
+            getFunc = function() return PM.selected_profile_name or "" end,
+            setFunc = function(v) PM.selected_profile_name = v end,
+            disabled = function() return PM.char_saved.use_account_settings end
         },
         {
-            type = "button", name = "|cFF0000DELETE Data & Reload|r",
-            tooltip = "|cFF0000WARNING: PERMANENTLY deletes saved data for the selected char.|r",
-            func = function() PM.delete_character_settings(PM.selected_char_delete) end
+            type = "button", name = "|c00FFFFLOAD PROFILE|r", width = "half",
+            tooltip = "Loads the selected profile and reloads the UI.",
+            func = function() PM.load_profile(PM.selected_profile_name) end,
+            disabled = function() return PM.char_saved.use_account_settings end
+        },
+        {
+            type = "button", name = "|cFF0000DELETE PROFILE|r", width = "half",
+            tooltip = "Deletes the selected profile permanently.",
+            func = function() PM.delete_profile(PM.selected_profile_name) end,
+            disabled = function() return PM.char_saved.use_account_settings end
         }
     }
     table.insert(b_data, {
-        type = "submenu", name = "Character Data Management",
-        tooltip = "Manage individual character settings profiles.", controls = grp_char
+        type = "submenu", name = "|cFFFF00Profile Manager|r",
+        tooltip = "Manage and dynamically swap your settings profiles.", controls = grp_prof
     })
 
     local grp_lrn = {
@@ -2150,7 +2549,7 @@ if is_pad then
             disabled = function() return not PM.settings.enable_learning end
         },
         {
-            type = "button", name = "|c00FF00Activate Selected Memento|r", width = "half",
+            type = "button", name = "|c00FF00ACTIVATE SELECTION|r", width = "half",
             tooltip = "|c00FF00Activates the memento currently selected in the dropdown.|r",
             func = function()
                 if PM.selected_learned_id and PM.selected_learned_id ~= 0 then
@@ -2170,12 +2569,12 @@ if is_pad then
         },
         {
             type = "button", name = "Delete Selected Memento", width = "half",
-            tooltip = "Removes the selected memento from Learned Data and reloads UI.",
+            tooltip = "Removes the selected memento from Learned Data.",
             func = function() PM.delete_learned_data(PM.selected_learned_id) end,
             disabled = function() return not PM.settings.enable_learning end
         },
         {
-            type = "button", name = "Randomize Learned Memento", width = "half",
+            type = "button", name = "RANDOMIZED LEARNED", width = "half",
             tooltip = "Picks a random memento from your Learned Data list.",
             func = function()
                 local r_id = PM.get_random_learned()
@@ -2190,14 +2589,14 @@ if is_pad then
             disabled = function() return not PM.settings.enable_learning end
         },
         {
-            type = "button", name = "|cFF0000DELETE ALL LEARNED DATA|r", width = "half",
+            type = "button", name = "|cFF0000DELETE ALL LEARNED|r", width = "full",
             tooltip = "|cFF0000WARNING: Deletes ALL manual and auto-scanned learned data.|r",
             func = function() PM.delete_all_learned_data() end,
             disabled = function() return not PM.settings.enable_learning end
         }
     }
     table.insert(b_data, {
-        type = "submenu", name = "Learned Data Management",
+        type = "submenu", name = "|cFFFF00Learned Data Management|r",
         tooltip = "Manage mementos scanned by the Auto-Scan feature.", controls = grp_lrn
     })
 
@@ -2249,90 +2648,9 @@ if is_pad then
         })
     end
     table.insert(b_data, {
-        type = "submenu", name = "Announcement Durations (Seconds)",
+        type = "submenu", name = "|cAAAAAAAnnouncement Durations (Seconds)|r",
         tooltip = "Configure how long text stays on screen.", controls = grp_dur
     })
-
-    if not is_pad then
-        local grp_sync = {
-            {
-                type = "description",
-                text = function()
-                    if not PM.settings.sync_module.is_enabled then
-                        return "|cFF0000Group Sync is DISABLED via Module Manager.|r"
-                    end
-                    return "Group synchronization options."
-                end
-            },
-            {
-                type = "dropdown", name = "Select Sync Request", reference = "PM_SyncDropdown",
-                tooltip = "Broadcasts a memento to your group to sync up animations.",
-                choices = PM.sync_names, choicesValues = PM.sync_ids,
-                getFunc = function() return 0 end,
-                setFunc = function(v)
-                    if v and v ~= 0 then
-                        local l_str = GetCollectibleLink(v, LINK_STYLE_BRACKETS)
-                        local function try_chat()
-                            StartChatInput(string.format("PM %s", l_str), CHAT_CHANNEL_PARTY)
-                        end
-                        if not pcall(try_chat) and CHAT_SYSTEM then
-                            CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
-                        end
-                    end
-                end,
-                disabled = function() return not PM.settings.sync_module.is_enabled end
-            },
-            {
-                type = "button", name = "Send Random Sync",
-                tooltip = "Picks a random unlocked memento and broadcasts it to group.",
-                func = function()
-                    local r_id = PM.get_random_any()
-                    if r_id then
-                        local l_str = GetCollectibleLink(r_id, LINK_STYLE_BRACKETS)
-                        local function try_chat()
-                            StartChatInput(string.format("PM %s", l_str), CHAT_CHANNEL_PARTY)
-                        end
-                        if not pcall(try_chat) and CHAT_SYSTEM then
-                            CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
-                        end
-                    end
-                end,
-                disabled = function() return not PM.settings.sync_module.is_enabled end
-            },
-            {
-                type = "button", name = "Send Stop Command",
-                tooltip = "Sends a STOP command to your group, halting their loops.",
-                func = function()
-                    local function try_chat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
-                    if not pcall(try_chat) and CHAT_SYSTEM then
-                        CHAT_SYSTEM:StartTextEntry("PM STOP")
-                    end
-                end,
-                disabled = function() return not PM.settings.sync_module.is_enabled end
-            },
-            {
-                type = "checkbox", name = "Randomize Sync Delay",
-                tooltip = "Adds random variation to the sync start time.",
-                getFunc = function() return PM.settings.sync_module.is_random end,
-                setFunc = function(v) PM.settings.sync_module.is_random = v end,
-                disabled = function() return not PM.settings.sync_module.is_enabled end
-            },
-            {
-                type = "slider", name = "Sync Delay (Seconds)",
-                tooltip = "Fixed delay before starting a synced memento.",
-                min = 0, max = 10, step = 1,
-                getFunc = function() return PM.settings.sync_module.delay end,
-                setFunc = function(v) PM.settings.sync_module.delay = v end,
-                disabled = function()
-                    return not PM.settings.sync_module.is_enabled or PM.settings.sync_module.is_random
-                end
-            }
-        }
-        table.insert(b_data, {
-            type = "submenu", name = "Sync Settings",
-            tooltip = "Group synchronization options.", controls = grp_sync
-        })
-    end
 
     local grp_delay = {
         {
@@ -2409,7 +2727,7 @@ if is_pad then
         }
     }
     table.insert(b_data, {
-        type = "submenu", name = "Delays (Seconds)",
+        type = "submenu", name = "|cAAAAAAMemento Delays (Seconds)|r",
         tooltip = "Fine-tune how long the addon waits after specific actions.", controls = grp_delay
     })
 
@@ -2446,44 +2764,9 @@ if is_pad then
         type = "button", name = "Reload UI",
         tooltip = "Reloads the User Interface.", func = function() ReloadUI("ingame") end
     })
-    table.insert(grp_cmd, {
-        type = "button", name = "|cFF0000RESET TO DEFAULTS|r",
-        tooltip = "|cFF0000RESETS ALL SETTINGS TO DEFAULT VALUES.|r",
-        func = function()
-            local d = PM.defaults
-            PM.settings.active_id = d.active_id
-            PM.settings.is_paused = d.is_paused
-            PM.settings.is_log_enabled = d.is_log_enabled
-            PM.settings.is_csa_enabled = d.is_csa_enabled
-            PM.settings.is_csa_cleanup_enabled = d.is_csa_cleanup_enabled
-            PM.settings.is_random_on_login = d.is_random_on_login
-            PM.settings.is_random_on_zone = d.is_random_on_zone
-            PM.settings.is_loop_in_combat = d.is_loop_in_combat
-            PM.settings.is_performance_mode = d.is_performance_mode
-            PM.settings.show_in_hud = d.show_in_hud
-            PM.settings.is_unrestricted = d.is_unrestricted
-            PM.settings.is_auto_cleanup = d.is_auto_cleanup
-            PM.settings.delay_move = d.delay_move
-            PM.settings.delay_sprint = d.delay_sprint
-            PM.settings.delay_block = d.delay_block
-            PM.settings.delay_cast = d.delay_cast
-            PM.settings.delay_swim = d.delay_swim
-            PM.settings.delay_sneak = d.delay_sneak
-            PM.settings.delay_mount = d.delay_mount
-            PM.settings.delay_idle = d.delay_idle
-            PM.settings.delay_teleport = d.delay_teleport
-            PM.settings.delay_resurrect = d.delay_resurrect
-            PM.settings.delay_in_menu = d.delay_in_menu
-            PM.settings.delay_combat_end = d.delay_combat_end
-            PM.settings.sync_module = ZO_ShallowTableCopy(d.sync_module)
-            PM.settings.ui = ZO_ShallowTableCopy(d.ui)
-            PM.settings.ui_menu = ZO_ShallowTableCopy(d.ui_menu)
-            PM.settings.csa_durations = ZO_ShallowTableCopy(d.csa_durations)
-            PM.toggle_cleanup_events(); ReloadUI("ingame")
-        end
-    })
+    
     table.insert(b_data, {
-        type = "submenu", name = "Commands",
+        type = "submenu", name = "|cFF0000Commands|r",
         tooltip = "Available chat commands and utility buttons.", controls = grp_cmd
     })
 
@@ -2544,9 +2827,35 @@ if is_pad then
         })
     end
 
-    table.insert(b_data, { type = "divider" })
+    local function ResetToDefaults()
+        local exclude = {
+            learned_data = true, favorites = true, total_loops = true,
+            memento_usage = true, install_date = true, version_history = true,
+            last_version = true, is_migrated_086 = true,
+            has_shown_lib_warning_086 = true, alc_disabled_pm = true
+        }
+        
+        for k, v in pairs(PM.defaults) do
+            if not exclude[k] then
+                if type(v) == "table" then
+                    PM.settings[k] = ZO_ShallowTableCopy(v)
+                else
+                    PM.settings[k] = v
+                end
+            end
+        end
+        
+        PM:toggle_cleanup_events(); ReloadUI("ingame")
+    end
 
     if is_pad then
+        table.insert(b_data, { 
+            type = "button", 
+            name = "|cFF0000RESET TO DEFAULTS|r", 
+            tooltip = "|cFF0000RESETS ALL SETTINGS TO DEFAULT VALUES.|r",
+            func = ResetToDefaults, 
+            width = "full" 
+        })
         table.insert(b_data, {
             type = "button", name = "|cFFD700Buy Me A Coffee|r", width = "full",
             tooltip = "Thank you! Donations help support continued development!\n\n" ..
@@ -2558,6 +2867,13 @@ if is_pad then
                       "https://www.esoui.com/portal.php?id=360&a=listbugs", func = function() end
         })
     else
+        table.insert(b_data, { 
+            type = "button", 
+            name = "|cFF0000RESET TO DEFAULTS|r", 
+            tooltip = "|cFF0000RESETS ALL SETTINGS TO DEFAULT VALUES.|r",
+            func = ResetToDefaults, 
+            width = "full" 
+        })
         table.insert(b_data, {
             type = "button", name = "|cFFD700Buy Me A Coffee|r", width = "full",
             tooltip = "Thank you! Donations help support continued development and maintenance! " ..
@@ -2656,6 +2972,9 @@ function PM.init(eventCode, addOnName)
     end
     PM.acct_saved.last_version = PM.version
     PM.current_sv_size_kb = math.floor(PM.estimate_table_size(_G["PermMementoSaved"] or {}) / 1024)
+    
+    local lam_ver, lca_ver = PM.get_settings_library()
+    PM.is_lca_valid = (LibCombatAlerts ~= nil and (lca_ver or 0) >= REQUIRED_LCA_VERSION)
     
     PM.create_ui(); PM.hook_game_ui(); PM.sync_engine.initialize()
     if not IsConsoleUI() then PM.toggle_stats_ui_tracker() end
@@ -2801,10 +3120,10 @@ function PM.init(eventCode, addOnName)
     end
     SLASH_COMMANDS["/permmementostop"] = SLASH_COMMANDS["/pmemstop"]
 
-    SLASH_COMMANDS["/pmemclean"] = function() PM:run_manual_cleanup(false) end
+    SLASH_COMMANDS["/pmemclean"] = function() PM.run_manual_cleanup(false) end
     SLASH_COMMANDS["/pmemcleanup"] = SLASH_COMMANDS["/pmemclean"]
 
-    SLASH_COMMANDS["/pmemcsacls"] = function() 
+    SLASH_COMMANDS["/pmemcsacls"] = function()
         PM.settings.is_csa_cleanup_enabled = not PM.settings.is_csa_cleanup_enabled
         local t_txt = PM.settings.is_csa_cleanup_enabled and "ON" or "OFF"
         PM.log_msg("Auto-Cleanup CSA: " .. t_txt, true, "settings") 
@@ -2892,13 +3211,13 @@ function PM.init(eventCode, addOnName)
     end
     SLASH_COMMANDS["/pmemuireset"] = SLASH_COMMANDS["/pmemresetui"]
 
-    SLASH_COMMANDS["/pmemwipe"] = function() PM:delete_all_learned_data() end
+    SLASH_COMMANDS["/pmemwipe"] = function() PM.delete_all_learned_data() end
     SLASH_COMMANDS["/pmemdeletealllearned"] = SLASH_COMMANDS["/pmemwipe"]
 
-    SLASH_COMMANDS["/pmemscan"] = function() PM:auto_scan_mementos() end
+    SLASH_COMMANDS["/pmemscan"] = function() PM.auto_scan_mementos() end
     SLASH_COMMANDS["/pmemautolearn"] = SLASH_COMMANDS["/pmemscan"]
 
-    SLASH_COMMANDS["/pmemlist"] = function() 
+    SLASH_COMMANDS["/pmemlist"] = function()
         if PM.acct_saved and PM.acct_saved.learned_data then 
             local out_msg = "Learned Data:\n"; local cc = 0
             for _, md in pairs(PM.acct_saved.learned_data) do
@@ -3057,8 +3376,11 @@ function PM.init(eventCode, addOnName)
     end
     
     SLASH_COMMANDS["/pmsyncstop"] = function() 
-        local function try_chat() StartChatInput("PM STOP", CHAT_CHANNEL_PARTY) end
-        if not pcall(try_chat) and CHAT_SYSTEM then CHAT_SYSTEM:StartTextEntry("PM STOP") end
+        if StartChatInput then
+            StartChatInput("PM STOP", CHAT_CHANNEL_PARTY)
+        elseif CHAT_SYSTEM then
+            CHAT_SYSTEM:StartTextEntry("PM STOP")
+        end
         if PM.settings then
             PM.settings.active_id = nil; PM.loop_token = (PM.loop_token or 0) + 1
         end
@@ -3070,10 +3392,9 @@ function PM.init(eventCode, addOnName)
         local r_id = PM.get_random_any()
         if r_id then
             local l_str = GetCollectibleLink(r_id, LINK_STYLE_BRACKETS)
-            local function try_chat()
+            if StartChatInput then
                 StartChatInput(string.format("PM %s", l_str), CHAT_CHANNEL_PARTY)
-            end
-            if not pcall(try_chat) and CHAT_SYSTEM then
+            elseif CHAT_SYSTEM then
                 CHAT_SYSTEM:StartTextEntry(string.format("PM %s", l_str))
             end
             PM.log_msg("Sent Random Sync Request", true, "sync", 90)
