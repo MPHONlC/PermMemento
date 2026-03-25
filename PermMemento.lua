@@ -3,7 +3,7 @@
 -- Copyright 2025-2026 @APHONlC
 -- Licensed under the Apache License, Version 2.0.
 
--- NOT TESTED: 2026-03-18 | Pre-Release v0.8.7 | APIVersion: 101049 | LAM2 v41
+-- TESTED: 2026-03-26 | Release v0.8.7 | APIVersion: 101049 | LAM2 v41
 local is_release_build = false
 local REQUIRED_LAM_VERSION = 41
 local REQUIRED_LCA_VERSION = 7060
@@ -143,65 +143,127 @@ PM.memento_data = {
 
 function PM.get_settings_library()
     local am = GetAddOnManager()
-    local lam_ver, lca_ver = 0, 0
+    local lam_v, lam_e = 0, false
+    local lca_v, lca_e = 0, false
     for i = 1, am:GetNumAddOns() do
         local name, _, _, _, _, state = am:GetAddOnInfo(i)
-        if state == ADDON_STATE_ENABLED then
-            if name == "LibAddonMenu-2.0" then lam_ver = am:GetAddOnVersion(i) end
-            if name == "LibCombatAlerts" then lca_ver = am:GetAddOnVersion(i) end
+        local is_en = (state == ADDON_STATE_ENABLED)
+        if name == "LibAddonMenu-2.0" then
+            local v = am:GetAddOnVersion(i)
+            if is_en then
+                lam_v = math.max(lam_v, v); lam_e = true
+            elseif not lam_e then
+                lam_v = math.max(lam_v, v)
+            end
+        end
+        if name == "LibCombatAlerts" then
+            local v = am:GetAddOnVersion(i)
+            if is_en then
+                lca_v = math.max(lca_v, v); lca_e = true
+            elseif not lca_e then
+                lca_v = math.max(lca_v, v)
+            end
         end
     end
-    return lam_ver, lca_ver
+    return lam_v, lam_e, lca_v, lca_e
 end
 
 function PM.show_missing_library_warning()
+    local lam_ver, lam_en, lca_ver, lca_en = PM.get_settings_library()
+    local lam_req, lca_req = REQUIRED_LAM_VERSION, REQUIRED_LCA_VERSION
+    
+    local lam_state = (lam_ver == 0) and "Missing" or (not lam_en and "Not Enabled" or (lam_ver < lam_req and "Outdated" or "OK"))
+    local lca_state = (lca_ver == 0) and "Missing" or (not lca_en and "Not Enabled" or (lca_ver < lca_req and "Outdated" or "OK"))
+    
+    if lam_state == "OK" and lca_state == "OK" then return end
+    
     local alerts = {}
-    local lam_ver, lca_ver = PM.get_settings_library()
-    lam_ver = lam_ver or 0
-    lca_ver = lca_ver or 0
+    if lam_state == "Missing" then table.insert(alerts, "|c00FFFFLibAddonMenu-2.0|r (Missing)")
+    elseif lam_state == "Not Enabled" then table.insert(alerts, string.format("|c00FFFFLibAddonMenu-2.0|r (Disabled) [%sv%d|r]", lam_ver >= lam_req and "|c00FF00" or "|cFF0000", lam_ver))
+    elseif lam_state == "Outdated" then table.insert(alerts, string.format("|c00FFFFLibAddonMenu-2.0|r (Outdated) [|cFF0000v%d|r]", lam_ver)) end
+
+    if lca_state == "Missing" then table.insert(alerts, "|c00FFFFLibCombatAlerts|r (Missing)")
+    elseif lca_state == "Not Enabled" then table.insert(alerts, string.format("|c00FFFFLibCombatAlerts|r (Disabled) [%sv%d|r]", lca_ver >= lca_req and "|c00FF00" or "|cFF0000", lca_ver))
+    elseif lca_state == "Outdated" then table.insert(alerts, string.format("|c00FFFFLibCombatAlerts|r (Outdated) [|cFF0000v%d|r]", lca_ver)) end
     
-    if lam_ver == 0 then table.insert(alerts, "|c00FFFFLibAddonMenu-2.0|r (Missing)")
-    elseif lam_ver < REQUIRED_LAM_VERSION then table.insert(alerts, "|c00FFFFLibAddonMenu-2.0|r (Outdated)") end
-    
-    if not LibCombatAlerts then table.insert(alerts, "|c00FFFFLibCombatAlerts|r (Missing)")
-    elseif lca_ver < REQUIRED_LCA_VERSION then table.insert(alerts, "|c00FFFFLibCombatAlerts|r (Outdated)") end
-    
-    if #alerts == 0 then return end
-    
-    local dialog_id = "PM_MISSING_LIBRARY_WARN"
-    local popup_title = "|cFF0000PM - Dependency Alert|r"
-    local popup_body = "For full functionality, please update or install:\n\n" .. table.concat(alerts, "\n")
-                       
-    local function on_ack()
-        PM.settings.has_shown_lib_warning_086 = true
-        local tick_ms = GetGameTimeMilliseconds()
-        if (tick_ms - PM.last_priority_save_time) >= 900000 then
-            GetAddOnManager():RequestAddOnSavedVariablesPrioritySave(PM.name)
-            PM.last_priority_save_time = tick_ms
+    if not PM.settings.has_shown_lib_warning_087 then
+        local dialog_id = "PM_MISSING_LIBRARY_WARN"
+        local popup_title = "|cFF0000PM - Optional Dependency Alert|r"
+        local popup_body = "For full functionality, please update or install and enable:\n\n" .. table.concat(alerts, "\n")
+                           
+        local function on_ack()
+            PM.settings.has_shown_lib_warning_087 = true
+            local tick_ms = GetGameTimeMilliseconds()
+            if (tick_ms - PM.last_priority_save_time) >= 900000 then
+                GetAddOnManager():RequestAddOnSavedVariablesPrioritySave(PM.name)
+                PM.last_priority_save_time = tick_ms
+            end
         end
+
+        if not ESO_Dialogs[dialog_id] then
+            ESO_Dialogs[dialog_id] = {
+                canQueue = true, 
+                gamepadInfo = { dialogType = GAMEPAD_DIALOGS.BASIC }, 
+                title = { text = popup_title }, 
+                mainText = { text = popup_body },
+                buttons = { { text = "Acknowledge / Close", keybind = "DIALOG_PRIMARY", callback = on_ack } }
+            }
+        end
+
+        zo_callLater(function()
+            if IsInGamepadPreferredMode() then ZO_Dialogs_ShowGamepadDialog(dialog_id) 
+            else ZO_Dialogs_ShowDialog(dialog_id) end
+        end, 2000)
     end
 
-    if not ESO_Dialogs[dialog_id] then
-        ESO_Dialogs[dialog_id] = {
-            canQueue = true,
-            gamepadInfo = { dialogType = GAMEPAD_DIALOGS.BASIC },
-            title = { text = popup_title },
-            mainText = { text = popup_body },
-            buttons = { { text = "Acknowledge / Close", keybind = "DIALOG_PRIMARY", callback = on_ack } }
-        }
+    local csa_msg = ""
+    if lam_state == lca_state and lam_state ~= "OK" then
+        csa_msg = string.format("%s Optional Libraries!", lam_state)
+    elseif lam_state ~= "OK" and lca_state == "OK" then
+        if lam_state == "Outdated" then csa_msg = string.format("Optional Dependency Enabled LibAddonMenu-2.0 Incorrect Version \"v%d\"", lam_ver)
+        else csa_msg = string.format("%s Optional Library LibAddonMenu-2.0!", lam_state) end
+    elseif lca_state ~= "OK" and lam_state == "OK" then
+        if lca_state == "Outdated" then csa_msg = string.format("Optional Dependency Enabled LibCombatAlerts Incorrect Version \"v%d\"", lca_ver)
+        else csa_msg = string.format("%s Optional Library LibCombatAlerts!", lca_state) end
+    else
+        csa_msg = "Missing/Outdated Optional Libraries!"
     end
+    
+    local show_csa = true
+    local show_chat = true
+    
+    local bad_lam = (lam_state ~= "OK")
+    local bad_lca = (lca_state ~= "OK")
+    local correct_lam = (lam_state == "Not Enabled" and lam_ver >= lam_req)
+    local correct_lca = (lca_state == "Not Enabled" and lca_ver >= lca_req)
+    
+    local only_disabled_correct = false
+    if bad_lam and bad_lca then only_disabled_correct = (correct_lam and correct_lca)
+    elseif bad_lam then only_disabled_correct = correct_lam
+    elseif bad_lca then only_disabled_correct = correct_lca end
 
-    zo_callLater(function()
-        if IsInGamepadPreferredMode() then
-            ZO_Dialogs_ShowGamepadDialog(dialog_id)
+    if only_disabled_correct then
+        if IsConsoleUI() then
+            show_chat = false
+            show_csa = true
         else
-            ZO_Dialogs_ShowDialog(dialog_id)
+            show_csa = false
+            show_chat = true
         end
-    end, 2000)
-
-    if CHAT_SYSTEM then 
-        CHAT_SYSTEM:AddMessage("|cFF0000[PM Setup Warning]|r Please update your libraries.") 
     end
+
+    local chat_msg = "|cFF0000[PM Error]|r " .. csa_msg
+    
+    zo_callLater(function()
+        if show_chat and CHAT_SYSTEM then CHAT_SYSTEM:AddMessage(chat_msg) end
+        
+        if show_csa and CENTER_SCREEN_ANNOUNCE then
+            local params = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_LARGE_TEXT, SOUNDS.NONE)
+            params:SetText("|cFF0000[PM Error]|r " .. csa_msg)
+            params:SetLifespanMS(10000)
+            CENTER_SCREEN_ANNOUNCE:AddMessageWithParams(params)
+        end
+    end, 4000)
 end
 
 local function is_alc_enabled()
@@ -309,22 +371,87 @@ function PM.get_data(target_id)
     return nil
 end
 
-function PM.estimate_table_size(t, seen_map)
-    if type(t) ~= "table" then return 0 end
-    seen_map = seen_map or {}; if seen_map[t] then return 0 end; seen_map[t] = true
-    local est_size = 0
-    for k, v in pairs(t) do
-        if type(k) == "string" then est_size = est_size + string.len(k)
-        else est_size = est_size + 8 end
+function PM.calculate_ram_overhead_recursive(t, seen_map)
+    seen_map = seen_map or {}
+    if seen_map[t] then return 0, 0, 0, 0 end
+    seen_map[t] = true
+    
+    local keys, raw_bytes, total_refs = 0, 0, 0
+    local array_slots, hash_slots, nested_ib = 0, 0, 0
 
-        if type(v) == "string" then est_size = est_size + string.len(v)
-        elseif type(v) == "number" then est_size = est_size + 8
-        elseif type(v) == "boolean" then est_size = est_size + 4
-        elseif type(v) == "table" then
-            est_size = est_size + PM.estimate_table_size(v, seen_map)
+    for k, v in pairs(t) do
+        keys = keys + 1
+        total_refs = total_refs + 1
+        
+        -- GC Header overhead for string keys
+        if type(k) == "string" then raw_bytes = raw_bytes + #k + 16 end
+        
+        local v_type = type(v)
+        if v_type == "string" then raw_bytes = raw_bytes + #v + 16
+        elseif v_type == "number" then raw_bytes = raw_bytes + 8
+        elseif v_type == "boolean" then raw_bytes = raw_bytes + 8
+        elseif v_type == "table" then
+            local rb, tr, k2, ib2 = PM.calculate_ram_overhead_recursive(v, seen_map)
+            raw_bytes = raw_bytes + rb
+            total_refs = total_refs + tr
+            keys = keys + k2
+            nested_ib = nested_ib + ib2
         end
+        
+        if type(k) == "number" and k > 0 and k % 1 == 0 then array_slots = array_slots + 1
+        else hash_slots = hash_slots + 1 end
     end
-    return est_size
+    
+    total_refs = total_refs + 1
+    local function next_power_2(n)
+        local p = 1
+        while p < n do p = p * 2 end
+        return p
+    end
+    
+    local allocated_array_slots = next_power_2(array_slots)
+    local allocated_hash_slots = next_power_2(hash_slots)
+    
+    -- Using 8-byte array slots and 24-byte hash slots to reflect ESO's 32-bit constrained LuaJIT pointers
+    local invisible_structure_bytes = (allocated_array_slots * 8) + (allocated_hash_slots * 24) + 16 + nested_ib
+    return raw_bytes, total_refs, keys, invisible_structure_bytes
+end
+
+function PM.get_true_ram_footprint(t)
+    local rb, tr, k, ib = PM.calculate_ram_overhead_recursive(t)
+    -- TValue is 8-bytes under the 32-bit pointer limits
+    return (rb + (k * 8) + ib)
+end
+
+function PM.get_high_precision_sv_disk_size(t)
+    local function count_sv_chars_recursive(t, depth, seen)
+        if type(t) ~= "table" or seen[t] then return 0 end
+        seen[t] = true
+        
+        local chars = 0
+        for k, v in pairs(t) do
+            -- ESO native formatting uses 4 spaces per depth
+            chars = chars + (depth * 4)
+            
+            local k_type = type(k)
+            if k_type == "string" then chars = chars + #k + 7
+            elseif k_type == "number" then chars = chars + 10 end
+            
+            local v_type = type(v)
+            if v_type == "string" then chars = chars + #v + 4 
+            elseif v_type == "number" then chars = chars + 10
+            elseif v_type == "boolean" then chars = chars + (v and 4 or 5) + 2
+            elseif v_type == "table" then 
+                chars = chars + 1 + (depth * 4) + 2 -- \n    {\n
+                chars = chars + count_sv_chars_recursive(v, depth + 1, seen) 
+                chars = chars + (depth * 4) + 3     --     },\n
+            end
+        end
+        return chars
+    end
+    
+    -- Table Name + formatting + EOF spacing trimmed slightly to align closer to base-10 outputs
+    return count_sv_chars_recursive(t, 1, {}) + #PM.name + 2
 end
 
 function PM.get_top_mementos()
@@ -349,7 +476,6 @@ function PM.get_stats_text()
         return "Statistics Tracking is currently DISABLED to save memory."
     end
     local c_mem = IsConsoleUI() and GetTotalUserAddOnMemoryPoolUsageMB() or (collectgarbage("count") / 1024)
-    local pm_mem = PM.estimate_table_size(PM) / (1024 * 1024)
     local warn_str = ""; local limit_str = ""
     
     if IsConsoleUI() then
@@ -369,30 +495,47 @@ function PM.get_stats_text()
     local v_hist_str = table.concat(v_hist, ", ")
     
     local sv_status = _G["PermMementoSaved"] and "|c00FF00Healthy|r" or "|cFF0000Corrupted|r"
-    local sv_size = PM.current_sv_size_kb or 0
+    
+    local lam_ver, lam_en, lca_ver, lca_en = PM.get_settings_library()
+    
+    local function get_lib_str(ver, en, name, req)
+        if ver == 0 then return string.format("|cFF0000%s (Missing)|r", name) end
+        if not en then return string.format("|cFF0000%s (Disabled - v%d)|r", name, ver) end
+        if ver < req then return string.format("|cFF0000%s (v%d) (PLEASE UPDATE %s TO v%d)|r", name, ver, name, req) end
+        return string.format("|c00FF00%s (v%d)|r", name, ver)
+    end
+    
+    local lib_str = get_lib_str(lam_ver, lam_en, "LAM2", REQUIRED_LAM_VERSION) .. " | " .. get_lib_str(lca_ver, lca_en, "LCA", REQUIRED_LCA_VERSION)
+    
+    local mem_raw = PM.get_true_ram_footprint(PM)
+    local mem_mb = mem_raw / (1024 * 1024)
+    local mem_kb = mem_raw / 1024
+    local mem_str = (mem_mb >= 1) and string.format("%.2f MB", mem_mb) or string.format("%.2f KB", mem_kb)
+    
+    local sv_precision_bytes = PM.get_high_precision_sv_disk_size(_G["PermMementoSaved"] or {})
+    local sv_size_kb = sv_precision_bytes / 1024
+    local sv_size_mb = sv_size_kb / 1024
+    local sv_str = (sv_size_mb >= 1) and string.format("%.2f MB", sv_size_mb) or string.format("%.2f KB", sv_size_kb)
+
     local sv_warn = ""
     if IsConsoleUI() then
-        if sv_size > 1000 then sv_warn = "|cFFA500(WARNING: Large Console File)|r"
+        if sv_size_kb > 1000 then sv_warn = "|cFFA500(WARNING: Large Console File)|r"
         else sv_warn = "|c00FF00(Safe)|r" end
     else
-        if sv_size > 5000 then sv_warn = "|cFFA500(Large File)|r"
+        if sv_size_kb > 5000 then sv_warn = "|cFFA500(Large File)|r"
         else sv_warn = "|c00FF00(Safe)|r" end
     end
     
-    local lib_type, lam_ver = PM.get_settings_library()
-    local lib_str = "Not Installed"
-    if lib_type == "LAM2" then lib_str = string.format("LibAddonMenu (v%d)", lam_ver) end
-    
     local format_str = "Installed Since: %s\nVersion History: %s\nActive Library: %s\n" ..
         "Max Lua Memory: %s\nCurrent Global Memory: %s %s\n" ..
-        "PermMemento Data Footprint: ~%.2f MB (Estimated)\n" ..
-        "SV Disk Size: ~%d KB (%s) %s\nSession Loops: %d | Total Loops: %d\n" ..
+        "Data Footprint: %s (Estimated)\n" ..
+        "SavedVariable Disk Size: %s (%s) %s\nSession Loops: %d | Total Loops: %d\n" ..
         "Favorites: %d | Learned: %d\n\nMost Used Mementos:%s"
 
     return string.format(
         format_str,
         install_d, v_hist_str, lib_str, limit_str, PM.format_memory(c_mem),
-        warn_str, pm_mem, sv_size, sv_status, sv_warn, PM.session_loops,
+        warn_str, mem_str, sv_str, sv_status, sv_warn, PM.session_loops,
         tot_loops, f_count, PM.learned_count, PM.get_top_mementos()
     )
 end
@@ -1951,19 +2094,13 @@ end
 function PM.build_menu()
     if PM.is_menu_built then return end
     
-    local lam_ver, lca_ver = PM.get_settings_library()
-    lam_ver = lam_ver or 0
-    
-    local is_lam_ok = (lam_ver >= REQUIRED_LAM_VERSION)
-    if (not is_lam_ok or not PM.is_lca_valid) and not PM.settings.has_shown_lib_warning_086 then
-        PM.show_missing_library_warning()
-    end
-    if lam_ver == 0 then return end
+    local lam_ver, lam_en, lca_ver, lca_en = PM.get_settings_library()
+    if not lam_en or lam_ver < 30 then return end
 
-    if lam_ver > 0 and lam_ver < REQUIRED_LAM_VERSION then
+    if lam_ver >= 30 and lam_ver < REQUIRED_LAM_VERSION then
         zo_callLater(function()
             local warn_msg = string.format(
-                "|cFFFF00Warning: LibAddonMenu is outdated (v%d). Update to (v%d) for PM menu.|r",
+                "|cFFFF00Warning: LibAddonMenu is outdated (v%d). Update to v%d+ for PM.|r", 
                 lam_ver, REQUIRED_LAM_VERSION
             )
             if CHAT_SYSTEM then CHAT_SYSTEM:AddMessage("|cFF9900[PM]|r " .. warn_msg) end
@@ -1971,10 +2108,10 @@ function PM.build_menu()
                 local p = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(
                     CSA_CATEGORY_LARGE_TEXT, SOUNDS.NONE
                 )
-                p:SetText(warn_msg); p:SetLifespanMS(6000)
+                p:SetText(warn_msg); p:SetLifespanMS(4000)
                 CENTER_SCREEN_ANNOUNCE:AddMessageWithParams(p)
             end
-        end, 4000); return
+        end, 4000)
     end
 
     PM.is_menu_built = true
@@ -2902,12 +3039,69 @@ function PM.init(eventCode, addOnName)
     EVENT_MANAGER:UnregisterForEvent(PM.name, EVENT_ADD_ON_LOADED)
     
     local srv = GetWorldName() or "Default"
+    local sv_name = "PermMementoSaved"
+    local account = GetDisplayName()
+    local charId = GetCurrentCharacterId()
+
+    if _G[sv_name] and _G[sv_name][srv] and _G[sv_name][srv][account] then
+        local root_acct = _G[sv_name][srv][account]["$AccountWide"]
+        if root_acct then
+            _G[sv_name]["Default"] = _G[sv_name]["Default"] or {}
+            _G[sv_name]["Default"][account] = _G[sv_name]["Default"][account] or {}
+            _G[sv_name]["Default"][account]["$AccountWide"] = _G[sv_name]["Default"][account]["$AccountWide"] or {}
+            _G[sv_name]["Default"][account]["$AccountWide"][srv] = _G[sv_name]["Default"][account]["$AccountWide"][srv] or {}
+            
+            if root_acct["AccountWide"] then
+                for k, v in pairs(root_acct["AccountWide"]) do
+                    _G[sv_name]["Default"][account]["$AccountWide"][srv][k] = v
+                end
+            end
+            
+            for k, v in pairs(root_acct) do
+                if k ~= "AccountWide" and type(k) == "string" and not string.match(k, "^%$") then
+                    _G[sv_name]["Default"][account]["$AccountWide"][srv][k] = v
+                end
+            end
+        end
+        
+        if charId and _G[sv_name][srv][account][charId] then
+            local root_char = _G[sv_name][srv][account][charId]
+            if root_char then
+                _G[sv_name]["Default"] = _G[sv_name]["Default"] or {}
+                _G[sv_name]["Default"][account] = _G[sv_name]["Default"][account] or {}
+                _G[sv_name]["Default"][account][charId] = _G[sv_name]["Default"][account][charId] or {}
+                _G[sv_name]["Default"][account][charId][srv] = _G[sv_name]["Default"][account][charId][srv] or {}
+                
+                if root_char["Character"] then
+                    for k, v in pairs(root_char["Character"]) do
+                        _G[sv_name]["Default"][account][charId][srv][k] = v
+                    end
+                end
+                
+                for k, v in pairs(root_char) do
+                    if k ~= "Character" and type(k) == "string" and not string.match(k, "^%$") then
+                        _G[sv_name]["Default"][account][charId][srv][k] = v
+                    end
+                end
+            end
+        end
+        
+        _G[sv_name][srv] = nil
+    end
+
     PM.acct_saved = ZO_SavedVars:NewAccountWide(
-        "PermMementoSaved", 1, "AccountWide", PM.defaults, srv
+        sv_name, 1, srv, PM.defaults
     )
     PM.char_saved = ZO_SavedVars:NewCharacterIdSettings(
-        "PermMementoSaved", 1, "Character", PM.defaults, srv
+        sv_name, 1, srv, PM.defaults
     )
+
+    local pm_deprecated = {"recentScans", "target_wipe_string"}
+    for _, key in ipairs(pm_deprecated) do
+        PM.acct_saved[key] = nil
+        PM.char_saved[key] = nil
+    end
+
     if PM.char_saved.use_account_settings == nil then
         PM.char_saved.use_account_settings = PM.defaults.use_account_settings
     end
@@ -2971,10 +3165,15 @@ function PM.init(eventCode, addOnName)
         end
     end
     PM.acct_saved.last_version = PM.version
-    PM.current_sv_size_kb = math.floor(PM.estimate_table_size(_G["PermMementoSaved"] or {}) / 1024)
     
-    local lam_ver, lca_ver = PM.get_settings_library()
-    PM.is_lca_valid = (LibCombatAlerts ~= nil and (lca_ver or 0) >= REQUIRED_LCA_VERSION)
+    local lam_ver, lam_en, lca_ver, lca_en = PM.get_settings_library()
+    
+    local is_lam_ok = (lam_en and lam_ver >= 30)
+    PM.is_lca_valid = (LibCombatAlerts ~= nil and lca_en and lca_ver >= 7010)
+
+    if not is_lam_ok or not PM.is_lca_valid then 
+        PM.show_missing_library_warning() 
+    end
     
     PM.create_ui(); PM.hook_game_ui(); PM.sync_engine.initialize()
     if not IsConsoleUI() then PM.toggle_stats_ui_tracker() end
