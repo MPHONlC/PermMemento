@@ -130,7 +130,9 @@ This add-on is not created by, affiliated with, or sponsored by ZeniMax Media In
 
 **Check out my other addons/projects:**
 
-[Auto Lua Memory Cleaner](https://www.esoui.com/downloads/fileinfo.php?id=4388#info) • [Permanent Memento](https://www.esoui.com/downloads/fileinfo.php?id=4116#info) • [Tamriel Trade Center, HarvestMap & ESO-Hub Auto-Updater](https://www.esoui.com/downloads/fileinfo.php?id=3249#info) *(Linux, macOS, SteamDeck, & Windows)*
+• [Auto Lua Memory Cleaner](https://www.esoui.com/downloads/fileinfo.php?id=4388#info) 
+• [Permanent Memento](https://www.esoui.com/downloads/fileinfo.php?id=4116#info) 
+• [Tamriel Trade Center, HarvestMap & ESO-Hub Auto-Updater](https://www.esoui.com/downloads/fileinfo.php?id=3249#info) *(Linux, macOS, SteamDeck, & Windows)*
 
 ### Bug Reports
 
