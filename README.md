@@ -134,13 +134,13 @@ This add-on is not created by, affiliated with, or sponsored by ZeniMax Media In
 • [Permanent Memento](https://www.esoui.com/downloads/fileinfo.php?id=4116#info)<br>
 • [Tamriel Trade Center, HarvestMap & ESO-Hub Auto-Updater](https://www.esoui.com/downloads/fileinfo.php?id=3249#info) *(Linux, macOS, SteamDeck, & Windows)*
 
+### Bug Reports
+
+If you encounter any issues, please submit a report here:
+[ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs) | [GitHub Issue Tracker](https://github.com/MPHONlC/PermMemento/issues)
+
 <br>
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/aph0nlc)
 
 <br>
-
-### Bug Reports
-
-If you encounter any issues, please submit a report here:
-[ESOUI Bug Portal](https://www.esoui.com/portal.php?id=360&a=listbugs) | [GitHub Issue Tracker](https://github.com/MPHONlC/PermMemento/issues)
