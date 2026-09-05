@@ -44,6 +44,7 @@ It also watches for various things where you don't want a memento to be used lik
 
 | Command | Effect |
 |---|---|
+| <kbd>Activate</kbd> | a memento as you normally would and watch it auto loop after it ends. |
 | <kbd>/pmem</kbd> | Displays commands in chat |
 | <kbd>/pmem &lt;name&gt;</kbd> | Start looping a memento by name |
 | <kbd>/pmemstop</kbd> | Stop the loop |
