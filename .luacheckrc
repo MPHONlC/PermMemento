@@ -1,7 +1,7 @@
 std = "lua51"
 ignore = {"113", "212", "232"}
 globals = {
-	"PermMementoCore",
+	"PMCore",
 	"SLASH_COMMANDS",
 	"BMU",
 	"ESO_Dialogs",
