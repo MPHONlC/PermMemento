@@ -142,7 +142,7 @@ function PM.create_ui()
 			force_resize(); return
 		end
 
-		local cd_txt = ""
+		local cd_txt
 		local cd_rem, _ = GetCollectibleCooldownAndDuration(PM.settings.active_id)
 
 		if cd_rem > 0 then cd_txt = string.format(" |cFFA500(%.1fs)|r", cd_rem / 1000)
