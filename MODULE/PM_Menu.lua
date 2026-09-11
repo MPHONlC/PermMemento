@@ -209,7 +209,7 @@ function PM.update_menu_choices()
 		end
 	end
 	table.sort(arr_act, function(a,b) return a.name < b.name end)
-	for i, t in ipairs(arr_act) do
+	for _, t in ipairs(arr_act) do
 		local stat_str = t.stat and (" (" .. PM.L("LABEL_STATIONARY") .. ")") or ""
 		local f_str = string.format("%s (%ds)%s", t.name, t.dur / 1000, stat_str)
 		if PM.settings and PM.settings.active_id == t.id then
@@ -232,7 +232,7 @@ function PM.update_menu_choices()
 		end
 	end
 	table.sort(arr_sync, function(a,b) return a.name < b.name end)
-	for i, t in ipairs(arr_sync) do
+	for _, t in ipairs(arr_sync) do
 		local f_str = t.name; local md = PM.get_data(t.id)
 		if md then f_str = f_str .. string.format(" (%ds)", md.dur / 1000) end
 		table.insert(PM.state.sync_names, f_str); table.insert(PM.state.sync_ids, t.id)
@@ -245,9 +245,9 @@ function PM.update_menu_choices()
 	PM.state.learned_list_names, PM.state.learned_list_values = {PM.L("LABEL_NONE")}, {0}
 	if PM.acct_saved and PM.acct_saved.learned_data then
 		local arr_lrn = {}
-		for f_id, md in pairs(PM.acct_saved.learned_data) do table.insert(arr_lrn, md) end
+		for _, md in pairs(PM.acct_saved.learned_data) do table.insert(arr_lrn, md) end
 		table.sort(arr_lrn, function(a,b) return a.name < b.name end)
-		for i, md in ipairs(arr_lrn) do
+		for _, md in ipairs(arr_lrn) do
 			local f_str = md.name .. string.format(" (%ds)", md.dur / 1000)
 			table.insert(PM.state.learned_list_names, f_str); table.insert(PM.state.learned_list_values, md.id)
 		end

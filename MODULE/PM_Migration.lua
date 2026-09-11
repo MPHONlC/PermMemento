@@ -105,16 +105,16 @@ function PM.migrate_data()
 	end
 
 	if PM.acct_saved and PM.acct_saved.learned_data then
-		for id, data in pairs(PM.acct_saved.learned_data) do
+		for _, data in pairs(PM.acct_saved.learned_data) do
 			if data.aid and not data.ref_id then data.ref_id = data.aid; data.aid = nil end
 			if data.refID and not data.ref_id then data.ref_id = data.refID; data.refID = nil end
 		end
 	end
 
 	if _G["PermMemento"] then
-		for w_name, w_data in pairs(_G["PermMemento"]) do
+		for _, w_data in pairs(_G["PermMemento"]) do
 			if type(w_data) == "table" then
-				for a_name, a_data in pairs(w_data) do
+				for _, a_data in pairs(w_data) do
 					if type(a_data) == "table" then
 						for p_id, p_data in pairs(a_data) do
 							if type(p_data) == "table" then

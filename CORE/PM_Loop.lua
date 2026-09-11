@@ -91,7 +91,7 @@ end
 function PM.update_fav_count()
 	local cc = 0
 	if PM.settings and PM.settings.favorites then
-		for k, v in pairs(PM.settings.favorites) do if v then cc = cc + 1 end end
+		for _, v in pairs(PM.settings.favorites) do if v then cc = cc + 1 end end
 	end
 	PM.state.current_fav_count = cc
 end
