@@ -2,8 +2,8 @@
 -- Licensed under the GNU General Public License v3.0 (GPLv3).
 -- See LICENSE.md and NOTICE.md.
 
-PermMementoCore = PermMementoCore or {}
-local PM = PermMementoCore
+PMCore = PMCore or {}
+local PM = PMCore
 
 function PM.update_settings_reference()
 	if PM.char_saved and PM.char_saved.use_account_settings then

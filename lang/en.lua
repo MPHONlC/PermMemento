@@ -11,10 +11,10 @@
 -- list next to the other lang/*.lua entries, and submit it via the
 -- Feature Request thread: https://www.esoui.com/portal.php?id=360&a=featurereq
 
-PermMementoCore = PermMementoCore or {}
-PermMementoCore.Lang = PermMementoCore.Lang or {}
+PMCore = PMCore or {}
+PMCore.Lang = PMCore.Lang or {}
 
-PermMementoCore.Lang.en = {
+PMCore.Lang.en = {
 	-- Setup Wizard
 	WIZARD_SETUP_WORD = "Setup",
 	WIZARD_ALMOST_DONE = "Almost Done",

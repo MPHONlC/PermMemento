@@ -2,8 +2,8 @@
 -- Licensed under the GNU General Public License v3.0 (GPLv3).
 -- See LICENSE.md and NOTICE.md.
 
-PermMementoCore = PermMementoCore or {}
-local PM = PermMementoCore
+PMCore = PMCore or {}
+local PM = PMCore
 
 local function wizard_title(suffix)
 	local t = "|c9CD04CPermanent Memento|r " .. PM.L("WIZARD_SETUP_WORD")

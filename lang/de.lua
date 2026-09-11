@@ -8,10 +8,10 @@
 -- If something reads awkwardly, please submit a correction via the
 -- addon's Feature Request thread: https://www.esoui.com/portal.php?id=360&a=featurereq
 
-PermMementoCore = PermMementoCore or {}
-PermMementoCore.Lang = PermMementoCore.Lang or {}
+PMCore = PMCore or {}
+PMCore.Lang = PMCore.Lang or {}
 
-PermMementoCore.Lang.de = {
+PMCore.Lang.de = {
 	WIZARD_SETUP_WORD = "Einrichtung",
 	WIZARD_ALMOST_DONE = "Fast Fertig",
 	WIZARD_WELCOME_TITLE = "Willkommen bei Permanent Memento!",

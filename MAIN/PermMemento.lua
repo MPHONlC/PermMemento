@@ -2,8 +2,8 @@
 -- Licensed under the GNU General Public License v3.0 (GPLv3).
 -- See LICENSE.md and NOTICE.md.
 
-PermMementoCore = PermMementoCore or {}
-local PM = PermMementoCore
+PMCore = PMCore or {}
+local PM = PMCore
 
 function PM.init(eventCode, addOnName)
 	if addOnName ~= PM.name then return end

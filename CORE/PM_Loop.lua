@@ -2,8 +2,8 @@
 -- Licensed under the GNU General Public License v3.0 (GPLv3).
 -- See LICENSE.md and NOTICE.md.
 
-PermMementoCore = PermMementoCore or {}
-local PM = PermMementoCore
+PMCore = PMCore or {}
+local PM = PMCore
 
 function PM.get_stats_text()
 	local install_d_raw = (PM.acct_saved and PM.acct_saved.install_date) or PM.L("INSTALL_DATE_UNKNOWN")

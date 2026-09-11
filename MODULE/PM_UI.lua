@@ -2,8 +2,8 @@
 -- Licensed under the GNU General Public License v3.0 (GPLv3).
 -- See LICENSE.md and NOTICE.md.
 
-PermMementoCore = PermMementoCore or {}
-local PM = PermMementoCore
+PMCore = PMCore or {}
+local PM = PMCore
 
 function PM.update_ui_anchor()
 	if not PM.ui_refs.ui_window or not PM.settings then return end
