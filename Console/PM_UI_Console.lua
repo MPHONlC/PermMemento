@@ -6,5 +6,5 @@ PermMementoCore = PermMementoCore or {}
 local PM = PermMementoCore
 
 function PM.create_gamepad_mover(target)
-    return LibAPH.CreateGamepadMover(target)
+	return LibAPH.CreateGamepadMover(target)
 end

@@ -1,7 +1,7 @@
 PermMemento - Changelog
 =========================
 
-Version: 0.8.8 (2026-09-04)
+Version: 0.8.8 (2026-09-11)
 ---------------------------
 
 New Features & Improvements
@@ -9,12 +9,14 @@ New Features & Improvements
   - Added LibHarvensAddonSettings support for console Settings Menu.
   - Added a Delay Triggers submenu - individually enable or disable which situations pause the auto-loop.
   - Added dedicated delay-length sliders for Death, Crafting, and Attacking.
+  - Added a button to delete all saved per-character profile data (Advanced Settings, only available when using account-wide settings).
   - Updated Bug Report.
 
 Technical Style & Logic
   - Now depends on LibAPH, a shared helper library for my addons.
   - Updated Module Manager - Sync, Wizard, Menu, UI, and Migration can each be soft-disabled independently (/pmemunloadsync, /pmemunloadmenu, /pmemunloadui, /pmemunloadwizard, /pmemunloadmigration).
   - New Codebase changes and language localization support.
+  - Removed a per-tick table allocation from the HUD's update handler.
 
 UI & Console Updates
   - The HUD UI auto hides and shows, if theres no active memento.
@@ -25,6 +27,7 @@ UI & Console Updates
 
 Maintenance & Bug Fixes
   - Fixed Crafting detection.
+  - Updated the default Memento Delay values for new installs.
   - Removed Live statistics in favor of Client information for easier bug tracking.
 
 
