@@ -1,0 +1,22 @@
+name: API Version Refresh
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # once a day, 12:00 UTC
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  refresh-api-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - uses: MPHONlC/eso-api-version-refresh@Version-0.0.1
+        with:
+          manifest_file: 'PermMemento.addon'
+          git_name: 'MPHONlC'
+          git_email: '207844175+MPHONlC@users.noreply.github.com'
