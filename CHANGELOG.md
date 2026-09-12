@@ -29,6 +29,7 @@ Maintenance & Bug Fixes
   - Fixed Crafting detection.
   - Updated the default Memento Delay values for new installs.
   - Removed Live statistics in favor of Client information for easier bug tracking.
+  - Fixed a queued Group Sync request getting lost on /reloadui or a relog - it now survives and still fires correctly once whatever it was waiting on (your own active memento finishing, or its cooldown) clears, and won't fire a second time if you reload right as it's firing.
 
 
 Version: 0.8.7 (2026-03-26)

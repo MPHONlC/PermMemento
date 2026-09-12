@@ -54,7 +54,7 @@ function PM.sync_engine.initialize()
 		end
 
 		if PM.settings.active_id then
-			PM.log_msg(PM.L("CHAT_SYNC_RECEIVED_QUEUING"), true, "sync", 70); PM.state.pending_sync_id = c_id
+			PM.log_msg(PM.L("CHAT_SYNC_RECEIVED_QUEUING"), true, "sync", 70); PM.settings.pending_sync_id = c_id
 		else
 			local c_rem, _ = GetCollectibleCooldownAndDuration(c_id)
 			if c_rem and c_rem > 0 then
@@ -77,7 +77,7 @@ function PM.sync_engine.initialize()
 			end
 			if PM.settings then
 				PM.settings.active_id = nil; PM.state.loop_token = (PM.state.loop_token or 0) + 1
-				PM.state.pending_sync_id = nil; PM.state.next_fire_time = 0
+				PM.settings.pending_sync_id = nil; PM.state.next_fire_time = 0
 				PM.log_msg(PM.L("CHAT_GROUP_STOP_RECEIVED", cl_name), true, "stop", 90)
 			end
 			return

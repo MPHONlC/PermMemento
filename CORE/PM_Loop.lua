@@ -444,7 +444,7 @@ function PM.run_loop(req_token)
 	PM.trigger_memory_check("Loop", 0)
 
 	local cur_target = PM.settings.active_id
-	if state.pending_sync_id then cur_target = state.pending_sync_id end
+	if PM.settings.pending_sync_id then cur_target = PM.settings.pending_sync_id end
 
 	local cd_rem, _ = GetCollectibleCooldownAndDuration(cur_target)
 	if cd_rem and cd_rem > 500 then
@@ -455,14 +455,16 @@ function PM.run_loop(req_token)
 	end
 
 	state.is_looping = true
-	if state.pending_sync_id then
-		 state.is_sync_firing = true; UseCollectible(state.pending_sync_id)
+	if PM.settings.pending_sync_id then
+		 local sync_id = PM.settings.pending_sync_id
+		 state.is_sync_firing = true; UseCollectible(sync_id)
+		 PM.settings.pending_sync_id = nil
 		 zo_callLater(function()
 			 if req_token ~= state.loop_token then return end
-			 local s_rem, s_dur = GetCollectibleCooldownAndDuration(state.pending_sync_id)
+			 local s_rem, s_dur = GetCollectibleCooldownAndDuration(sync_id)
 			 local wait_ms = (s_rem > 0) and s_rem or s_dur
 			 PM.log_msg(PM.L("CHAT_SYNC_FINISHED"), true, "sync", 80)
-			 state.pending_sync_id = nil; state.is_sync_firing = false; state.is_looping = false
+			 state.is_sync_firing = false; state.is_looping = false
 			 state.next_fire_time = GetGameTimeMilliseconds() + wait_ms + 1000
 			 zo_callLater(function() PM.run_loop(req_token) end, wait_ms + 1000)
 		 end, 500); return

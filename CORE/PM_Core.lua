@@ -253,6 +253,7 @@ end
 
 PM.defaults = {
 	active_id = nil,
+	pending_sync_id = nil,
 	is_paused = false,
 	is_log_enabled = false,
 	is_csa_enabled = true,
@@ -336,7 +337,6 @@ PM.movement_tracker = LibAPH.CreateMovementTracker()
 PM.state.is_moving = false
 PM.teleport_tracker = LibAPH.CreateTeleportTracker()
 PM.state.is_sync_firing = false
-PM.state.pending_sync_id = nil
 PM.state.next_fire_time = 0
 PM.state.learned_count = 0
 PM.state.session_loops = 0
