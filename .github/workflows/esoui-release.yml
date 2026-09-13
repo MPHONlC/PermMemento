@@ -1,10 +1,10 @@
-name: ESOUI Release
+name: Release / Update
 
 on:
   workflow_dispatch:
     inputs:
       test_run:
-        description: "Test Run (dry-run ESOUI upload - safe, validates without publishing anything)"
+        description: "Test Run (dry-run ESOUI + Bethesda uploads - safe, validates without publishing anything)"
         type: boolean
         default: true
       upload_esoui:
@@ -13,6 +13,10 @@ on:
         default: false
       release_github:
         description: "Release to Github"
+        type: boolean
+        default: false
+      upload_bethesda:
+        description: "Upload to Bethesda"
         type: boolean
         default: false
 
@@ -29,9 +33,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - uses: MPHONlC/eso-version-refresh@Version-0.0.1
+      - uses: MPHONlC/version-refresh@Version-0.0.2
         with:
           manifest_file: 'PermMemento.addon'
+          field_name: 'AddOnVersion'
+          format: 'YYMMDDVVV'
           git_name: 'MPHONlC'
           git_email: '207844175+MPHONlC@users.noreply.github.com'
 
@@ -50,8 +56,81 @@ jobs:
           git_name: 'MPHONlC'
           git_email: '207844175+MPHONlC@users.noreply.github.com'
 
-  release:
+  quality-gate-changelog-date:
     needs: [check, refresh-version, refresh-api-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: MPHONlC/changelog-date-check@Version-0.0.1
+        with:
+          manifest_file: 'PermMemento.addon'
+
+  quality-gate-readme-badge:
+    needs: [check, refresh-version, refresh-api-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: MPHONlC/eso-readme-badge-check@Version-0.0.1
+        with:
+          manifest_file: 'PermMemento.addon'
+
+  quality-gate-dependency:
+    needs: [check, refresh-version, refresh-api-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: MPHONlC/eso-dependency-check@Version-0.0.1
+        with:
+          manifest_file: 'PermMemento.addon'
+          dependency_name: 'LibAPH'
+          dependency_manifest_url: 'https://raw.githubusercontent.com/MPHONlC/LibAPH/main/LibAPH.addon'
+
+  quality-gate-localization:
+    needs: [check, refresh-version, refresh-api-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: MPHONlC/localization-check@Version-0.0.1
+
+  quality-gate-slash-commands:
+    needs: [check, refresh-version, refresh-api-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: MPHONlC/eso-slash-command-doc-check@Version-0.0.1
+        with:
+          doc_files: |
+            README_BBCODE.txt
+            README.md
+            README_COMMONMARK.txt
+
+  quality-gate-markdown:
+    needs: [check, refresh-version, refresh-api-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: MPHONlC/markdown-check@Version-0.0.1
+        with:
+          bbcode_readme: 'README_BBCODE.txt'
+          bbcode_changelog: 'CHANGELOG_BBCODE.txt'
+
+  release:
+    needs:
+      - check
+      - refresh-version
+      - refresh-api-version
+      - quality-gate-changelog-date
+      - quality-gate-readme-badge
+      - quality-gate-dependency
+      - quality-gate-localization
+      - quality-gate-slash-commands
+      - quality-gate-markdown
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -79,12 +158,32 @@ jobs:
 
       - name: Extract latest changelog entries
         run: |
-          awk '/^### Version / { if (found) exit; found=1 } found' CHANGELOG_GITHUB.txt > latest_changes_github.md
+          awk '/^\[b\]\[COLOR="Orange"\]Version / { if (found) exit; found=1 } found' CHANGELOG_BBCODE.txt > latest_changes_esoui.txt
+          awk '/^### Version / { if (found) exit; found=1 } found' CHANGELOG_GFM.txt > latest_changes_github.md
+          awk '/^# VERSION / { if (found) exit; found=1 } found' CHANGELOG_COMMONMARK.txt > latest_changes_bethesda.txt
           awk '/^Version: / { if (found) exit; found=1 } found' CHANGELOG.md > latest_changes_plain.md
+          echo "--- ESOUI (BBCode, latest entry) ---"
+          cat latest_changes_esoui.txt
           echo "--- GitHub Release body (rendered markdown) ---"
           cat latest_changes_github.md
+          echo "--- Bethesda (release_notes_file) ---"
+          cat latest_changes_bethesda.txt
           echo "--- Plain changelog (for step summaries) ---"
           cat latest_changes_plain.md
+
+      - name: Compare changelog content across platforms
+        if: always()
+        continue-on-error: true
+        uses: MPHONlC/changelog-check@Version-0.0.1
+        with:
+          bbcode_file: 'CHANGELOG_BBCODE.txt'
+
+      - name: Compare description content across platforms
+        if: always()
+        continue-on-error: true
+        uses: MPHONlC/description-check@Version-0.0.1
+        with:
+          bbcode_file: 'README_BBCODE.txt'
 
       - name: Test upload to ESOUI (dry run)
         id: dry_test
@@ -95,11 +194,11 @@ jobs:
           addon_id: '4116'
           version: ${{ steps.version.outputs.version }}
           zip_file: ${{ env.zip_file }}
-          changelog_file: 'CHANGELOG_ESOUI.txt'
-          description_file: 'README_ESOUI.txt'
+          changelog_file: 'CHANGELOG_BBCODE.txt'
+          description_file: 'README_BBCODE.txt'
           test: true
 
-      - name: Annotate test result
+      - name: Annotate ESOUI test result
         if: always() && inputs.test_run == true
         run: |
           STATUS="${{ steps.dry_test.outcome }}"
@@ -112,7 +211,7 @@ jobs:
           fi
           echo "::notice title=$TITLE::Version ${{ steps.version.outputs.display_version }} (AddOnVersion ${{ steps.version.outputs.version }}), declared API ${{ steps.version.outputs.api_version }}.$DETAIL"
           {
-            echo "## $TITLE"
+            echo "## ESOUI: $TITLE"
             echo ""
             echo "- **Version:** ${{ steps.version.outputs.display_version }} (AddOnVersion \`${{ steps.version.outputs.version }}\`)"
             echo "- **Declared API:** ${{ steps.version.outputs.api_version }}"
@@ -124,6 +223,46 @@ jobs:
             echo "### Changelog"
             echo '```'
             cat latest_changes_plain.md
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Test upload to Bethesda (dry run)
+        id: dry_test_bethesda
+        if: inputs.test_run == true
+        uses: m00nyONE/bnet-upload@v1
+        with:
+          BNET_USERNAME: ${{ secrets.BNET_USERNAME }}
+          BNET_PASSWORD: ${{ secrets.BNET_PASSWORD }}
+          addon_id: '2aa223e9-ba88-45f7-90d3-0a47002c720c'
+          version: ${{ steps.version.outputs.display_version }}
+          zip_file: ${{ env.zip_file }}
+          release_notes_file: 'latest_changes_bethesda.txt'
+          publish: false
+
+      - name: Annotate Bethesda test result
+        if: always() && inputs.test_run == true
+        run: |
+          STATUS="${{ steps.dry_test_bethesda.outcome }}"
+          if [ "$STATUS" == "success" ]; then
+            TITLE="Test Release Complete"
+            DETAIL=" Note: unlike the ESOUI test above, Bethesda's uploader has no true no-op test mode - this uploaded a real unpublished draft to your Bethesda.net account (publish: false), it just isn't visible to players until you check 'Upload to Bethesda' for real."
+          else
+            TITLE="Test Release Failed"
+            DETAIL=" Check the 'Test upload to Bethesda' step's log above. Common causes: MFA still enabled on your Bethesda.net account (must be off for the CLI uploader), wrong BNET_USERNAME/BNET_PASSWORD secret, or a wrong addon_id."
+          fi
+          echo "::notice title=Bethesda $TITLE::Version ${{ steps.version.outputs.display_version }}.$DETAIL"
+          {
+            echo "## Bethesda: $TITLE"
+            echo ""
+            echo "- **Version:** ${{ steps.version.outputs.display_version }} (AddOnVersion \`${{ steps.version.outputs.version }}\`)"
+            if [ -n "$DETAIL" ]; then
+              echo ""
+              echo "${DETAIL# }"
+            fi
+            echo ""
+            echo "### Changelog"
+            echo '```'
+            cat latest_changes_bethesda.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -153,7 +292,7 @@ jobs:
           fi
           echo "::notice title=$TITLE::Version ${{ steps.version.outputs.display_version }} (AddOnVersion ${{ steps.version.outputs.version }}), declared API ${{ steps.version.outputs.api_version }}.$DETAIL"
           {
-            echo "## $TITLE"
+            echo "## GitHub: $TITLE"
             echo ""
             echo "- **Version:** ${{ steps.version.outputs.display_version }} (AddOnVersion \`${{ steps.version.outputs.version }}\`)"
             echo "- **Declared API:** ${{ steps.version.outputs.api_version }}"
@@ -177,8 +316,8 @@ jobs:
           addon_id: '4116'
           version: ${{ steps.version.outputs.version }}
           zip_file: ${{ env.zip_file }}
-          changelog_file: 'CHANGELOG_ESOUI.txt'
-          description_file: 'README_ESOUI.txt'
+          changelog_file: 'CHANGELOG_BBCODE.txt'
+          description_file: 'README_BBCODE.txt'
 
       - name: Annotate ESOUI upload result
         if: always() && inputs.upload_esoui == true
@@ -193,7 +332,7 @@ jobs:
           fi
           echo "::notice title=$TITLE::Version ${{ steps.version.outputs.display_version }} (AddOnVersion ${{ steps.version.outputs.version }}), declared API ${{ steps.version.outputs.api_version }}.$DETAIL"
           {
-            echo "## $TITLE"
+            echo "## ESOUI: $TITLE"
             echo ""
             echo "- **Version:** ${{ steps.version.outputs.display_version }} (AddOnVersion \`${{ steps.version.outputs.version }}\`)"
             echo "- **Declared API:** ${{ steps.version.outputs.api_version }}"
@@ -205,5 +344,45 @@ jobs:
             echo "### Changelog"
             echo '```'
             cat latest_changes_plain.md
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload to Bethesda (real, only if upload_bethesda was checked)
+        id: real_upload_bethesda
+        if: inputs.upload_bethesda == true
+        uses: m00nyONE/bnet-upload@v1
+        with:
+          BNET_USERNAME: ${{ secrets.BNET_USERNAME }}
+          BNET_PASSWORD: ${{ secrets.BNET_PASSWORD }}
+          addon_id: '2aa223e9-ba88-45f7-90d3-0a47002c720c'
+          version: ${{ steps.version.outputs.display_version }}
+          zip_file: ${{ env.zip_file }}
+          release_notes_file: 'latest_changes_bethesda.txt'
+          publish: true
+
+      - name: Annotate Bethesda upload result
+        if: always() && inputs.upload_bethesda == true
+        run: |
+          STATUS="${{ steps.real_upload_bethesda.outcome }}"
+          if [ "$STATUS" == "success" ]; then
+            TITLE="Bethesda Upload Complete"
+            DETAIL=""
+          else
+            TITLE="Bethesda Upload Failed"
+            DETAIL=" Check the 'Upload to Bethesda (real)' step's log above. Common causes: MFA still enabled on your Bethesda.net account (must be off for the CLI uploader), wrong BNET_USERNAME/BNET_PASSWORD secret, or a wrong addon_id."
+          fi
+          echo "::notice title=$TITLE::Version ${{ steps.version.outputs.display_version }}.$DETAIL"
+          {
+            echo "## Bethesda: $TITLE"
+            echo ""
+            echo "- **Version:** ${{ steps.version.outputs.display_version }} (AddOnVersion \`${{ steps.version.outputs.version }}\`)"
+            if [ -n "$DETAIL" ]; then
+              echo ""
+              echo "${DETAIL# }"
+            fi
+            echo ""
+            echo "### Changelog"
+            echo '```'
+            cat latest_changes_bethesda.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

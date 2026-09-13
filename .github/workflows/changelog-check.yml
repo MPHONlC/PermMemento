@@ -1,0 +1,21 @@
+name: Changelog Content Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'CHANGELOG_BBCODE.txt'
+      - 'CHANGELOG_GFM.txt'
+      - 'CHANGELOG_COMMONMARK.txt'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - uses: MPHONlC/changelog-check@Version-0.0.1
+        with:
+          bbcode_file: 'CHANGELOG_BBCODE.txt'
