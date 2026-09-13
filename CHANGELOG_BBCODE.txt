@@ -1,0 +1,177 @@
+[SIZE="3"][b][COLOR="#4CAF50"]Changelog[/COLOR][/b][/SIZE]
+
+[b][COLOR="Orange"]Version 0.8.8 [COLOR="Gray"][i](09/11/2026)[/i][/COLOR][/COLOR][/b]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]New Features & Improvements:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="Lime"]Added[/COLOR] a [COLOR="Lime"]Setup Wizard[/COLOR] on first install to ask your preferences.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="#FF69B4"]LibHarvensAddonSettings[/COLOR] support for [COLOR="Lime"]console Settings Menu[/COLOR].
+[*] [COLOR="Lime"]Added[/COLOR] a [COLOR="Lime"]Delay Triggers[/COLOR] submenu - individually enable or disable which situations pause the auto-loop.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]dedicated delay-length sliders[/COLOR] for Death, Crafting, and Attacking.
+[*] [COLOR="Lime"]Added[/COLOR] a button to [COLOR="Lime"]delete all saved per-character profile data[/COLOR] [COLOR="Gray"][i](Advanced Settings, only available when using account-wide settings)[/i][/COLOR].
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="Lime"]Bug Report[/COLOR].
+[/LIST]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Technical Style & Logic:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#1E90FF"]Now[/COLOR] depends on [COLOR="#FF69B4"]LibAPH[/COLOR], a shared helper library for my addons.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="#1E90FF"]Module Manager[/COLOR] - Sync, Wizard, Menu, UI, and Migration can each be soft-disabled independently [COLOR="Gray"][i](/pmemunloadsync, /pmemunloadmenu, /pmemunloadui, /pmemunloadwizard, /pmemunloadmigration).[/i][/COLOR]
+[*] [COLOR="Lime"]New[/COLOR] [COLOR="Lime"]Codebase changes[/COLOR] and language localization support.
+[*] [COLOR="#FF4500"]Removed[/COLOR] a per-tick table allocation from the HUD's update handler.
+[/LIST]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]UI & Console Updates:[/COLOR][/b][/SIZE]
+[LIST]
+[*] The [COLOR="Lime"]HUD UI[/COLOR] auto hides and shows, if theres no active memento.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] the [COLOR="#1E90FF"]HUD countdown[/COLOR] - now shows what's actually delaying the loop [COLOR="Gray"][i](e.g. "Crafting...", "Attacking...", "Casting...")[/i][/COLOR] instead of a generic "Delaying..." message.
+[*] [COLOR="Lime"]Added[/COLOR] a [COLOR="Lime"]Library Warning Messages[/COLOR] toggle to enable or disable the optional-library popup, screen announcement, and chat reminder on their own [COLOR="Gray"][i](/pmemlibwarn)[/i][/COLOR].
+[*] [COLOR="#1E90FF"]Updated[/COLOR] the optional-library [COLOR="#1E90FF"]chat and screen announcement messages[/COLOR] to clearly state whether [COLOR="#FF69B4"]LibAddonMenu[/COLOR] or [COLOR="#FF69B4"]LibHarvensAddonSettings[/COLOR] is missing, disabled, or outdated, with the popup and screen announcement now shown only once instead of on every reload.
+[*] [COLOR="Lime"]Added[/COLOR] settings-menu [COLOR="Lime"]submenus remembering[/COLOR] whether they were left open or closed across a reload.
+[/LIST]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Maintenance & Bug Fixes:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#FF6347"]Fixed[/COLOR] [COLOR="#FF6347"]Crafting detection[/COLOR].
+[*] [COLOR="#1E90FF"]Updated[/COLOR] the default [COLOR="#1E90FF"]Memento Delay[/COLOR] values for new installs.
+[*] [COLOR="#FF4500"]Removed[/COLOR] [COLOR="#FF4500"]Live statistics[/COLOR] in favor of [COLOR="Lime"]Client information[/COLOR] for stability and easier bug tracking.
+[*] [COLOR="#FF6347"]Fixed[/COLOR] [COLOR="#FF6347"]a queued Group Sync request[/COLOR] getting lost on /reloadui or a relog - it now survives and still fires correctly, and won't fire a second time if you reload right as it's firing.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.8.7 [COLOR="Gray"][i](03/26/2026)[/i][/COLOR][/COLOR][/b]
+
+
+[SIZE="2"][b][COLOR="RoyalBlue"]New Features & UI Overhauls:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]Gamepad UI Movement[/COLOR] via [COLOR="#FF69B4"]LibCombatAlerts[/COLOR] to allow [COLOR="#FF69B4"]PS5/Xbox[/COLOR] users to move the status UI with D-Pad.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] the old [COLOR="#da8787"]Character Management[/COLOR] into [COLOR="#1E90FF"]Profile Manager[/COLOR] to save, load, and delete custom settings profiles.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="#1E90FF"]Dropdown Menus[/COLOR] to highlight currently active memento and active profile in [COLOR="Lime"]green[/COLOR].
+[/LIST]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Technical Style & Logic:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#00BFFF"]Improved[/COLOR] [COLOR="#00BFFF"]Addon Code[/COLOR] for better readability.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="#1E90FF"]Internal Function Calls[/COLOR] to standardized dot notation for better consistency.
+[*] [COLOR="#00FFFF"]Optimized[/COLOR] [COLOR="#00FFFF"]Table Operations[/COLOR] using ZO_ShallowTableCopy for configuration tables to prevent future accidental issues.
+[/LIST]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Maintenance & Bug Fixes:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#FF6347"]Fixed[/COLOR] the [COLOR="#FF6347"]Scene Manager Override Bug[/COLOR] that forcefully unhid the PM UI by implementing strict fragment queries.
+[*] [COLOR="#00FFFF"]Optimized[/COLOR] [COLOR="#00FFFF"]Reset Logic[/COLOR] to safely wipe settings to default while protecting persistent data.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="#00FFFF"]Auto Lua Cleanup[/COLOR] logic to ensure it stays dormant when core features aren't active.
+[/LIST]
+
+Thanks to [COLOR="#FF69B4"]@Baertram[/COLOR] for giving me some advices!
+
+[b][COLOR="Orange"]Version 0.8.6 [COLOR="Gray"][i](03/17/2026)[/i][/COLOR][/COLOR][/b]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]New Features & Improvements:[/COLOR][/b][/SIZE]
+
+[LIST]
+[*] [COLOR="Lime"]Introduced[/COLOR] the [COLOR="Lime"]Module Manager[/COLOR] to the settings menu. Individual features [COLOR="Gray"][i](Stats Tracker, Random/Favorites, Learning Mode, Sync)[/i][/COLOR] can now be independently toggled off.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] all [COLOR="#1E90FF"]settings[/COLOR] to now completely unregister events and background calls when modules are disabled, ensuring 0% CPU footprint for unused features.
+[*] [COLOR="Lime"]Added[/COLOR] several new [COLOR="Lime"]slash commands[/COLOR] to support the [COLOR="Lime"]Module Manager toggles[/COLOR]: [COLOR="#00FFFF"]/pmemstats[/COLOR], [COLOR="#00FFFF"]/pmemrandfav[/COLOR], [COLOR="#00FFFF"]/pmemlearn[/COLOR], and [COLOR="#00FFFF"]/pmsyncon[/COLOR] [COLOR="Gray"][i](PC Only)[/i][/COLOR].
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="#00FFFF"]Auto Lua Memory Cleaner[/COLOR] integration to safely synchronize with the recent [COLOR="#00FFFF"]ALC[/COLOR] updates.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]Dependency Warning popups[/COLOR] for missing or outdated [COLOR="#FF69B4"]LibAddonMenu-2.0[/COLOR].
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]Stop Character Spinning toggle[/COLOR] and [COLOR="#00FFFF"]/pmemnospin[/COLOR] command to prevent camera shifts in menus.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]Performance Mode toggle[/COLOR] and [COLOR="#00FFFF"]/pmemperf[/COLOR] command to reduce UI update frequency by 75%.
+[/LIST]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Fixes & Data Migration:[/COLOR][/b][/SIZE]
+
+[LIST]
+[*] [b][COLOR="Lime"]Auto-Migration:[/COLOR][/b] The logic will now automatically [COLOR="Lime"]migrate your saved variables[/COLOR] upon updating to ensure performance first default settings are seamlessly applied without wiping your saved Mementos.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.8.5 [COLOR="Gray"][i](03/01/2026)[/i][/COLOR][/COLOR][/b]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Fixes & Improvements:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#00BFFF"]Improved[/COLOR] cleanup routine checks for the built-in [COLOR="#00FFFF"]ALC[/COLOR] logic.
+[*] [COLOR="#00FFFF"]Optimized[/COLOR] the [COLOR="#00FFFF"]console event listener[/COLOR] for increased stability on console hardware.
+[*] [COLOR="#FF6347"]Adjusted[/COLOR] the [COLOR="#FF6347"]auto-cleanup delay[/COLOR] to better synchronize with active memento animations.
+[*] [COLOR="#DA70D6"]Changed[/COLOR] [COLOR="#FF69B4"]LibAddonMenu-2.0[/COLOR] to optional dependency. Core cleanup and [COLOR="#00FFFF"]/pmem[/COLOR] commands now work independently [COLOR="Gray"][i](if you want the settings GUI, please install the library)[/i][/COLOR].
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.8.4 [COLOR="Gray"][i](02/27/2026)[/i][/COLOR][/COLOR][/b]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Fixes & Improvements:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#00BFFF"]Improved[/COLOR] [COLOR="Yellow"]CSA message handling[/COLOR] to prevent long text strings from being cut off.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] all [COLOR="#1E90FF"]settings menu tooltips[/COLOR] to accurately reflect recent slash command changes.
+[*] [COLOR="#40E0D0"]Enhanced[/COLOR] the [COLOR="#00FFFF"]/pmem[/COLOR] slash command chat output for significantly better readability.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.8.3 [COLOR="Gray"][i](02/17/2026)[/i][/COLOR][/COLOR][/b]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]New Features & Improvements:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#4CAF50"]Implemented[/COLOR] [COLOR="#4CAF50"]Priority Save logic[/COLOR] for background data saving to protect your configuration if the game client closes unexpectedly.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] the [COLOR="#1E90FF"]Live Statistics dashboard[/COLOR] to display version of [COLOR="#FF69B4"]LibAddonMenu[/COLOR] currently loaded by the game engine.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.8.2 [COLOR="Gray"][i](02/16/2026)[/i][/COLOR][/COLOR][/b]
+[LIST]
+[*] [COLOR="#1E90FF"]Updated[/COLOR] minimum requirement to [COLOR="#FF69B4"]LibAddonMenu-2.0[/COLOR] version [COLOR="Orange"]41[/COLOR].
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.8.0 [COLOR="Gray"][i](02/16/2026)[/i][/COLOR][/COLOR][/b]
+[LIST]
+[*] [COLOR="Lime"]Added[/COLOR] support for [COLOR="#00FFFF"]Auto Lua Memory Cleaner[/COLOR] addon.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.7.9 [COLOR="Gray"][i](02/15/2026)[/i][/COLOR][/COLOR][/b]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]New Features & Improvements:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="#00FFFF"]LEARN: Auto-Scan[/COLOR] to instantly scan all owned mementos in the background.
+[*] [COLOR="Lime"]Added[/COLOR] a [COLOR="Lime"]Migrate SavedVariables button[/COLOR] to menu for manual data correction.
+[*] [COLOR="#00BFFF"]Improved[/COLOR] [COLOR="#00FFFF"]Auto Lua Cleanup[/COLOR] by replacing background timers with dormant, event-driven trigger.
+[*] [COLOR="Lime"]Added[/COLOR] a [COLOR="Lime"]DONATE button[/COLOR] to settings menu [COLOR="Gray"][i](PC Only)[/i][/COLOR].
+[/LIST]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Fixes & Technical Updates:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="#FF6347"]Fixed[/COLOR] critical issue where [COLOR="#FF6347"]account-wide settings were saving to an orphaned profile[/COLOR] instead of correct Megaserver.
+[*] [COLOR="#4CAF50"]Implemented[/COLOR] [COLOR="#4CAF50"]SavedVariables Cleanup[/COLOR] to automatically prune obsolete ghost data.
+[*] [COLOR="#66CDAA"]Refined[/COLOR] [COLOR="#00FFFF"]Busy Checks[/COLOR] to strictly pause during loading screens and buffer for 3 seconds after exiting combat.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.7.8 [COLOR="Gray"][i](02/14/2026)[/i][/COLOR][/COLOR][/b]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]Major Feature Update & Optimization:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="Lime"]Added[/COLOR] the [COLOR="#DDA0DD"]Shimmering Gala Gown Veil[/COLOR] memento to native support list.
+[*] [COLOR="#FFD700"]Introduced[/COLOR] the [COLOR="#00FFFF"]Auto Lua Cleanup[/COLOR] logic [COLOR="Gray"][i](400MB PC / 85MB Console threshold)[/i][/COLOR].
+[*] [COLOR="#FFD700"]Introduced[/COLOR] [COLOR="#4CAF50"]Auto-Scanner & Learned Data module[/COLOR] with [COLOR="#00FFFF"]LEARN: Auto-Scan[/COLOR] button.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]Favorites Module[/COLOR] for custom randomization pooling.
+[*] [COLOR="Lime"]Added[/COLOR] the [COLOR="Lime"]Live Statistics Panel[/COLOR] and [COLOR="Lime"]Character Profiles[/COLOR] management menu.
+[*] [COLOR="#4CAF50"]Implemented[/COLOR] compatibility fixes for [COLOR="#FF69B4"]BeamMeUp[/COLOR], [COLOR="#FF69B4"]PerfectPixel[/COLOR], and crafting tables.
+[*] [COLOR="#9370DB"]Transitioned[/COLOR] all delay and [COLOR="Yellow"]CSA sliders[/COLOR] from milliseconds to seconds.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.7.7 [COLOR="Gray"][i](02/10/2026)[/i][/COLOR][/COLOR][/b]
+
+[SIZE="2"][b][COLOR="RoyalBlue"]New Features & Improvements:[/COLOR][/b][/SIZE]
+[LIST]
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]Randomize features[/COLOR]: Random on Login, Random on Zone, and Activate Random button.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]UI Scaling[/COLOR] and [COLOR="Yellow"]CSA duration sliders[/COLOR] for better visual customization.
+[*] [COLOR="Lime"]Added[/COLOR] the [COLOR="Lime"]Group Stop button[/COLOR] to remotely halt memento loops for your entire party.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]state checks[/COLOR] for menus and crafting to prevent interaction bugs.
+[*] [COLOR="#FF6347"]Fixed[/COLOR] a [COLOR="#FF6347"]SavedVariables crash[/COLOR] caused by missing or corrupted UI anchor data.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.7.6 [COLOR="Gray"][i](02/09/2026)[/i][/COLOR][/COLOR][/b]
+[LIST]
+[*] [COLOR="#00FFFF"]Optimized[/COLOR] [COLOR="#00FFFF"]event registration flow[/COLOR] to prevent potential race conditions during initialization.
+[*] [COLOR="#F08080"]Corrected[/COLOR] the [COLOR="#FF69B4"]AddOnVersion[/COLOR] format in manifest for standard compliance.
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="#1E90FF"]internal logic[/COLOR] to use self references for better stability and conflict prevention.
+[/LIST]
+
+[b][COLOR="Orange"]Version 0.7.5 [COLOR="Gray"][i](02/08/2026)[/i][/COLOR][/COLOR][/b]
+[LIST]
+[*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="Orange"]API Version[/COLOR] and set UI defaults to right side of Compass.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="#00FFFF"]/pmem[/COLOR] <name> partial search for quick activation.
+[*] [COLOR="Lime"]Added[/COLOR] the [COLOR="#00FFFF"]/pmem[/COLOR] uireset command.
+[*] [COLOR="#4CAF50"]Integrated[/COLOR] the [COLOR="#4CAF50"]sync module[/COLOR] directly into main logic and removed obsolete debug logs.
+[/LIST]

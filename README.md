@@ -25,7 +25,7 @@ Without the optional dependencies, the addon still runs entirely independently a
 
 Opened so many crates had so many cool mementos but you don't even use them? well Mementos go on a short cooldown after each use, and most players don't have time to go through menus or have extra quickslot to re-activate them manually or just forget they even exist. Permanent Memento watches your chosen memento's cooldown and re-triggers it the instant it's ready again. Set it once and forget it.
 
-It also watches for various things where you don't want a memento to be used, like moving, attacking, blocking, casting, swimming, sneaking, mounting up, being dead, teleporting, or opening a menu, and re-triggers after a short configurable grace delay for each, instead of forcing itself to activate even tho you can't (there's already one active or you are dead or swimming) or shouldn't (you are in combat and dont want to summon your cake and eat it infront of the enemy while it slaps you in the face)
+It also watches for various things where you don't want a memento to be used, like moving, attacking, blocking, casting, swimming, sneaking, mounting up, being dead, teleporting, or opening a menu, and re-triggers after a short configurable grace delay for each, instead of forcing itself to activate even tho you can't (there's already one active or you are dead or swimming) or shouldn't (you are in combat and dont want to summon your cake and eat it infront of the enemy while it slaps you in the face). So you can focus on other things.
 
 ## Features
 
