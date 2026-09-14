@@ -33,3 +33,6 @@
 * Fixed Crafting detection.
 * Updated the default Memento Delay values for new installs.
 * Removed Live statistics in favor of Client information for stability and easier bug tracking.
+* Fixed a queued <kbd>Group Sync</kbd> request getting lost on /reloadui or a relog - it now
+  survives and still fires correctly, and won't fire a second time if you reload right as it's
+  firing.
