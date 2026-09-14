@@ -55,6 +55,7 @@ It also watches for various things where you don't want a memento to be used, li
 | Command | Effect |
 |---|---|
 | <kbd>/pmemstop</kbd> | Stop the current loop |
+| <kbd>/pmempause</kbd> | Pause/resume the current loop |
 | <kbd>/pmemlist</kbd> | List learned mementos |
 | <kbd>/pmemcur</kbd> | Show currently looping memento |
 | <kbd>/pmemplay &lt;name&gt;</kbd> | Start a specific learned memento |
@@ -63,8 +64,11 @@ It also watches for various things where you don't want a memento to be used, li
 | <kbd>/pmemrandlrn</kbd> | Toggle random-memento-from-learned |
 | <kbd>/pmemrandlog</kbd> | Toggle random-memento-on-login |
 | <kbd>/pmemrandzone</kbd> | Toggle random-memento-on-zone-change |
+| <kbd>/pmemlearn</kbd> | Toggle learning mode (auto-learn new mementos) |
+| <kbd>/pmemfree</kbd> | Toggle unrestricted mode (bypass activation restrictions) |
 | <kbd>/pmemscan</kbd> | Scan collections for owned memento and add them to the supported list |
 | <kbd>/pmemcsa</kbd> | Toggle screen announcements |
+| <kbd>/pmemcsacls</kbd> | Toggle screen announcements on cleanup |
 | <kbd>/pmemcombat</kbd> | Toggle looping while in combat |
 | <kbd>/pmemautoclean</kbd> | Toggle auto memory cleanup |
 | <kbd>/pmemclean</kbd> | Force a manual memory cleanup |
@@ -74,14 +78,20 @@ It also watches for various things where you don't want a memento to be used, li
 | <kbd>/pmemhudscale &lt;n&gt;</kbd> | Set HUD UI scale |
 | <kbd>/pmemmenuscale &lt;n&gt;</kbd> | Set menu UI scale |
 | <kbd>/pmemacct</kbd> | Toggle account-wide/character settings |
+| <kbd>/pmemset &lt;name&gt; &lt;seconds&gt;</kbd> | Set a delay by name - <kbd>/pmemset list</kbd> shows valid names |
 | <kbd>/pmemwipe</kbd> | Wipe all learned data |
 | <kbd>/pmemwipefav</kbd> | Wipe all favorites |
 | <kbd>/pmemwizard</kbd> | Re-run the first-time setup wizard |
 | <kbd>/pmemlibwarn</kbd> | Toggle Library Warning Messages |
 | <kbd>/pmemreset</kbd> | Reset all settings to defaults |
 | <kbd>/pmemclientinfo</kbd> | Print client information |
+| <kbd>/pmemlogs</kbd> | *PC only:* toggle chat log messages |
+| <kbd>/pmemnospin</kbd> | *PC only:* stop the character-spin animation during activation |
 | <kbd>/pmemunloadsync</kbd> / <kbd>/pmemunloadmenu</kbd> / <kbd>/pmemunloadui</kbd> / <kbd>/pmemunloadwizard</kbd> / <kbd>/pmemunloadmigration</kbd> | Module Manager: soft-disable an optional module |
 | <kbd>/pmsync &lt;name&gt;</kbd> | *PC only:* broadcast a memento to your group |
+| <kbd>/pmsyncon</kbd> | *PC only:* toggle group sync listening |
+| <kbd>/pmsyncrand</kbd> | *PC only:* broadcast a random supported memento to your group |
+| <kbd>/pmsyncdelay</kbd> | *PC only:* toggle a random delay before your sync broadcast |
 | <kbd>/pmsyncstop</kbd> | *PC only:* stop group sync |
 
 ## Current Native Supported Mementos *(No Scan Required)*

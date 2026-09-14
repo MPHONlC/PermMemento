@@ -6,7 +6,7 @@
 
 - Added a Setup Wizard on first install to ask your preferences.
 - Added LibHarvensAddonSettings support for console Settings Menu.
-- Added a Delay Triggers submenu - individually enable or disable which situations pause the auto-loop.
+- Added a Delay Triggers submenu: individually enable or disable which situations pause the auto-loop.
 - Added dedicated delay-length sliders for Death, Crafting, and Attacking.
 - Added a button to delete all saved per-character profile data (Advanced Settings, only available when using account-wide settings).
 - Updated Bug Report.
@@ -14,14 +14,14 @@
 ## Technical Style & Logic
 
 - Now depends on LibAPH, a shared helper library for my addons.
-- Updated Module Manager - Sync, Wizard, Menu, UI, and Migration can each be soft-disabled independently (/pmemunloadsync, /pmemunloadmenu, /pmemunloadui, /pmemunloadwizard, /pmemunloadmigration).
+- Updated Module Manager: Sync, Wizard, Menu, UI, and Migration can each be soft-disabled independently (/pmemunloadsync, /pmemunloadmenu, /pmemunloadui, /pmemunloadwizard, /pmemunloadmigration).
 - New Codebase changes and language localization support.
 - Removed a per-tick table allocation from the HUD's update handler.
 
 ## UI & Console Updates
 
 - The HUD UI auto hides and shows, if theres no active memento.
-- Updated the HUD countdown - now shows what's actually delaying the loop (e.g. "Crafting...", "Attacking...", "Casting...") instead of a generic "Delaying..." message.
+- The HUD countdown now shows what's actually delaying the loop (e.g. "Crafting...", "Attacking...", "Casting...") instead of a generic "Delaying..." message.
 - Added a Library Warning Messages toggle to enable or disable the optional-library popup, screen announcement, and chat reminder on their own (/pmemlibwarn).
 - Updated the optional-library chat and screen announcement messages to clearly state whether LibAddonMenu or LibHarvensAddonSettings is missing, disabled, or outdated, with the popup and screen announcement now shown only once instead of on every reload.
 - Added settings-menu submenus remembering whether they were left open or closed across a reload.
@@ -30,5 +30,4 @@
 
 - Fixed Crafting detection.
 - Updated the default Memento Delay values for new installs.
-- Removed Live statistics in favor of Client information for stability and easier bug tracking.
-- Fixed a queued Group Sync request getting lost on /reloadui or a relog - it now survives and still fires correctly, and won't fire a second time if you reload right as it's firing.
+- Removed Live statistics in favor of Client information for easier bug tracking.

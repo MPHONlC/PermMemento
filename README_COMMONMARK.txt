@@ -44,6 +44,7 @@ It also watches for various things where you don't want a memento to be used, li
 ## Slash Commands (PC & Console)
 
 - `/pmemstop`: Stop the current loop
+- `/pmempause`: Pause/resume the current loop
 - `/pmemlist`: List learned mementos
 - `/pmemcur`: Show currently looping memento
 - `/pmemplay <name>`: Start a specific learned memento
@@ -52,8 +53,11 @@ It also watches for various things where you don't want a memento to be used, li
 - `/pmemrandlrn`: Toggle random-memento-from-learned
 - `/pmemrandlog`: Toggle random-memento-on-login
 - `/pmemrandzone`: Toggle random-memento-on-zone-change
+- `/pmemlearn`: Toggle learning mode (auto-learn new mementos)
+- `/pmemfree`: Toggle unrestricted mode (bypass activation restrictions)
 - `/pmemscan`: Scan collections for owned memento and add them to the supported list.
 - `/pmemcsa`: Toggle screen announcements
+- `/pmemcsacls`: Toggle screen announcements on cleanup
 - `/pmemcombat`: Toggle looping while in combat
 - `/pmemautoclean`: Toggle auto memory cleanup
 - `/pmemclean`: Force a manual memory cleanup
@@ -63,14 +67,20 @@ It also watches for various things where you don't want a memento to be used, li
 - `/pmemhudscale <n>`: Set HUD UI scale
 - `/pmemmenuscale <n>`: Set menu UI scale
 - `/pmemacct`: Toggle account-wide/character settings
+- `/pmemset <name> <seconds>`: Set a delay by name - `/pmemset list` shows valid names
 - `/pmemwipe`: Wipe all learned data
 - `/pmemwipefav`: Wipe all favorites
 - `/pmemwizard`: Re-run the first-time setup wizard
 - `/pmemlibwarn`: Toggle Library Warning Messages
 - `/pmemreset`: Reset all settings to defaults
 - `/pmemclientinfo`: Print client information
+- `/pmemlogs`: PC only, toggle chat log messages
+- `/pmemnospin`: PC only, stop the character-spin animation during activation
 - `/pmemunloadsync`, `/pmemunloadmenu`, `/pmemunloadui`, `/pmemunloadwizard`, `/pmemunloadmigration`: Module Manager, soft-disable an optional module
 - `/pmsync <name>`: PC only, broadcast a memento to your group
+- `/pmsyncon`: PC only, toggle group sync listening
+- `/pmsyncrand`: PC only, broadcast a random supported memento to your group
+- `/pmsyncdelay`: PC only, toggle a random delay before your sync broadcast
 - `/pmsyncstop`: PC only, stop group sync
 
 ## Current Native Supported Mementos (No Scan Required)

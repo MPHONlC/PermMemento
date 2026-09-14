@@ -51,6 +51,7 @@ It also watches for various things where you don't want a memento to be used, li
 [b][COLOR="RoyalBlue"]Slash Commands [COLOR="Gray"][i](PC & Console)[/i][/COLOR]:[/COLOR][/b]
 [LIST]
 [*] [b][color=#00FFFF]/pmemstop[/color][/b] - Stop the current loop
+[*] [b][color=#00FFFF]/pmempause[/color][/b] - Pause/resume the current loop
 [*] [b][color=#00FFFF]/pmemlist[/color][/b] - List learned mementos
 [*] [b][color=#00FFFF]/pmemcur[/color][/b] - Show currently looping memento
 [*] [b][color=#00FFFF]/pmemplay <name>[/color][/b] - Start a specific learned memento
@@ -59,8 +60,11 @@ It also watches for various things where you don't want a memento to be used, li
 [*] [b][color=#00FFFF]/pmemrandlrn[/color][/b] - Toggle random-memento-from-learned
 [*] [b][color=#00FFFF]/pmemrandlog[/color][/b] - Toggle random-memento-on-login
 [*] [b][color=#00FFFF]/pmemrandzone[/color][/b] - Toggle random-memento-on-zone-change
+[*] [b][color=#00FFFF]/pmemlearn[/color][/b] - Toggle learning mode (auto-learn new mementos)
+[*] [b][color=#00FFFF]/pmemfree[/color][/b] - Toggle unrestricted mode (bypass activation restrictions)
 [*] [b][color=#00FFFF]/pmemscan[/color][/b] - Scan collections for owned memento and add them to the supported list.
 [*] [b][color=#00FFFF]/pmemcsa[/color][/b] - Toggle screen announcements
+[*] [b][color=#00FFFF]/pmemcsacls[/color][/b] - Toggle screen announcements on cleanup
 [*] [b][color=#00FFFF]/pmemcombat[/color][/b] - Toggle looping while in combat
 [*] [b][color=#00FFFF]/pmemautoclean[/color][/b] - Toggle auto memory cleanup
 [*] [b][color=#00FFFF]/pmemclean[/color][/b] - Force a manual memory cleanup
@@ -70,14 +74,20 @@ It also watches for various things where you don't want a memento to be used, li
 [*] [b][color=#00FFFF]/pmemhudscale <n>[/color][/b] - Set HUD UI scale
 [*] [b][color=#00FFFF]/pmemmenuscale <n>[/color][/b] - Set menu UI scale
 [*] [b][color=#00FFFF]/pmemacct[/color][/b] - Toggle account-wide/character settings
+[*] [b][color=#00FFFF]/pmemset <name> <seconds>[/color][/b] - Set a delay by name - [b][color=#00FFFF]/pmemset list[/color][/b] shows valid names
 [*] [b][color=#00FFFF]/pmemwipe[/color][/b] - Wipe all learned data
 [*] [b][color=#00FFFF]/pmemwipefav[/color][/b] - Wipe all favorites
 [*] [b][color=#00FFFF]/pmemwizard[/color][/b] - Re-run the first-time setup wizard
 [*] [b][color=#00FFFF]/pmemlibwarn[/color][/b] - Toggle Library Warning Messages
 [*] [b][color=#00FFFF]/pmemreset[/color][/b] - Reset all settings to defaults
 [*] [b][color=#00FFFF]/pmemclientinfo[/color][/b] - Print client information
+[*] [b][color=#00FFFF]/pmemlogs[/color][/b] - PC only: toggle chat log messages
+[*] [b][color=#00FFFF]/pmemnospin[/color][/b] - PC only: stop the character-spin animation during activation
 [*] [b][color=#00FFFF]/pmemunloadsync[/color][/b], [b][color=#00FFFF]/pmemunloadmenu[/color][/b], [b][color=#00FFFF]/pmemunloadui[/color][/b], [b][color=#00FFFF]/pmemunloadwizard[/color][/b], [b][color=#00FFFF]/pmemunloadmigration[/color][/b] - Module Manager: soft-disable an optional module
 [*] [b][color=#00FFFF]/pmsync <name>[/color][/b] - PC only: broadcast a memento to your group
+[*] [b][color=#00FFFF]/pmsyncon[/color][/b] - PC only: toggle group sync listening
+[*] [b][color=#00FFFF]/pmsyncrand[/color][/b] - PC only: broadcast a random supported memento to your group
+[*] [b][color=#00FFFF]/pmsyncdelay[/color][/b] - PC only: toggle a random delay before your sync broadcast
 [*] [b][color=#00FFFF]/pmsyncstop[/color][/b] - PC only: stop group sync
 [/LIST]
 

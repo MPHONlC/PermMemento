@@ -3,7 +3,7 @@
 #### New Features & Improvements
 * Added a <kbd>Setup Wizard</kbd> on first install to ask your preferences.
 * Added <kbd>LibHarvensAddonSettings</kbd> support for console Settings Menu.
-* Added a <kbd>Delay Triggers</kbd> submenu - individually enable or disable which situations
+* Added a <kbd>Delay Triggers</kbd> submenu: individually enable or disable which situations
   pause the auto-loop.
 * Added dedicated delay-length sliders for Death, Crafting, and Attacking.
 * Added a button to delete all saved per-character profile data (Advanced Settings, only available
@@ -12,7 +12,7 @@
 
 #### Technical Style & Logic
 * Now depends on <kbd>LibAPH</kbd>, a shared helper library for my addons.
-* Updated <kbd>Module Manager</kbd> - Sync, Wizard, Menu, UI, and Migration can each be
+* Updated <kbd>Module Manager</kbd>: Sync, Wizard, Menu, UI, and Migration can each be
   soft-disabled independently (<kbd>/pmemunloadsync</kbd>, <kbd>/pmemunloadmenu</kbd>,
   <kbd>/pmemunloadui</kbd>, <kbd>/pmemunloadwizard</kbd>, <kbd>/pmemunloadmigration</kbd>).
 * New Codebase changes and language localization support.
@@ -20,7 +20,7 @@
 
 #### UI & Console Updates
 * The HUD UI auto hides and shows, if theres no active memento.
-* Updated the HUD countdown - now shows what's actually delaying the loop (e.g. "Crafting...",
+* The HUD countdown now shows what's actually delaying the loop (e.g. "Crafting...",
   "Attacking...", "Casting...") instead of a generic "Delaying..." message.
 * Added a <kbd>Library Warning Messages</kbd> toggle to enable or disable the optional-library
   popup, screen announcement, and chat reminder on their own (<kbd>/pmemlibwarn</kbd>).
@@ -32,7 +32,7 @@
 #### Maintenance & Bug Fixes
 * Fixed Crafting detection.
 * Updated the default Memento Delay values for new installs.
-* Removed Live statistics in favor of Client information for stability and easier bug tracking.
+* Removed Live statistics in favor of Client information for easier bug tracking.
 * Fixed a queued <kbd>Group Sync</kbd> request getting lost on /reloadui or a relog - it now
   survives and still fires correctly, and won't fire a second time if you reload right as it's
   firing.
