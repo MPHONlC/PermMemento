@@ -258,11 +258,19 @@ function PM.update_menu_choices()
 	end
 end
 
+function PM.dev_simulate_error()
+	zo_callLater(function()
+		error(PM.name .. ": dev-simulated error for bug report testing")
+	end, 1)
+end
+
 function PM.show_copy_text_box(plain_text)
+	local is_dev = (GetDisplayName() == "@APHONlC")
 	PM.ui_refs.copy_box = PM.ui_refs.copy_box or LibAPH.CreateCopyTextBox({
 		name = "PMCopyBox",
 		closeText = PM.L("BTN_CLOSE"),
 		titleText = PM.L("BUG_REPORT_COPY_TITLE"),
+		devButton = is_dev and { text = "Simulate Error", onClick = PM.dev_simulate_error } or nil,
 	})
 	PM.ui_refs.copy_box:Show(plain_text)
 end
