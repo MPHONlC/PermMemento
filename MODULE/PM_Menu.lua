@@ -264,6 +264,16 @@ function PM.dev_simulate_error()
 	end, 1)
 end
 
+function PM.dismiss_captured_error()
+	PM.state.last_own_error = nil
+	PM.show_bug_report_box()
+end
+
+function PM.wipe_all_bugs()
+	PM.state.last_own_error = nil
+	if PM.ui_refs.copy_box then PM.ui_refs.copy_box:Hide() end
+end
+
 function PM.show_copy_text_box(plain_text)
 	local is_dev = (GetDisplayName() == "@APHONlC")
 	PM.ui_refs.copy_box = PM.ui_refs.copy_box or LibAPH.CreateCopyTextBox({
@@ -271,6 +281,8 @@ function PM.show_copy_text_box(plain_text)
 		closeText = PM.L("BTN_CLOSE"),
 		titleText = PM.L("BUG_REPORT_COPY_TITLE"),
 		devButton = is_dev and { text = "Simulate Error", onClick = PM.dev_simulate_error } or nil,
+		dismissBug = { text = "Dismiss Bug", onClick = PM.dismiss_captured_error },
+		wipeAllBugs = { text = "Wipe All Bugs", onClick = PM.wipe_all_bugs },
 	})
 	PM.ui_refs.copy_box:Show(plain_text)
 end
