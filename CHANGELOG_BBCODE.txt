@@ -42,7 +42,7 @@
 
 [SIZE="2"][b][COLOR="RoyalBlue"]New Features & UI Overhauls:[/COLOR][/b][/SIZE]
 [LIST]
-[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]Gamepad UI Movement[/COLOR] via [COLOR="#FF69B4"]LibCombatAlerts[/COLOR] to allow [COLOR="#FF69B4"]PS5/Xbox[/COLOR] users to move the status UI with D-Pad.
+[*] [COLOR="Lime"]Added[/COLOR] [COLOR="Lime"]Gamepad UI Movement[/COLOR] via [COLOR="#FF69B4"]LibCombatAlerts[/COLOR] to allow [COLOR="#FF69B4"]PS5/Xbox[/COLOR] users to move the status UI with the Right Stick.
 [*] [COLOR="#1E90FF"]Updated[/COLOR] the old [COLOR="#da8787"]Character Management[/COLOR] into [COLOR="#1E90FF"]Profile Manager[/COLOR] to save, load, and delete custom settings profiles.
 [*] [COLOR="#1E90FF"]Updated[/COLOR] [COLOR="#1E90FF"]Dropdown Menus[/COLOR] to highlight currently active memento and active profile in [COLOR="Lime"]green[/COLOR].
 [/LIST]
