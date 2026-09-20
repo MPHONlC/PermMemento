@@ -363,4 +363,6 @@ PMCore.Lang.de = {
 	BUG_REPORT_COPY_PROMPT = "Kopiere dies und füge es in deinen Fehlerbericht ein:",
 	BUG_REPORT_NONE_CAPTURED = "Es wurden keine %s-Fehler in dieser Sitzung erfasst.",
 	BUG_REPORT_DESCRIBE_INSTEAD = "Wenn du gerade eine Fehlermeldung auf dem Bildschirm gesehen hast, beschreibe bitte stattdessen in deinem Fehlerbericht, was du zu diesem Zeitpunkt getan hast.",
+	BUG_REPORT_SEEN_COUNT = " (%dx gesehen)",
+	CMD_DESC_BUG_REPORT = "Öffnet das Kopierfeld für den Fehlerbericht",
 }

@@ -11,4 +11,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - uses: MPHONlC/lua-check@Version-0.0.3
+      - uses: ./.github/actions/lua-check

@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - uses: MPHONlC/localization-check@Version-0.0.1
+      - uses: ./.github/actions/localization-check
         with:
           lang_glob: 'lang/*.lua'
           reference: 'en.lua'

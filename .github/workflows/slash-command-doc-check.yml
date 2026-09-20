@@ -13,9 +13,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - uses: MPHONlC/eso-slash-command-doc-check@Version-0.0.3
+      - uses: ./.github/actions/eso-slash-command-doc-check
         with:
           doc_files: |
             README_BBCODE.txt
             README.md
             README_COMMONMARK.txt
+          ignore_commands: '/pmemsimulateerror'

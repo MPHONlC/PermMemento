@@ -23,11 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - uses: MPHONlC/git-commit-signing@Version-0.0.1
+      - uses: ./.github/actions/git-commit-signing
         with:
           ssh_signing_key: ${{ secrets.SSH_SIGNING_KEY }}
 
-      - uses: MPHONlC/eso-readme-badge-check@Version-0.0.1
+      - uses: ./.github/actions/eso-readme-badge-check
         with:
           manifest_file: 'PermMemento.addon'
           fix: ${{ inputs.fix }}

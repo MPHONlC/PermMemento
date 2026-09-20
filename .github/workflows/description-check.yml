@@ -18,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - uses: MPHONlC/description-check@Version-0.0.2
+      - uses: ./.github/actions/description-check
         with:
           bbcode_file: 'README_BBCODE.txt'
           manifest_file: 'PermMemento.addon'

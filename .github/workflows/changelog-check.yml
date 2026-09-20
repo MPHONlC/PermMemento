@@ -18,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - uses: MPHONlC/changelog-check@Version-0.0.2
+      - uses: ./.github/actions/changelog-check
         with:
           bbcode_file: 'CHANGELOG_BBCODE.txt'
           manifest_file: 'PermMemento.addon'
