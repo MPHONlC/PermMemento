@@ -2,48 +2,52 @@
 
 #### New Features & Improvements
 * Added a <kbd>Setup Wizard</kbd> on first install to ask your preferences.
-* Added <kbd>LibHarvensAddonSettings</kbd> support for console Settings Menu.
-* Added a <kbd>Delay Triggers</kbd> submenu: individually enable or disable which situations
-  pause the auto-loop.
-* Added dedicated delay-length sliders for Death, Crafting, and Attacking.
-* Added a button to delete all saved per-character profile data (Advanced Settings, only available
-  when using account-wide settings).
+* Added LibHarvensAddonSettings support for <kbd>console Settings Menu</kbd>.
+* Added a <kbd>Delay Triggers</kbd> submenu - individually enable or disable which situations pause
+  the auto-loop.
+* Added <kbd>dedicated delay-length sliders</kbd> for Death, Crafting, and Attacking.
+* Added a button to <kbd>delete all saved per-character profile data</kbd> (Advanced Settings, only
+  available when using account-wide settings).
 * Updated Bug Report.
 
 #### Technical Style & Logic
-* Now depends on <kbd>LibAPH</kbd>, a shared helper library for my addons.
-* Updated <kbd>Module Manager</kbd>: Sync, Wizard, Menu, UI, and Migration can each be
-  soft-disabled independently (<kbd>/pmemunloadsync</kbd>, <kbd>/pmemunloadmenu</kbd>,
-  <kbd>/pmemunloadui</kbd>, <kbd>/pmemunloadwizard</kbd>, <kbd>/pmemunloadmigration</kbd>).
-* New Codebase changes and language localization support.
+* Now depends on LibAPH, a shared helper library for my addons.
+* Updated <kbd>Module Manager</kbd> - Sync, Wizard, Menu, UI, and Migration can each be soft-disabled
+  independently (/pmemunloadsync, /pmemunloadmenu, /pmemunloadui, /pmemunloadwizard,
+  /pmemunloadmigration).
+* New <kbd>Codebase changes</kbd> and language localization support.
 * Removed a per-tick table allocation from the HUD's update handler.
 
 #### UI & Console Updates
-* The HUD UI auto hides and shows, if theres no active memento.
-* The HUD countdown now shows what's actually delaying the loop (e.g. "Crafting...",
-  "Attacking...", "Casting...") instead of a generic "Delaying..." message.
-* Added a <kbd>Library Warning Messages</kbd> toggle to enable or disable the optional-library
-  popup, screen announcement, and chat reminder on their own (<kbd>/pmemlibwarn</kbd>).
-* Updated the optional-library chat and screen announcement messages to clearly state whether
-  <kbd>LibAddonMenu</kbd> or <kbd>LibHarvensAddonSettings</kbd> is missing, disabled, or outdated,
-  with the popup and screen announcement now shown only once instead of on every reload.
-* Added settings-menu submenus remembering whether they were left open or closed across a reload.
-* The memento name/timer display can now be resized by dragging its corner, with its text scaling to fit - `Reset UI Size` resets it back to default.
-* The <kbd>Bug Report</kbd> window now opens on its own when a new error is captured, and repeated occurrences of the same error are counted instead of piling up separately. It can also be resized, with its text scaling to fit.
-* Fixed the mouse cursor staying locked to camera control when the Bug Report window auto-opens.
+* The <kbd>HUD UI</kbd> auto hides and shows, if theres no active memento.
+* Updated the <kbd>HUD countdown</kbd> - now shows what's actually delaying the loop (e.g.
+  "Crafting...", "Attacking...", "Casting...") instead of a generic "Delaying..." message.
+* Added a <kbd>Library Warning Messages</kbd> toggle to enable or disable the optional-library popup,
+  screen announcement, and chat reminder on their own (/pmemlibwarn).
+* Updated the optional-library <kbd>chat and screen announcement messages</kbd> to clearly state
+  whether LibAddonMenu or LibHarvensAddonSettings is missing, disabled, or outdated, with the popup
+  and screen announcement now shown only once instead of on every reload.
+* Added settings-menu <kbd>submenus remembering</kbd> whether they were left open or closed across a
+  reload.
+* Added the ability to resize the memento name/timer display by dragging its corner, with its text
+  scaling to fit - Reset UI Size resets it back to default.
 
 #### Maintenance & Bug Fixes
-* Fixed Crafting detection.
-* Updated the default Memento Delay values for new installs.
-* Removed Live statistics in favor of Client information for easier bug tracking.
-* Fixed a queued <kbd>Group Sync</kbd> request getting lost on /reloadui or a relog - it now
-  survives and still fires correctly, and won't fire a second time if you reload right as it's
-  firing.
-* Removed the built-in automatic and manual memory/pool cleanup feature (and its wizard step) -
-  <kbd>Auto Lua Memory Cleaner</kbd> already covers this.
-* Fixed Bug Report becoming unreachable if the Menu module was unloaded, and added
-  <kbd>/pmembugreport</kbd> so it can always be opened directly.
+* Fixed <kbd>Crafting detection</kbd>.
+* Updated the default <kbd>Memento Delay</kbd> values for new installs.
+* Removed <kbd>Live statistics</kbd> in favor of Client information for stability and easier bug
+  tracking.
+* Fixed <kbd>a queued Group Sync request</kbd> getting lost on /reloadui or a relog - it now survives
+  and still fires correctly, and won't fire a second time if you reload right as it's firing.
+* Removed the built-in automatic and manual memory/pool cleanup feature (and its wizard step) - Auto
+  Lua Memory Cleaner already covers this.
+* Fixed Bug Report becoming unreachable if the Menu module was unloaded, and added /pmembugreport so
+  it can always be opened directly.
 * Bug Report now live-updates when a new error is captured instead of needing to be reopened.
-* Added automatic protection for <kbd>Group Sync</kbd>: entering a dungeon, trial, or PvP zone
-  while it's active now suspends it (to avoid trolling), and resumes it automatically on the
-  way out. Turning it on manually while already inside one of these zones still works.
+* Bug Report now also opens on its own when a new error is captured (not just while already open),
+  counts repeated occurrences of the same error instead of piling them up separately, and can be
+  resized with its text scaling to fit.
+* Fixed the mouse cursor staying locked to camera control when the Bug Report window auto-opens.
+* Added automatic protection for Group Sync - entering a dungeon, trial, or PvP zone while it's active
+  now suspends it (to avoid trolling), and resumes it automatically on the way out. Turning it on
+  manually while already inside one of these zones still works.
