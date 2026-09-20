@@ -1,0 +1,14 @@
+name: Lua Check
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  lua-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - uses: MPHONlC/lua-check@Version-0.0.3

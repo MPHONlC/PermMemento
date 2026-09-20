@@ -1,0 +1,21 @@
+Setup Wizard
+console Settings Menu
+Delay Triggers
+dedicated delay-length sliders
+delete all saved per-character profile data
+Module Manager
+Codebase changes
+HUD UI
+HUD countdown
+Library Warning Messages
+chat and screen announcement messages
+submenus remembering
+Crafting detection
+Memento Delay
+Live statistics
+a queued Group Sync request
+Auto Lua Cleanup
+Profile Manager
+
+Bug Report:Lime
+Client information:Lime
