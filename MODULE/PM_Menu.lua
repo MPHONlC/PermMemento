@@ -283,6 +283,7 @@ function PM.show_copy_text_box(plain_text)
 	local is_dev = (GetDisplayName() == "@APHONlC")
 	PM_ui_refs.copy_box = PM_ui_refs.copy_box or LibAPH.CreateCopyTextBox({
 		name = "PMCopyBox",
+		maxInputChars = LibAPH.BUG_REPORT_MAX_CHARS,
 		closeText = PM.L("BTN_CLOSE"),
 		titleText = PM.L("BUG_REPORT_COPY_TITLE"),
 		devButton = is_dev and { text = "Simulate Error", onClick = PM.dev_simulate_error } or nil,
@@ -387,6 +388,7 @@ function PM.show_bug_report_box()
 		settingsLines = settings_lines,
 		fieldSettingsLabel = PM.L("FIELD_SETTINGS"),
 		errorSection = error_section,
+		environmentText = LibAPH.BuildEnvironmentReport(),
 	})
 
 	LibAPH.LoadLocalization("SI_PM_", PM.Lang, "en", PM.settings.override_language)
