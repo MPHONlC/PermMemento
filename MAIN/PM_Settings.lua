@@ -4,6 +4,7 @@
 
 PMCore = PMCore or {}
 local PM = PMCore
+local PM_defaults = PM.defaults
 
 function PM.update_settings_reference()
 	if PM.char_saved and PM.char_saved.use_account_settings then
@@ -15,17 +16,17 @@ function PM.update_settings_reference()
 	if not PM.settings then return end
 
 	if type(PM.settings.ui) ~= "table" then
-		PM.settings.ui = ZO_ShallowTableCopy(PM.defaults.ui)
+		PM.settings.ui = ZO_ShallowTableCopy(PM_defaults.ui)
 	end
 	if type(PM.settings.ui_menu) ~= "table" then
-		PM.settings.ui_menu = ZO_ShallowTableCopy(PM.defaults.ui_menu)
+		PM.settings.ui_menu = ZO_ShallowTableCopy(PM_defaults.ui_menu)
 	end
 	if type(PM.settings.sync_module) ~= "table" then
-		PM.settings.sync_module = ZO_ShallowTableCopy(PM.defaults.sync_module)
+		PM.settings.sync_module = ZO_ShallowTableCopy(PM_defaults.sync_module)
 	end
 	if PM.refresh_loop_event_registrations then PM.refresh_loop_event_registrations() end
 	if type(PM.settings.csa_durations) ~= "table" then
-		PM.settings.csa_durations = ZO_ShallowTableCopy(PM.defaults.csa_durations)
+		PM.settings.csa_durations = ZO_ShallowTableCopy(PM_defaults.csa_durations)
 	end
 	if PM.acct_saved and type(PM.acct_saved.learned_data) ~= "table" then
 		PM.acct_saved.learned_data = {}

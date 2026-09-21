@@ -4,6 +4,10 @@
 
 PMCore = PMCore or {}
 local PM = PMCore
+PM.state = PM.state or {}
+PM.ui_refs = PM.ui_refs or {}
+local PM_state = PM.state
+local PM_ui_refs = PM.ui_refs
 
 PM.name = "PermMemento"
 PM.version = "0.8.8"
@@ -19,6 +23,7 @@ PM._modules = {
 	menu = false,
 	wizard = false
 }
+local PM_modules = PM._modules
 
 function PM.call_optional(fn, label, ...)
 	return LibAPH.CallOptional(PM.acct_saved.warned_labels, "|cFF9900[PermMemento]|r",
@@ -132,32 +137,32 @@ PM.COMMAND_REFERENCE = {
 		{ cmd = "/pmemunloadwizard", desc_key = "CMD_DESC_UNLOAD_WIZARD", available = function() return true end },
 	}},
 	{ section_key = "HEADER_CONFIGURE_UI_POSITIONS", commands = {
-		{ cmd = "/pmemui", alias = "/pmemtoggleui", desc_key = "CMD_DESC_TOGGLE_STATUS_DISPLAY", available = function() return PM._modules.ui end },
-		{ cmd = "/pmemhud", alias = "/pmemuimode", desc_key = "CMD_DESC_TOGGLE_HUD_MENU", available = function() return PM._modules.ui end },
-		{ cmd = "/pmemlock", alias = "/pmemuilock", desc_key = "CMD_DESC_LOCK_UNLOCK_UI", available = function() return PM._modules.ui end },
-		{ cmd = "/pmemresetui", alias = "/pmemuireset", desc_key = "CMD_DESC_RESET_UI_SCALE_POS", available = function() return PM._modules.ui end },
-		{ cmd = "/pmemhudscale <val>", alias = "/pmemsethudscale", desc_key = "CMD_DESC_SET_HUD_SCALE", available = function() return PM._modules.ui end },
-		{ cmd = "/pmemmenuscale <val>", alias = "/pmemsetmenuscale", desc_key = "CMD_DESC_SET_MENU_SCALE", available = function() return PM._modules.ui end },
+		{ cmd = "/pmemui", alias = "/pmemtoggleui", desc_key = "CMD_DESC_TOGGLE_STATUS_DISPLAY", available = function() return PM_modules.ui end },
+		{ cmd = "/pmemhud", alias = "/pmemuimode", desc_key = "CMD_DESC_TOGGLE_HUD_MENU", available = function() return PM_modules.ui end },
+		{ cmd = "/pmemlock", alias = "/pmemuilock", desc_key = "CMD_DESC_LOCK_UNLOCK_UI", available = function() return PM_modules.ui end },
+		{ cmd = "/pmemresetui", alias = "/pmemuireset", desc_key = "CMD_DESC_RESET_UI_SCALE_POS", available = function() return PM_modules.ui end },
+		{ cmd = "/pmemhudscale <val>", alias = "/pmemsethudscale", desc_key = "CMD_DESC_SET_HUD_SCALE", available = function() return PM_modules.ui end },
+		{ cmd = "/pmemmenuscale <val>", alias = "/pmemsetmenuscale", desc_key = "CMD_DESC_SET_MENU_SCALE", available = function() return PM_modules.ui end },
 	}},
 	{ section_key = "HEADER_SYNC_SETTINGS", commands = {
-		{ cmd = "/pmsync <name>", alias = "/permmementosync", desc_key = "CMD_DESC_SEND_SYNC_REQUEST", available = function() return PM._modules.sync end },
-		{ cmd = "/pmsyncrand", alias = "/permmementosyncrandom", desc_key = "CMD_DESC_SEND_RANDOM_SYNC", available = function() return PM._modules.sync end },
-		{ cmd = "/pmsyncstop", alias = "/permmementosyncstop", desc_key = "CMD_DESC_SEND_STOP_REQUEST", available = function() return PM._modules.sync end },
-		{ cmd = "/pmsyncon", alias = "/pmemsyncenable", desc_key = "CMD_DESC_TOGGLE_SYNC_LISTENING", available = function() return PM._modules.sync end },
-		{ cmd = "/pmsyncdelay", alias = "/pmemsyncrandomdelay", desc_key = "CMD_DESC_TOGGLE_RANDOM_SYNC_DELAY", available = function() return PM._modules.sync end },
+		{ cmd = "/pmsync <name>", alias = "/permmementosync", desc_key = "CMD_DESC_SEND_SYNC_REQUEST", available = function() return PM_modules.sync end },
+		{ cmd = "/pmsyncrand", alias = "/permmementosyncrandom", desc_key = "CMD_DESC_SEND_RANDOM_SYNC", available = function() return PM_modules.sync end },
+		{ cmd = "/pmsyncstop", alias = "/permmementosyncstop", desc_key = "CMD_DESC_SEND_STOP_REQUEST", available = function() return PM_modules.sync end },
+		{ cmd = "/pmsyncon", alias = "/pmemsyncenable", desc_key = "CMD_DESC_TOGGLE_SYNC_LISTENING", available = function() return PM_modules.sync end },
+		{ cmd = "/pmsyncdelay", alias = "/pmemsyncrandomdelay", desc_key = "CMD_DESC_TOGGLE_RANDOM_SYNC_DELAY", available = function() return PM_modules.sync end },
 	}},
 	{ section_key = "HEADER_FAVORITES_MANAGER", commands = {
-		{ cmd = "/pmemwipefav", alias = "/pmemdeleteallfavorites", desc_key = "CMD_DESC_CLEAR_ALL_FAVORITES", available = function() return PM._modules.menu and PM.settings.enable_random_fav end },
+		{ cmd = "/pmemwipefav", alias = "/pmemdeleteallfavorites", desc_key = "CMD_DESC_CLEAR_ALL_FAVORITES", available = function() return PM_modules.menu and PM.settings.enable_random_fav end },
 	}},
 	{ section_key = "HEADER_PROFILE_MANAGER", commands = {
-		{ cmd = "/pmemacct", alias = "/pmemuseaccountsettings", desc_key = "CMD_DESC_TOGGLE_ACCOUNT_SETTINGS", available = function() return PM._modules.migration end },
+		{ cmd = "/pmemacct", alias = "/pmemuseaccountsettings", desc_key = "CMD_DESC_TOGGLE_ACCOUNT_SETTINGS", available = function() return PM_modules.migration end },
 	}},
 	{ section_key = "HEADER_LEARNED_DATA_MGMT", commands = {
 		{ cmd = "/pmemscan", alias = "/pmemautolearn", desc_key = "CMD_DESC_START_AUTOSCAN", available = function() return PM.settings.enable_learning end },
 		{ cmd = "/pmemlist", alias = "/pmemlearned", desc_key = "CMD_DESC_LIST_LEARNED", available = function() return PM.settings.enable_learning end },
 		{ cmd = "/pmemplay <name>", alias = "/pmemactivatelearned", desc_key = "CMD_DESC_FORCE_LOOP_LEARNED", available = function() return PM.settings.enable_learning end },
 		{ cmd = "/pmemrandlrn", alias = "/pmemrandomlearned", desc_key = "CMD_DESC_ACTIVATE_RANDOM_LEARNED", available = function() return PM.settings.enable_learning end },
-		{ cmd = "/pmemwipe", alias = "/pmemdeletealllearned", desc_key = "CMD_DESC_WIPE_ALL_LEARNED", available = function() return PM._modules.menu and PM.settings.enable_learning end },
+		{ cmd = "/pmemwipe", alias = "/pmemdeletealllearned", desc_key = "CMD_DESC_WIPE_ALL_LEARNED", available = function() return PM_modules.menu and PM.settings.enable_learning end },
 	}},
 	{ section_key = "SECTION_ANNOUNCE_DELAYS", commands = {
 		{ cmd = "/pmemcsa", alias = "/pmemtogglecsa", desc_key = "CMD_DESC_TOGGLE_SCREEN_ANNOUNCE", available = function() return true end },
@@ -166,7 +171,7 @@ PM.COMMAND_REFERENCE = {
 	{ section_key = "HEADER_ADVANCED_SETTINGS", commands = {
 		{ cmd = "/pmemcombat", alias = "/pmemloopincombat", desc_key = "CMD_DESC_TOGGLE_LOOP_IN_COMBAT", available = function() return true end },
 		{ cmd = "/pmemreset", alias = "/pmemresetdefaults", desc_key = "CMD_DESC_RESET_TO_DEFAULTS", available = function() return true end },
-		{ cmd = "/pmemwizard", desc_key = "CMD_DESC_RERUN_WIZARD", available = function() return PM._modules.wizard end },
+		{ cmd = "/pmemwizard", desc_key = "CMD_DESC_RERUN_WIZARD", available = function() return PM_modules.wizard end },
 		{ cmd = "/pmemlibwarn", desc_key = "CMD_DESC_TOGGLE_LIB_WARNING", available = function() return true end },
 		{ cmd = "/pmemlogs", alias = "/pmemchatlogs", desc_key = "CMD_DESC_TOGGLE_CHAT_LOGS", available = function() return true end },
 		{ cmd = "/pmemnospin", alias = "/pmemstopspinning", desc_key = "CMD_DESC_TOGGLE_STOP_SPINNING", available = function() return true end },
@@ -220,8 +225,8 @@ function PM.toggle_module_disabled(mod_key, silent)
 				true, "settings", 90
 			)
 		end, silent)
-	LibAPH.SyncModuleLifecycle(PM._modules, mod_key, now_disabled)
-	PM.state.cached_stats_suffix = nil
+	LibAPH.SyncModuleLifecycle(PM_modules, mod_key, now_disabled)
+	PM_state.cached_stats_suffix = nil
 	if not now_disabled then
 		PM.acct_saved.warned_labels = {}
 	end
@@ -234,8 +239,8 @@ function PM.apply_module_disable_overrides()
 	if IsConsoleUI() and PM.acct_saved.module_disabled.sync == nil then
 		PM.acct_saved.module_disabled.sync = true
 	end
-	PM.state.module_disabled_snapshot = ZO_ShallowTableCopy(PM.acct_saved.module_disabled)
-	LibAPH.ApplyModuleDisableOverrides(PM.acct_saved, PM.MODULE_FILE_FUNCS, PM._modules,
+	PM_state.module_disabled_snapshot = ZO_ShallowTableCopy(PM.acct_saved.module_disabled)
+	LibAPH.ApplyModuleDisableOverrides(PM.acct_saved, PM.MODULE_FILE_FUNCS, PM_modules,
 		function(fname)
 			if fname == "sync_engine.initialize" then
 				PM.sync_engine = {}
@@ -321,52 +326,49 @@ PM.defaults = {
 	}
 }
 
-PM.state = PM.state or {}
-PM.ui_refs = PM.ui_refs or {}
-
-PM.state.is_looping = false
-PM.state.is_scanning = false
-PM.state.loop_token = 0
+PM_state.is_looping = false
+PM_state.is_scanning = false
+PM_state.loop_token = 0
 PM.movement_tracker = LibAPH.CreateMovementTracker()
-PM.state.is_moving = false
+PM_state.is_moving = false
 PM.teleport_tracker = LibAPH.CreateTeleportTracker()
-PM.state.is_sync_firing = false
-PM.state.sync_auto_suspended = false
-PM.state.was_in_sync_protected_zone = false
-PM.state.next_fire_time = 0
-PM.state.learned_count = 0
-PM.state.session_loops = 0
-PM.state.current_fav_count = 0
-PM.state.current_sv_size_kb = 0
-PM.state.next_random_precalc = nil
-PM.state.last_priority_save_time = 0
+PM_state.is_sync_firing = false
+PM_state.sync_auto_suspended = false
+PM_state.was_in_sync_protected_zone = false
+PM_state.next_fire_time = 0
+PM_state.learned_count = 0
+PM_state.session_loops = 0
+PM_state.current_fav_count = 0
+PM_state.current_sv_size_kb = 0
+PM_state.next_random_precalc = nil
+PM_state.last_priority_save_time = 0
 PM.sync_engine = PM.sync_engine or {}
-PM.state.is_menu_built = false
-PM.state.active_names = {}
-PM.state.active_ids = {}
-PM.state.sync_names = {}
-PM.state.sync_ids = {}
-PM.state.learned_list_names = {}
-PM.state.learned_list_values = {}
-PM.state.fav_all_names = {}
-PM.state.fav_all_ids = {}
-PM.state.fav_current_names = {}
-PM.state.fav_current_ids = {}
-PM.state.char_list_values = {}
-PM.state.char_list_names = {}
-PM.state.selected_sync_id = nil
-PM.state.pending_id = nil
-PM.state.selected_char_copy = nil
-PM.state.selected_char_delete = nil
-PM.state.selected_learned_id = nil
-PM.state.selected_fav_candidate = nil
-PM.state.selected_fav_removal = nil
-PM.ui_refs.ctrl_active_dropdown = nil
-PM.ui_refs.ctrl_sync_dropdown = nil
-PM.ui_refs.ctrl_learned_dropdown = nil
-PM.ui_refs.ctrl_fav_candidate_dropdown = nil
-PM.ui_refs.ctrl_fav_remove_dropdown = nil
-PM.ui_refs.ui_update_fn = nil
+PM_state.is_menu_built = false
+PM_state.active_names = {}
+PM_state.active_ids = {}
+PM_state.sync_names = {}
+PM_state.sync_ids = {}
+PM_state.learned_list_names = {}
+PM_state.learned_list_values = {}
+PM_state.fav_all_names = {}
+PM_state.fav_all_ids = {}
+PM_state.fav_current_names = {}
+PM_state.fav_current_ids = {}
+PM_state.char_list_values = {}
+PM_state.char_list_names = {}
+PM_state.selected_sync_id = nil
+PM_state.pending_id = nil
+PM_state.selected_char_copy = nil
+PM_state.selected_char_delete = nil
+PM_state.selected_learned_id = nil
+PM_state.selected_fav_candidate = nil
+PM_state.selected_fav_removal = nil
+PM_ui_refs.ctrl_active_dropdown = nil
+PM_ui_refs.ctrl_sync_dropdown = nil
+PM_ui_refs.ctrl_learned_dropdown = nil
+PM_ui_refs.ctrl_fav_candidate_dropdown = nil
+PM_ui_refs.ctrl_fav_remove_dropdown = nil
+PM_ui_refs.ui_update_fn = nil
 
 function PM.get_settings_library()
 	local lam_v, lam_e = LibAPH.CheckLibraryVersion("LibAddonMenu-2.0")
@@ -406,9 +408,9 @@ function PM.show_missing_library_warning()
 		local function on_ack()
 			PM.settings.has_shown_lib_warning_088 = true
 			local tick_ms = GetGameTimeMilliseconds()
-			if (tick_ms - PM.state.last_priority_save_time) >= 900000 then
+			if (tick_ms - PM_state.last_priority_save_time) >= 900000 then
 				GetAddOnManager():RequestAddOnSavedVariablesPrioritySave(PM.name)
-				PM.state.last_priority_save_time = tick_ms
+				PM_state.last_priority_save_time = tick_ms
 			end
 		end
 
@@ -475,15 +477,15 @@ end
 
 function PM.toggle_sync_listener()
 	if not PM.settings then return end
-	if PM.settings.sync_module.is_enabled and PM.state.on_sync_chat_message then
+	if PM.settings.sync_module.is_enabled and PM_state.on_sync_chat_message then
 		EVENT_MANAGER:RegisterForEvent(PM.name .. "_Sync", EVENT_CHAT_MESSAGE_CHANNEL,
-			PM.state.on_sync_chat_message)
+			PM_state.on_sync_chat_message)
 	else
 		EVENT_MANAGER:UnregisterForEvent(PM.name .. "_Sync", EVENT_CHAT_MESSAGE_CHANNEL)
 	end
 end
 
-function PM.is_in_sync_protected_zone()
+local function is_in_sync_protected_zone()
 	return IsUnitInDungeon("player")
 		or IsPlayerInRaid()
 		or IsActiveWorldBattleground()
@@ -492,30 +494,30 @@ end
 
 function PM.check_sync_zone_protection()
 	if not PM.settings or not PM.settings.sync_module then return end
-	local is_protected = PM.is_in_sync_protected_zone()
+	local is_protected = is_in_sync_protected_zone()
 
-	if is_protected and not PM.state.was_in_sync_protected_zone then
+	if is_protected and not PM_state.was_in_sync_protected_zone then
 		if PM.settings.sync_module.is_enabled then
-			PM.state.sync_auto_suspended = true
+			PM_state.sync_auto_suspended = true
 			EVENT_MANAGER:UnregisterForEvent(PM.name .. "_Sync", EVENT_CHAT_MESSAGE_CHANNEL)
 			PM.log_msg(PM.L("CHAT_SYNC_AUTO_SUSPENDED"), true, "sync", 90)
 		end
-	elseif not is_protected and PM.state.was_in_sync_protected_zone then
-		if PM.state.sync_auto_suspended then
-			PM.state.sync_auto_suspended = false
+	elseif not is_protected and PM_state.was_in_sync_protected_zone then
+		if PM_state.sync_auto_suspended then
+			PM_state.sync_auto_suspended = false
 			PM.toggle_sync_listener()
 			PM.log_msg(PM.L("CHAT_SYNC_AUTO_RESUMED"), true, "sync", 90)
 		end
 	end
 
-	PM.state.was_in_sync_protected_zone = is_protected
+	PM_state.was_in_sync_protected_zone = is_protected
 end
 
 function PM.trigger_priority_save()
 	local tick_ms = GetGameTimeMilliseconds()
-	if (tick_ms - PM.state.last_priority_save_time) >= 900000 then
+	if (tick_ms - PM_state.last_priority_save_time) >= 900000 then
 		GetAddOnManager():RequestAddOnSavedVariablesPrioritySave(PM.name)
-		PM.state.last_priority_save_time = tick_ms
+		PM_state.last_priority_save_time = tick_ms
 	end
 end
 

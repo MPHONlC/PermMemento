@@ -4,6 +4,7 @@
 
 PMCore = PMCore or {}
 local PM = PMCore
+local PM_state = PM.state
 
 function PM.sync_engine.initialize()
 	SLASH_COMMANDS["/pmsync"] = function(arg_str)
@@ -19,9 +20,9 @@ function PM.sync_engine.initialize()
 		if c_arg == "stop" then
 			StartChatInput("PM STOP", CHAT_CHANNEL_PARTY)
 			if PM.settings then
-				PM.settings.active_id = nil; PM.state.loop_token = (PM.state.loop_token or 0) + 1
+				PM.settings.active_id = nil; PM_state.loop_token = (PM_state.loop_token or 0) + 1
 			end
-			PM.state.next_fire_time = 0; return
+			PM_state.next_fire_time = 0; return
 		elseif c_arg == "random" then
 			local r_id = PM.call_optional(PM.get_random_any, "Loop module (get_random_any)")
 			if r_id then
@@ -62,13 +63,13 @@ function PM.sync_engine.initialize()
 				zo_callLater(function() attempt_col(c_id) end, c_rem + 1000)
 			else
 				PM.log_msg(PM.L("CHAT_SYNC_RECEIVED_PLAYING"), true, "sync", 80)
-				PM.state.is_sync_firing = true; UseCollectible(c_id)
-				zo_callLater(function() PM.state.is_sync_firing = false end, 1000)
+				PM_state.is_sync_firing = true; UseCollectible(c_id)
+				zo_callLater(function() PM_state.is_sync_firing = false end, 1000)
 			end
 		end
 	end
 
-	PM.state.on_sync_chat_message = function(eventCode, channelType, fromName, text)
+	PM_state.on_sync_chat_message = function(eventCode, channelType, fromName, text)
 		if channelType ~= CHAT_CHANNEL_PARTY then return end
 		local cl_name = zo_strformat("<<1>>", fromName)
 		if string.match(text, "^PM STOP") then
@@ -76,8 +77,8 @@ function PM.sync_engine.initialize()
 				PM.log_msg(PM.L("CHAT_SENT_GROUP_STOP"), true, "sync", 90); return
 			end
 			if PM.settings then
-				PM.settings.active_id = nil; PM.state.loop_token = (PM.state.loop_token or 0) + 1
-				PM.settings.pending_sync_id = nil; PM.state.next_fire_time = 0
+				PM.settings.active_id = nil; PM_state.loop_token = (PM_state.loop_token or 0) + 1
+				PM.settings.pending_sync_id = nil; PM_state.next_fire_time = 0
 				PM.log_msg(PM.L("CHAT_GROUP_STOP_RECEIVED", cl_name), true, "stop", 90)
 			end
 			return
@@ -111,7 +112,7 @@ end
 LibAPH.RegisterModuleLifecycle("sync", {
 	onUnload = function()
 		EVENT_MANAGER:UnregisterForEvent(PM.name .. "_Sync", EVENT_CHAT_MESSAGE_CHANNEL)
-		PM.state.on_sync_chat_message = nil
+		PM_state.on_sync_chat_message = nil
 		SLASH_COMMANDS["/pmsync"] = nil
 		SLASH_COMMANDS["/permmementosync"] = nil
 	end,

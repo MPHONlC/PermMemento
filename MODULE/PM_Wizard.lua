@@ -4,6 +4,7 @@
 
 PMCore = PMCore or {}
 local PM = PMCore
+local PM_state = PM.state
 
 local function wizard_title(suffix)
 	local t = "|c9CD04CPermanent Memento|r " .. PM.L("WIZARD_SETUP_WORD")
@@ -18,7 +19,7 @@ end
 function PM.finish_wizard()
 	PM.acct_saved.wizard_completed = true
 	PM.acct_saved.wizard_skipped = false
-	PM.state.cached_stats_suffix = nil
+	PM_state.cached_stats_suffix = nil
 	local function auto_unload_wizard()
 		LibAPH.AutoUnloadWizardModule(PM.acct_saved, PM.toggle_module_disabled)
 	end
@@ -92,7 +93,7 @@ local function finish_lite_mode()
 	PM.apply_lite_mode()
 	PM.acct_saved.wizard_completed = true
 	PM.acct_saved.wizard_skipped = false
-	PM.state.cached_stats_suffix = nil
+	PM_state.cached_stats_suffix = nil
 	LibAPH.AutoUnloadWizardModule(PM.acct_saved, PM.toggle_module_disabled)
 	PM.log_msg(PM.L("CHAT_LITE_MODE_COMPLETE"), true, "settings", 90)
 	zo_callLater(function() ReloadUI("ingame") end, 5000)
@@ -150,7 +151,7 @@ function PM.run_wizard()
 				callback = function()
 					PM.acct_saved.wizard_completed = true
 					PM.acct_saved.wizard_skipped = true
-					PM.state.cached_stats_suffix = nil
+					PM_state.cached_stats_suffix = nil
 				end
 			}
 		}

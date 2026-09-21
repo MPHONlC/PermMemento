@@ -4,10 +4,15 @@
 
 PMCore = PMCore or {}
 local PM = PMCore
+local PM_defaults = PM.defaults
+local PM_modules = PM._modules
+local PM_state = PM.state
+local PM_ui_refs = PM.ui_refs
+local build_delay_trigger_options
 
 function PM.update_profile_list()
-	PM.state.profile_list_names = {}
-	PM.state.profile_list_values = {}
+	PM_state.profile_list_names = {}
+	PM_state.profile_list_values = {}
 	local raw_names = {}
 
 	if PM.acct_saved and PM.acct_saved.profiles then
@@ -22,19 +27,19 @@ function PM.update_profile_list()
 		if PM.settings and PM.settings.active_profile == p_name then
 			display_name = "|c00FF00" .. p_name .. "|r"
 		end
-		table.insert(PM.state.profile_list_names, display_name)
-		table.insert(PM.state.profile_list_values, p_name)
+		table.insert(PM_state.profile_list_names, display_name)
+		table.insert(PM_state.profile_list_values, p_name)
 	end
 
-	if #PM.state.profile_list_names == 0 then
-		table.insert(PM.state.profile_list_names, PM.L("LABEL_NONE"))
-		table.insert(PM.state.profile_list_values, "")
+	if #PM_state.profile_list_names == 0 then
+		table.insert(PM_state.profile_list_names, PM.L("LABEL_NONE"))
+		table.insert(PM_state.profile_list_values, "")
 	end
 
 	local ddl = _G["PM_ProfileDropdown"]
 	if ddl and ddl.UpdateChoices then
-		ddl:UpdateChoices(PM.state.profile_list_names, PM.state.profile_list_values)
-		ddl:UpdateValue(false, PM.state.selected_profile_name or "")
+		ddl:UpdateChoices(PM_state.profile_list_names, PM_state.profile_list_values)
+		ddl:UpdateValue(false, PM_state.selected_profile_name or "")
 	end
 end
 
@@ -66,8 +71,8 @@ function PM.save_profile(p_name)
 	PM.settings.active_profile = p_name
 	PM.acct_saved.profiles[p_name] = new_prof
 	PM.log_msg(PM.L("CHAT_PROFILE_SAVED", p_name), true, "settings", 90)
-	PM.ui_refs.profile_input_text = ""
-	PM.state.selected_profile_name = p_name
+	PM_ui_refs.profile_input_text = ""
+	PM_state.selected_profile_name = p_name
 	PM.update_profile_list()
 	if IsConsoleUI() then
 		zo_callLater(function() ReloadUI("ingame") end, 1000)
@@ -103,7 +108,7 @@ function PM.delete_profile(p_name)
 			PM.settings.active_profile = nil
 		end
 		PM.log_msg(PM.L("CHAT_PROFILE_DELETED", p_name), true, "settings", 90)
-		if PM.state.selected_profile_name == p_name then PM.state.selected_profile_name = "" end
+		if PM_state.selected_profile_name == p_name then PM_state.selected_profile_name = "" end
 		PM.update_profile_list()
 		if IsConsoleUI() then
 			zo_callLater(function() ReloadUI("ingame") end, 1000)
@@ -134,8 +139,8 @@ end
 
 function PM.update_favorites_choices()
 	PM.call_optional(PM.update_fav_count, "Loop module (update_fav_count)")
-	PM.state.fav_all_names, PM.state.fav_all_ids = {}, {}
-	PM.state.fav_current_names, PM.state.fav_current_ids = {PM.L("LABEL_NONE")}, {0}
+	PM_state.fav_all_names, PM_state.fav_all_ids = {}, {}
+	PM_state.fav_current_names, PM_state.fav_current_ids = {PM.L("LABEL_NONE")}, {0}
 
 	local arr_all = {}
 	local max_cat = GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO)
@@ -150,7 +155,7 @@ function PM.update_favorites_choices()
 		local f_str = t.name; local md = PM.get_data(t.id)
 		if md then f_str = f_str .. string.format(" (%ds)", md.dur / 1000) end
 		if PM.settings.favorites[t.id] then f_str = "|c00FF00" .. f_str .. " (" .. PM.L("LABEL_FAV") .. ")|r" end
-		table.insert(PM.state.fav_all_names, f_str); table.insert(PM.state.fav_all_ids, t.id)
+		table.insert(PM_state.fav_all_names, f_str); table.insert(PM_state.fav_all_ids, t.id)
 	end
 
 	local arr_fav = {}
@@ -165,18 +170,18 @@ function PM.update_favorites_choices()
 	for _, t in ipairs(arr_fav) do
 		local f_str = t.name; local md = PM.get_data(t.id)
 		if md then f_str = f_str .. string.format(" (%ds)", md.dur / 1000) end
-		table.insert(PM.state.fav_current_names, f_str); table.insert(PM.state.fav_current_ids, t.id)
+		table.insert(PM_state.fav_current_names, f_str); table.insert(PM_state.fav_current_ids, t.id)
 	end
 
 	local cand_ddl = _G["PM_FavCandidateDropdown"]
 	if cand_ddl and cand_ddl.UpdateChoices then
-		cand_ddl:UpdateChoices(PM.state.fav_all_names, PM.state.fav_all_ids)
+		cand_ddl:UpdateChoices(PM_state.fav_all_names, PM_state.fav_all_ids)
 		cand_ddl:UpdateValue()
 	end
 
 	local rem_ddl = _G["PM_FavRemoveDropdown"]
 	if rem_ddl and rem_ddl.UpdateChoices then
-		rem_ddl:UpdateChoices(PM.state.fav_current_names, PM.state.fav_current_ids)
+		rem_ddl:UpdateChoices(PM_state.fav_current_names, PM_state.fav_current_ids)
 		rem_ddl:UpdateValue()
 	end
 end
@@ -201,7 +206,7 @@ function PM.delete_all_favorites()
 end
 
 function PM.update_menu_choices()
-	PM.state.active_names, PM.state.active_ids = {PM.L("LABEL_NONE")}, {0}
+	PM_state.active_names, PM_state.active_ids = {PM.L("LABEL_NONE")}, {0}
 	local arr_act = {}
 	for f_id, md in pairs(PM.memento_data) do
 		if IsCollectibleUnlocked(f_id) then
@@ -215,14 +220,14 @@ function PM.update_menu_choices()
 		if PM.settings and PM.settings.active_id == t.id then
 			f_str = "|c00FF00" .. f_str .. "|r"
 		end
-		table.insert(PM.state.active_names, f_str); table.insert(PM.state.active_ids, t.id)
+		table.insert(PM_state.active_names, f_str); table.insert(PM_state.active_ids, t.id)
 	end
 	local act_ddl = _G["PM_ActiveDropdown"]
 	if act_ddl and act_ddl.UpdateChoices then
-		act_ddl:UpdateChoices(PM.state.active_names, PM.state.active_ids)
+		act_ddl:UpdateChoices(PM_state.active_names, PM_state.active_ids)
 	end
 
-	PM.state.sync_names, PM.state.sync_ids = {PM.L("LABEL_NONE")}, {0}
+	PM_state.sync_names, PM_state.sync_ids = {PM.L("LABEL_NONE")}, {0}
 	local arr_sync = {}
 	local max_cat = GetTotalCollectiblesByCategoryType(COLLECTIBLE_CATEGORY_TYPE_MEMENTO)
 	for i = 1, max_cat do
@@ -235,26 +240,26 @@ function PM.update_menu_choices()
 	for _, t in ipairs(arr_sync) do
 		local f_str = t.name; local md = PM.get_data(t.id)
 		if md then f_str = f_str .. string.format(" (%ds)", md.dur / 1000) end
-		table.insert(PM.state.sync_names, f_str); table.insert(PM.state.sync_ids, t.id)
+		table.insert(PM_state.sync_names, f_str); table.insert(PM_state.sync_ids, t.id)
 	end
 	local sync_ddl = _G["PM_SyncDropdown"]
 	if sync_ddl and sync_ddl.UpdateChoices then
-		sync_ddl:UpdateChoices(PM.state.sync_names, PM.state.sync_ids)
+		sync_ddl:UpdateChoices(PM_state.sync_names, PM_state.sync_ids)
 	end
 
-	PM.state.learned_list_names, PM.state.learned_list_values = {PM.L("LABEL_NONE")}, {0}
+	PM_state.learned_list_names, PM_state.learned_list_values = {PM.L("LABEL_NONE")}, {0}
 	if PM.acct_saved and PM.acct_saved.learned_data then
 		local arr_lrn = {}
 		for _, md in pairs(PM.acct_saved.learned_data) do table.insert(arr_lrn, md) end
 		table.sort(arr_lrn, function(a,b) return a.name < b.name end)
 		for _, md in ipairs(arr_lrn) do
 			local f_str = md.name .. string.format(" (%ds)", md.dur / 1000)
-			table.insert(PM.state.learned_list_names, f_str); table.insert(PM.state.learned_list_values, md.id)
+			table.insert(PM_state.learned_list_names, f_str); table.insert(PM_state.learned_list_values, md.id)
 		end
 	end
 	local lrn_ddl = _G["PM_LearnedDropdown"]
 	if lrn_ddl and lrn_ddl.UpdateChoices then
-		lrn_ddl:UpdateChoices(PM.state.learned_list_names, PM.state.learned_list_values)
+		lrn_ddl:UpdateChoices(PM_state.learned_list_names, PM_state.learned_list_values)
 	end
 end
 
@@ -271,12 +276,12 @@ end
 
 function PM.wipe_all_bugs()
 	PM.settings.captured_bugs = nil
-	if PM.ui_refs.copy_box then PM.ui_refs.copy_box:Hide() end
+	if PM_ui_refs.copy_box then PM_ui_refs.copy_box:Hide() end
 end
 
 function PM.show_copy_text_box(plain_text)
 	local is_dev = (GetDisplayName() == "@APHONlC")
-	PM.ui_refs.copy_box = PM.ui_refs.copy_box or LibAPH.CreateCopyTextBox({
+	PM_ui_refs.copy_box = PM_ui_refs.copy_box or LibAPH.CreateCopyTextBox({
 		name = "PMCopyBox",
 		closeText = PM.L("BTN_CLOSE"),
 		titleText = PM.L("BUG_REPORT_COPY_TITLE"),
@@ -284,14 +289,14 @@ function PM.show_copy_text_box(plain_text)
 		dismissBug = { text = "Dismiss Bug", onClick = PM.dismiss_captured_error },
 		wipeAllBugs = { text = "Wipe All Bugs", onClick = PM.wipe_all_bugs },
 	})
-	PM.ui_refs.copy_box:Show(plain_text)
+	PM_ui_refs.copy_box:Show(plain_text)
 end
 
 function PM.hook_error_capture()
 	LibAPH.HookErrorCapture(PM.name, function(text)
 		PM.settings.captured_bugs = PM.settings.captured_bugs or {}
 		local is_new = LibAPH.RecordCapturedBug(PM.settings.captured_bugs, text)
-		if is_new or (PM.ui_refs.copy_box and not PM.ui_refs.copy_box.window:IsHidden()) then
+		if is_new or (PM_ui_refs.copy_box and not PM_ui_refs.copy_box.window:IsHidden()) then
 			PM.show_bug_report_box()
 		end
 	end)
@@ -327,7 +332,7 @@ function PM.get_bug_report_settings_fields()
 	}
 end
 
-function PM.get_bug_report_delay_lines()
+local function get_bug_report_delay_lines()
 	local rows = {
 		{ "SLIDER_DELAY_IDLE", "delay_idle" },
 		{ "SLIDER_DELAY_MENU", "delay_in_menu" },
@@ -375,7 +380,7 @@ function PM.show_bug_report_box()
 		local acct_line = PM.L("CHK_ACCOUNT_SETTINGS") .. ": " .. (PM.char_saved.use_account_settings and on_word or off_word)
 		settings_lines = (settings_lines ~= "" and (settings_lines .. "\n") or "") .. acct_line
 	end
-	settings_lines = settings_lines .. "\n\n" .. PM.L("HEADER_MEMENTO_DELAYS") .. ":\n" .. PM.get_bug_report_delay_lines()
+	settings_lines = settings_lines .. "\n\n" .. PM.L("HEADER_MEMENTO_DELAYS") .. ":\n" .. get_bug_report_delay_lines()
 
 	local body = LibAPH.BuildBugReportText({
 		statsText = PM.get_stats_text(),
@@ -401,12 +406,12 @@ function PM.build_general_options(b_data, is_pad)
 		},
 		{
 			type = "dropdown", name = function() return PM.L("DD_SELECT_ACTIVE_MEMENTO") end, reference = "PM_ActiveDropdown",
-			choices = PM.state.active_names, choicesValues = PM.state.active_ids,
+			choices = PM_state.active_names, choicesValues = PM_state.active_ids,
 			getFunc = function()
-				if PM.state.pending_id == nil then return PM.settings.active_id or 0 end
-				return PM.state.pending_id
+				if PM_state.pending_id == nil then return PM.settings.active_id or 0 end
+				return PM_state.pending_id
 			end,
-			setFunc = function(v) PM.state.pending_id = v end,
+			setFunc = function(v) PM_state.pending_id = v end,
 			disabled = function() return PM.settings.is_random_on_zone end
 		},
 		{
@@ -419,23 +424,23 @@ function PM.build_general_options(b_data, is_pad)
 					PM.call_optional(PM.start_loop, "Loop module (start_loop)", r_id)
 				end
 			end,
-			disabled = function() return not PM._modules.loop end
+			disabled = function() return not PM_modules.loop end
 		},
 		{
 			type = "button", name = function() return "|c00FF00" .. PM.L("BTN_APPLY_SELECTED") .. "|r" end, width = "half",
 			func = function()
-				if PM.state.pending_id and PM.state.pending_id ~= 0 then
-					PM.settings.active_id = PM.state.pending_id
-					local md = PM.get_data(PM.state.pending_id)
+				if PM_state.pending_id and PM_state.pending_id ~= 0 then
+					PM.settings.active_id = PM_state.pending_id
+					local md = PM.get_data(PM_state.pending_id)
 					PM.log_msg(PM.L("CHAT_SELECTED_VIA_MENU", md.name or PM.L("LABEL_UNKNOWN")), true, "activation")
-					PM.call_optional(PM.start_loop, "Loop module (start_loop)", PM.state.pending_id); PM.state.pending_id = nil
-				elseif PM.state.pending_id == 0 then
-					PM.settings.active_id = nil; PM.state.loop_token = (PM.state.loop_token or 0) + 1
+					PM.call_optional(PM.start_loop, "Loop module (start_loop)", PM_state.pending_id); PM_state.pending_id = nil
+				elseif PM_state.pending_id == 0 then
+					PM.settings.active_id = nil; PM_state.loop_token = (PM_state.loop_token or 0) + 1
 					PM.log_msg(PM.L("CHAT_AUTOLOOP_STOPPED"), true, "stop", 90)
-					PM.state.pending_id = nil; PM.state.next_fire_time = 0
+					PM_state.pending_id = nil; PM_state.next_fire_time = 0
 				end
 			end,
-			disabled = function() return not PM._modules.loop end
+			disabled = function() return not PM_modules.loop end
 		},
 		{
 			type = "checkbox", name = function() return PM.L("CHK_RANDOM_ON_ZONE") end,
@@ -477,8 +482,8 @@ end
 
 function PM.build_module_manager_options(b_data, is_pad)
 	local function is_genuinely_missing(mod_key)
-		local was_disabled_at_start = PM.state.module_disabled_snapshot and PM.state.module_disabled_snapshot[mod_key]
-		return not PM._modules[mod_key] and not was_disabled_at_start
+		local was_disabled_at_start = PM_state.module_disabled_snapshot and PM_state.module_disabled_snapshot[mod_key]
+		return not PM_modules[mod_key] and not was_disabled_at_start
 	end
 	local missing_text = " - |c888888" .. PM.L("LABEL_MISSING_FILE") .. "|r |cFF0000" .. PM.L("LABEL_DISABLED_PAREN") .. "|r"
 	local function build_module_load_button(mod_key, display_name)
@@ -516,7 +521,7 @@ function PM.build_module_manager_options(b_data, is_pad)
 			type = "checkbox",
 			name = function()
 				local n = PM.L("CHK_ENABLE_SYNC_LISTENER")
-				if not PM._modules.sync then n = n .. " |cFF0000" .. PM.L("LABEL_DISABLED_PAREN") .. "|r" end
+				if not PM_modules.sync then n = n .. " |cFF0000" .. PM.L("LABEL_DISABLED_PAREN") .. "|r" end
 				return n
 			end,
 			getFunc = function() return PM.settings.sync_module.is_enabled end,
@@ -524,7 +529,7 @@ function PM.build_module_manager_options(b_data, is_pad)
 				PM.settings.sync_module.is_enabled = v; PM.toggle_sync_listener()
 				PM.log_msg(PM.L("CHAT_SYNC_LISTENING", v and PM.L("WORD_ON") or PM.L("WORD_OFF")), true, "settings")
 			end,
-			disabled = function() return not PM._modules.sync end
+			disabled = function() return not PM_modules.sync end
 		})
 	end
 
@@ -551,7 +556,7 @@ function PM.build_module_manager_options(b_data, is_pad)
 end
 
 function PM.build_ui_position_options(b_data, is_pad)
-	if not PM._modules.ui then return end
+	if not PM_modules.ui then return end
 	local function preview_window_move(win_ctrl)
 		SCENE_MANAGER:Show(IsInGamepadPreferredMode() and "gamepad_hud" or "hud")
 		win_ctrl:SetHidden(false)
@@ -560,8 +565,8 @@ function PM.build_ui_position_options(b_data, is_pad)
 	local function preview_window_reset(win_ctrl)
 		local cur_scene = SCENE_MANAGER:GetCurrentScene()
 		if not cur_scene then return end
-		local t_frag = PM.settings.show_in_hud and PM.ui_refs.hudFragment or PM.ui_refs.menuFragment
-		if win_ctrl == PM.ui_refs.ui_window and t_frag and cur_scene:HasFragment(t_frag) then
+		local t_frag = PM.settings.show_in_hud and PM_ui_refs.hudFragment or PM_ui_refs.menuFragment
+		if win_ctrl == PM_ui_refs.ui_window and t_frag and cur_scene:HasFragment(t_frag) then
 			win_ctrl:SetHidden(false)
 		end
 	end
@@ -579,7 +584,7 @@ function PM.build_ui_position_options(b_data, is_pad)
 				PM.call_optional(PM.toggle_ui_update, "UI module (toggle_ui_update)")
 				PM.log_msg(PM.L("CHAT_UI_VISIBILITY_CHANGED"), true, "ui", 90)
 			end,
-			disabled = function() return not PM._modules.ui end
+			disabled = function() return not PM_modules.ui end
 		},
 		{
 			type = "checkbox",
@@ -592,7 +597,7 @@ function PM.build_ui_position_options(b_data, is_pad)
 				PM.call_optional(PM.update_ui_scenes, "UI module (update_ui_scenes)")
 				PM.log_msg(PM.L("CHAT_UI_MODE", v and PM.L("LABEL_HUD_ONLY") or PM.L("LABEL_MENU_ONLY")), true, "ui")
 			end,
-			disabled = function() return PM.settings.ui.is_hidden or not PM._modules.ui end
+			disabled = function() return PM.settings.ui.is_hidden or not PM_modules.ui end
 		},
 		{
 			type = "checkbox", name = function() return PM.L("CHK_RENDER_IN_MENUS") end,
@@ -601,30 +606,30 @@ function PM.build_ui_position_options(b_data, is_pad)
 				PM.settings.is_ui_global = v
 				PM.call_optional(PM.update_ui_scenes, "UI module (update_ui_scenes)")
 			end,
-			disabled = function() return PM.settings.ui.is_hidden or not PM.settings.show_in_hud or not PM._modules.ui end
+			disabled = function() return PM.settings.ui.is_hidden or not PM.settings.show_in_hud or not PM_modules.ui end
 		},
 		{
 			type = "slider", name = function() return PM.L("SLIDER_HUD_UI_SCALE") end,
 			min = 0.5, max = 2.0, step = 0.1, decimals = 1,
 			getFunc = function() return PM.settings.ui.scale or (is_pad and 1.0 or 1.0) end,
-			setFunc = function(v) if PM.ui_refs.ui_mover then PM.ui_refs.ui_mover:ToggleGamepadMove(false) end; PM.settings.ui.scale = v; PM.call_optional(PM.update_ui_anchor, "UI module (update_ui_anchor)") end,
-			disabled = function() return not PM._modules.ui end
+			setFunc = function(v) if PM_ui_refs.ui_mover then PM_ui_refs.ui_mover:ToggleGamepadMove(false) end; PM.settings.ui.scale = v; PM.call_optional(PM.update_ui_anchor, "UI module (update_ui_anchor)") end,
+			disabled = function() return not PM_modules.ui end
 		},
 		{
 			type = "slider", name = function() return PM.L("SLIDER_MENU_UI_SCALE") end,
 			min = 0.5, max = 2.0, step = 0.1, decimals = 1,
 			getFunc = function() return PM.settings.ui_menu.scale or (is_pad and 1.2 or 1.0) end,
-			setFunc = function(v) if PM.ui_refs.ui_mover then PM.ui_refs.ui_mover:ToggleGamepadMove(false) end; PM.settings.ui_menu.scale = v; PM.call_optional(PM.update_ui_anchor, "UI module (update_ui_anchor)") end,
-			disabled = function() return not PM._modules.ui end
+			setFunc = function(v) if PM_ui_refs.ui_mover then PM_ui_refs.ui_mover:ToggleGamepadMove(false) end; PM.settings.ui_menu.scale = v; PM.call_optional(PM.update_ui_anchor, "UI module (update_ui_anchor)") end,
+			disabled = function() return not PM_modules.ui end
 		},
 		{
 			type = "checkbox", name = function() return PM.L("CHK_LOCK_UI_POSITION") end,
 			getFunc = function() return PM.settings.ui.is_locked end,
 			setFunc = function(v)
 				PM.settings.ui.is_locked = v
-				if PM.ui_refs.ui_window then PM.ui_refs.ui_window:SetMovable(not v) end
+				if PM_ui_refs.ui_window then PM_ui_refs.ui_window:SetMovable(not v) end
 			end,
-			disabled = function() return not PM._modules.ui end
+			disabled = function() return not PM_modules.ui end
 		}
 	}
 
@@ -632,10 +637,10 @@ function PM.build_ui_position_options(b_data, is_pad)
 		table.insert(ui_pos_controls, {
 			type = "button", name = function() return PM.L("BTN_MOVE_UI_STICK") end, width = "half",
 			func = function()
-				preview_window_move(PM.ui_refs.ui_window)
-				if PM.ui_refs.ui_mover then PM.ui_refs.ui_mover:ToggleGamepadMove(true) end
+				preview_window_move(PM_ui_refs.ui_window)
+				if PM_ui_refs.ui_mover then PM_ui_refs.ui_mover:ToggleGamepadMove(true) end
 			end,
-			disabled = function() return PM.ui_refs.ui_mover == nil or PM.settings.ui.is_locked or not PM._modules.ui end
+			disabled = function() return PM_ui_refs.ui_mover == nil or PM.settings.ui.is_locked or not PM_modules.ui end
 		})
 	end
 
@@ -643,31 +648,31 @@ function PM.build_ui_position_options(b_data, is_pad)
 	table.insert(ui_pos_controls, {
 		type = "button", name = function() return "|cFF0000" .. PM.L("BTN_RESET_UI_POSITION") .. "|r" end, width = reset_width,
 		func = function()
-			if PM.ui_refs.ui_mover then PM.ui_refs.ui_mover:ToggleGamepadMove(false) end
-			PM.settings.ui.left = PM.defaults.ui.left
-			PM.settings.ui.top = PM.defaults.ui.top
-			PM.settings.ui_menu.left = PM.defaults.ui_menu.left
-			PM.settings.ui_menu.top = PM.defaults.ui_menu.top
+			if PM_ui_refs.ui_mover then PM_ui_refs.ui_mover:ToggleGamepadMove(false) end
+			PM.settings.ui.left = PM_defaults.ui.left
+			PM.settings.ui.top = PM_defaults.ui.top
+			PM.settings.ui_menu.left = PM_defaults.ui_menu.left
+			PM.settings.ui_menu.top = PM_defaults.ui_menu.top
 			PM.call_optional(PM.update_ui_anchor, "UI module (update_ui_anchor)"); PM.log_msg(PM.L("CHAT_UI_POSITION_RESET"), true, "ui", 90)
-			preview_window_reset(PM.ui_refs.ui_window)
+			preview_window_reset(PM_ui_refs.ui_window)
 		end,
-		disabled = function() return not PM._modules.ui end
+		disabled = function() return not PM_modules.ui end
 	})
 
 	table.insert(ui_pos_controls, {
 		type = "button", name = function() return "|cFF0000" .. PM.L("BTN_RESET_UI_SIZE") .. "|r" end, width = reset_width,
 		func = function()
-			if PM.ui_refs.ui_mover then PM.ui_refs.ui_mover:ToggleGamepadMove(false) end
-			PM.settings.ui.scale = PM.defaults.ui.scale
-			PM.settings.ui_menu.scale = PM.defaults.ui_menu.scale
+			if PM_ui_refs.ui_mover then PM_ui_refs.ui_mover:ToggleGamepadMove(false) end
+			PM.settings.ui.scale = PM_defaults.ui.scale
+			PM.settings.ui_menu.scale = PM_defaults.ui_menu.scale
 			PM.settings.ui.width = nil
 			PM.settings.ui.height = nil
 			PM.settings.ui_menu.width = nil
 			PM.settings.ui_menu.height = nil
 			PM.call_optional(PM.update_ui_anchor, "UI module (update_ui_anchor)"); PM.log_msg(PM.L("CHAT_UI_SIZE_RESET"), true, "ui", 90)
-			preview_window_reset(PM.ui_refs.ui_window)
+			preview_window_reset(PM_ui_refs.ui_window)
 		end,
-		disabled = function() return not PM._modules.ui end
+		disabled = function() return not PM_modules.ui end
 	})
 
 	table.insert(b_data, {
@@ -677,7 +682,7 @@ function PM.build_ui_position_options(b_data, is_pad)
 end
 
 function PM.build_sync_options(b_data, is_pad)
-	if not PM._modules.sync then return end
+	if not PM_modules.sync then return end
 	if not is_pad then
 		local grp_sync = {
 			{
@@ -691,7 +696,7 @@ function PM.build_sync_options(b_data, is_pad)
 			},
 			{
 				type = "dropdown", name = function() return PM.L("DD_SELECT_SYNC_REQUEST") end, reference = "PM_SyncDropdown",
-				choices = PM.state.sync_names, choicesValues = PM.state.sync_ids,
+				choices = PM_state.sync_names, choicesValues = PM_state.sync_ids,
 				getFunc = function() return 0 end,
 				setFunc = function(v)
 					if v and v ~= 0 then
@@ -710,7 +715,7 @@ function PM.build_sync_options(b_data, is_pad)
 						StartChatInput(string.format("PM %s", l_str), CHAT_CHANNEL_PARTY)
 					end
 				end,
-				disabled = function() return not PM.settings.sync_module.is_enabled or not PM._modules.loop end
+				disabled = function() return not PM.settings.sync_module.is_enabled or not PM_modules.loop end
 			},
 			{
 				type = "button", name = function() return PM.L("BTN_SEND_STOP_COMMAND") end,
@@ -758,14 +763,14 @@ function PM.build_favorites_options(b_data, is_pad)
 		{
 			type = "dropdown", name = function() return PM.L("DD_SELECT_MEMENTO_FAVORITE") end,
 			reference = "PM_FavCandidateDropdown",
-			choices = PM.state.fav_all_names, choicesValues = PM.state.fav_all_ids,
-			getFunc = function() return PM.state.selected_fav_candidate or 0 end,
-			setFunc = function(v) PM.state.selected_fav_candidate = v end,
+			choices = PM_state.fav_all_names, choicesValues = PM_state.fav_all_ids,
+			getFunc = function() return PM_state.selected_fav_candidate or 0 end,
+			setFunc = function(v) PM_state.selected_fav_candidate = v end,
 			disabled = function() return not PM.settings.enable_random_fav end
 		},
 		{
 			type = "button", name = function() return PM.L("BTN_APPLY_TO_FAVORITES") end,
-			func = function() PM.toggle_favorite(PM.state.selected_fav_candidate) end,
+			func = function() PM.toggle_favorite(PM_state.selected_fav_candidate) end,
 			disabled = function() return not PM.settings.enable_random_fav end
 		}
 	}
@@ -775,14 +780,14 @@ function PM.build_favorites_options(b_data, is_pad)
 	table.insert(grp_fav, {
 		type = "dropdown", name = function() return PM.L("DD_VIEW_CURRENT_FAVORITES") end,
 		reference = "PM_FavRemoveDropdown",
-		choices = PM.state.fav_current_names, choicesValues = PM.state.fav_current_ids,
-		getFunc = function() return PM.state.selected_fav_removal or 0 end,
-		setFunc = function(v) PM.state.selected_fav_removal = v end,
+		choices = PM_state.fav_current_names, choicesValues = PM_state.fav_current_ids,
+		getFunc = function() return PM_state.selected_fav_removal or 0 end,
+		setFunc = function(v) PM_state.selected_fav_removal = v end,
 		disabled = function() return not PM.settings.enable_random_fav end
 	})
 	table.insert(grp_fav, {
 		type = "button", name = function() return PM.L("BTN_REMOVE_SELECTED_FAVORITE") end,
-		func = function() PM.toggle_favorite(PM.state.selected_fav_removal) end,
+		func = function() PM.toggle_favorite(PM_state.selected_fav_removal) end,
 		disabled = function() return not PM.settings.enable_random_fav end
 	})
 	table.insert(grp_fav, {
@@ -815,12 +820,12 @@ function PM.build_profile_options(b_data, is_pad)
 		{
 			type = "editbox", name = function() return PM.L("EDIT_NEW_PROFILE_NAME") end,
 			isMultiline = false,
-			getFunc = function() return PM.ui_refs.profile_input_text or "" end,
-			setFunc = function(v) PM.ui_refs.profile_input_text = v end
+			getFunc = function() return PM_ui_refs.profile_input_text or "" end,
+			setFunc = function(v) PM_ui_refs.profile_input_text = v end
 		},
 		{
 			type = "button", name = function() return "|c00FF00" .. PM.L("BTN_SAVE_NEW_PROFILE") .. "|r" end, width = "full",
-			func = function() PM.save_profile(PM.ui_refs.profile_input_text) end
+			func = function() PM.save_profile(PM_ui_refs.profile_input_text) end
 		}
 	}
 	if IsKeyboardUISupported() then
@@ -828,17 +833,17 @@ function PM.build_profile_options(b_data, is_pad)
 	end
 	table.insert(grp_prof, {
 		type = "dropdown", name = function() return PM.L("DD_SELECT_PROFILE") end, reference = "PM_ProfileDropdown",
-		choices = PM.state.profile_list_names, choicesValues = PM.state.profile_list_values,
-		getFunc = function() return PM.state.selected_profile_name or "" end,
-		setFunc = function(v) PM.state.selected_profile_name = v end
+		choices = PM_state.profile_list_names, choicesValues = PM_state.profile_list_values,
+		getFunc = function() return PM_state.selected_profile_name or "" end,
+		setFunc = function(v) PM_state.selected_profile_name = v end
 	})
 	table.insert(grp_prof, {
 		type = "button", name = function() return "|c00FFFF" .. PM.L("BTN_LOAD_PROFILE") .. "|r" end, width = "half",
-		func = function() PM.load_profile(PM.state.selected_profile_name) end
+		func = function() PM.load_profile(PM_state.selected_profile_name) end
 	})
 	table.insert(grp_prof, {
 		type = "button", name = function() return "|cFF0000" .. PM.L("BTN_DELETE_PROFILE") .. "|r" end, width = "half",
-		func = function() PM.delete_profile(PM.state.selected_profile_name) end
+		func = function() PM.delete_profile(PM_state.selected_profile_name) end
 	})
 	table.insert(b_data, {
 		type = "submenu", name = function() return "|cFFFF00" .. PM.L("HEADER_PROFILE_MANAGER") .. "|r" end,
@@ -861,31 +866,31 @@ function PM.build_learned_data_options(b_data, is_pad)
 		},
 		{
 			type = "dropdown", name = function() return PM.L("DD_LEARNED_MEMENTOS") end, reference = "PM_LearnedDropdown",
-			choices = PM.state.learned_list_names, choicesValues = PM.state.learned_list_values,
-			getFunc = function() return PM.state.selected_learned_id or 0 end,
-			setFunc = function(v) PM.state.selected_learned_id = v end,
+			choices = PM_state.learned_list_names, choicesValues = PM_state.learned_list_values,
+			getFunc = function() return PM_state.selected_learned_id or 0 end,
+			setFunc = function(v) PM_state.selected_learned_id = v end,
 			disabled = function() return not PM.settings.enable_learning end
 		},
 		{
 			type = "button", name = function() return "|c00FF00" .. PM.L("BTN_ACTIVATE_SELECTION") .. "|r" end, width = "half",
 			func = function()
-				if PM.state.selected_learned_id and PM.state.selected_learned_id ~= 0 then
-					PM.settings.active_id = PM.state.selected_learned_id
-					local md = PM.get_data(PM.state.selected_learned_id)
+				if PM_state.selected_learned_id and PM_state.selected_learned_id ~= 0 then
+					PM.settings.active_id = PM_state.selected_learned_id
+					local md = PM.get_data(PM_state.selected_learned_id)
 					PM.log_msg(PM.L("CHAT_SELECTED_LEARNED", md and md.name or "?"), true, "activation")
-					PM.call_optional(PM.start_loop, "Loop module (start_loop)", PM.state.selected_learned_id)
+					PM.call_optional(PM.start_loop, "Loop module (start_loop)", PM_state.selected_learned_id)
 				end
 			end,
-			disabled = function() return not PM.settings.enable_learning or not PM._modules.loop end
+			disabled = function() return not PM.settings.enable_learning or not PM_modules.loop end
 		},
 		{
 			type = "button", name = function() return "|cFFFF00" .. PM.L("BTN_LEARN_AUTOSCAN") .. "|r" end, width = "half",
 			func = function() PM.call_optional(PM.auto_scan_mementos, "Loop module (auto_scan_mementos)") end,
-			disabled = function() return not PM.settings.enable_learning or not PM._modules.loop end
+			disabled = function() return not PM.settings.enable_learning or not PM_modules.loop end
 		},
 		{
 			type = "button", name = function() return PM.L("BTN_DELETE_SELECTED_MEMENTO") end, width = "half",
-			func = function() PM.delete_learned_data(PM.state.selected_learned_id) end,
+			func = function() PM.delete_learned_data(PM_state.selected_learned_id) end,
 			disabled = function() return not PM.settings.enable_learning end
 		},
 		{
@@ -900,7 +905,7 @@ function PM.build_learned_data_options(b_data, is_pad)
 					PM.log_msg(PM.L("CHAT_NO_LEARNED_DATA"), true, "error")
 				end
 			end,
-			disabled = function() return not PM.settings.enable_learning or not PM._modules.loop end
+			disabled = function() return not PM.settings.enable_learning or not PM_modules.loop end
 		},
 		{
 			type = "button", name = function() return "|cFF0000" .. PM.L("BTN_DELETE_ALL_LEARNED") .. "|r" end, width = "full",
@@ -993,10 +998,10 @@ function PM.build_delay_options(b_data, is_pad)
 		reference = "PM_Submenu_Delays",
 		controls = grp_delay
 	})
-	PM.build_delay_trigger_options(b_data)
+	build_delay_trigger_options(b_data)
 end
 
-function PM.build_delay_trigger_options(b_data)
+function build_delay_trigger_options(b_data)
 	local function trigger_checkbox(key, setting_key)
 		return {
 			type = "checkbox", name = function() return PM.L(key) end,
@@ -1038,7 +1043,7 @@ function PM.build_commands_options(b_data, is_pad)
 		setFunc = function(v)
 			PM.settings.is_stop_spinning = v; PM.call_optional(PM.apply_spin_stop, "Loop module (apply_spin_stop)")
 		end,
-		disabled = function() return not PM._modules.loop end
+		disabled = function() return not PM_modules.loop end
 	})
 	table.insert(grp_cmd, {
 		type = "checkbox", name = function() return PM.L("CHK_LIB_WARNING_ENABLED") end,
@@ -1065,7 +1070,7 @@ function PM.build_commands_options(b_data, is_pad)
 			PM.log_msg(PM.L("CHAT_UNRESTRICTED_MODE", s_txt), true, "settings")
 		end
 	})
-	if PM._modules.wizard then
+	if PM_modules.wizard then
 		table.insert(grp_cmd, {
 			type = "button",
 			name = function() return "|c00FFFF" .. PM.L("BTN_SETUP_WIZARD") .. "|r" end,
@@ -1116,8 +1121,8 @@ function PM.build_language_options(b_data, is_pad)
 		getAvailableLanguages = PM.get_available_languages,
 		getLanguageDisplayName = PM.get_language_display_name,
 		reference = "PM_LangDropdown",
-		getPending = function() return PM.state.pending_language end,
-		setPending = function(v) PM.state.pending_language = v end,
+		getPending = function() return PM_state.pending_language end,
+		setPending = function(v) PM_state.pending_language = v end,
 		formatCurrentLanguageText = function(overrideLanguage)
 			if overrideLanguage then return PM.get_language_display_name(overrideLanguage) end
 			return PM.L("LANGUAGE_AUTO")
@@ -1132,7 +1137,7 @@ function PM.build_language_options(b_data, is_pad)
 end
 
 function PM.build_menu()
-	if PM.state.is_menu_built then return end
+	if PM_state.is_menu_built then return end
 
 	local lam_ver, lam_en = PM.get_settings_library()
 	if not lam_en or lam_ver < 30 then return end
@@ -1152,7 +1157,7 @@ function PM.build_menu()
 		end, 4000)
 	end
 
-	PM.state.is_menu_built = true
+	PM_state.is_menu_built = true
 	PM.update_menu_choices(); PM.update_favorites_choices()
 
 	if not PM.acct_saved.is_profiles_migrated then
@@ -1287,11 +1292,11 @@ function PM.build_menu()
 	end
 	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", on_panel_controls_created)
 
-	PM.ui_refs.ctrl_active_dropdown = _G["PM_ActiveDropdown"]
-	PM.ui_refs.ctrl_sync_dropdown = _G["PM_SyncDropdown"]
-	PM.ui_refs.ctrl_learned_dropdown = _G["PM_LearnedDropdown"]
-	PM.ui_refs.ctrl_fav_candidate_dropdown = _G["PM_FavCandidateDropdown"]
-	PM.ui_refs.ctrl_fav_remove_dropdown = _G["PM_FavRemoveDropdown"]
+	PM_ui_refs.ctrl_active_dropdown = _G["PM_ActiveDropdown"]
+	PM_ui_refs.ctrl_sync_dropdown = _G["PM_SyncDropdown"]
+	PM_ui_refs.ctrl_learned_dropdown = _G["PM_LearnedDropdown"]
+	PM_ui_refs.ctrl_fav_candidate_dropdown = _G["PM_FavCandidateDropdown"]
+	PM_ui_refs.ctrl_fav_remove_dropdown = _G["PM_FavRemoveDropdown"]
 end
 
-PM._modules.menu = true
+PM_modules.menu = true

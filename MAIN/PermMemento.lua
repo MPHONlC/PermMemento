@@ -4,6 +4,12 @@
 
 PMCore = PMCore or {}
 local PM = PMCore
+local PM_defaults = PM.defaults
+local PM_memento_data = PM.memento_data
+local PM_modules = PM._modules
+local PM_state = PM.state
+local PM_ui_refs = PM.ui_refs
+local on_player_activated
 
 local function SetLoopEventRegistered(suffix, event, enabled, handler, filterType, filterValue)
 	local namespace = PM.name .. suffix
@@ -16,7 +22,7 @@ local function SetLoopEventRegistered(suffix, event, enabled, handler, filterTyp
 end
 
 function PM.refresh_loop_event_registrations()
-	local loop = PM._modules.loop and PM.settings ~= nil
+	local loop = PM_modules.loop and PM.settings ~= nil
 	SetLoopEventRegistered("_Combat", EVENT_COMBAT_EVENT, loop and PM.settings.busy_check_attacking, PM.on_combat_event,
 		REGISTER_FILTER_SOURCE_COMBAT_UNIT_TYPE, COMBAT_UNIT_TYPE_PLAYER)
 	SetLoopEventRegistered("_Effect", EVENT_EFFECT_CHANGED, loop, PM.on_effect_changed,
@@ -91,10 +97,10 @@ function PM.init(eventCode, addOnName)
 	end
 
 	PM.acct_saved = ZO_SavedVars:NewAccountWide(
-		sv_name, 1, srv, PM.defaults
+		sv_name, 1, srv, PM_defaults
 	)
 	PM.char_saved = ZO_SavedVars:NewCharacterIdSettings(
-		sv_name, 1, srv, PM.defaults
+		sv_name, 1, srv, PM_defaults
 	)
 
 	local pm_deprecated = {"recentScans", "target_wipe_string"}
@@ -104,7 +110,7 @@ function PM.init(eventCode, addOnName)
 	end
 
 	if PM.char_saved.use_account_settings == nil then
-		PM.char_saved.use_account_settings = PM.defaults.use_account_settings
+		PM.char_saved.use_account_settings = PM_defaults.use_account_settings
 	end
 
 	PM.ensure_table(PM.acct_saved, "module_disabled")
@@ -143,7 +149,7 @@ function PM.init(eventCode, addOnName)
 		PM.acct_saved.module_disabled.migration = true
 	end
 
-	if not PM.state.loop_token then PM.state.loop_token = 0 end
+	if not PM_state.loop_token then PM_state.loop_token = 0 end
 
 	if not PM.acct_saved.install_date then
 		PM.acct_saved.install_date = PM.get_today_date_str()
@@ -154,7 +160,7 @@ function PM.init(eventCode, addOnName)
 	local lam_ver, lam_en = PM.get_settings_library()
 	local is_lam_ok = (lam_en and lam_ver >= 30)
 
-	if not is_lam_ok and PM._modules.menu then
+	if not is_lam_ok and PM_modules.menu then
 		PM.show_missing_library_warning()
 	end
 
@@ -170,7 +176,7 @@ function PM.init(eventCode, addOnName)
 
 	PM.call_optional(PM.hook_error_capture, "Menu module (hook_error_capture)")
 	EVENT_MANAGER:RegisterForEvent(PM.name, EVENT_PLAYER_ACTIVATED, function()
-		PM.on_player_activated(); PM.call_optional(PM.build_menu, "Menu module (build_menu)"); PM.state.pending_id = PM.settings.active_id
+		on_player_activated(); PM.call_optional(PM.build_menu, "Menu module (build_menu)"); PM_state.pending_id = PM.settings.active_id
 	end)
 
 	SLASH_COMMANDS["/pmem"] = function(raw_arg)
@@ -195,7 +201,7 @@ function PM.init(eventCode, addOnName)
 
 				local c_list = {"|c00FF00" .. PM.L("CHAT_SUPPORTED_MEMENTOS") .. "|r "}
 				local arr_act = {}
-				for f_id, md in pairs(PM.memento_data) do
+				for f_id, md in pairs(PM_memento_data) do
 					if IsCollectibleUnlocked(f_id) then table.insert(arr_act, md) end
 				end
 				table.sort(arr_act, function(a,b) return a.name < b.name end)
@@ -208,7 +214,7 @@ function PM.init(eventCode, addOnName)
 		end
 
 		local is_found = false
-		for f_id, md in pairs(PM.memento_data) do
+		for f_id, md in pairs(PM_memento_data) do
 			if string.lower(md.name) == parsed_cmd then
 				if IsCollectibleUnlocked(f_id) then
 					PM.log_msg(PM.L("CHAT_AUTOLOOP_STARTED", md.name), true, "activation", 90)
@@ -220,7 +226,7 @@ function PM.init(eventCode, addOnName)
 			end
 		end
 		if not is_found then
-			for f_id, md in pairs(PM.memento_data) do
+			for f_id, md in pairs(PM_memento_data) do
 				if string.find(string.lower(md.name), parsed_cmd, 1, true) then
 					if IsCollectibleUnlocked(f_id) then
 						PM.log_msg(PM.L("CHAT_AUTOLOOP_STARTED", md.name), true, "activation", 90)
@@ -251,9 +257,9 @@ function PM.init(eventCode, addOnName)
 	end
 
 	SLASH_COMMANDS["/pmemstop"] = function()
-		PM.settings.active_id = nil; PM.state.loop_token = (PM.state.loop_token or 0) + 1
+		PM.settings.active_id = nil; PM_state.loop_token = (PM_state.loop_token or 0) + 1
 		PM.log_msg(PM.L("CHAT_AUTOLOOP_STOPPED"), true, "stop", 90)
-		PM.state.pending_id = 0; PM.state.next_fire_time = 0
+		PM_state.pending_id = 0; PM_state.next_fire_time = 0
 	end
 	SLASH_COMMANDS["/permmementostop"] = SLASH_COMMANDS["/pmemstop"]
 
@@ -265,7 +271,7 @@ function PM.init(eventCode, addOnName)
 		PM.dev_simulate_error()
 	end
 
-	if PM._modules.ui then
+	if PM_modules.ui then
 		SLASH_COMMANDS["/pmemui"] = function()
 			PM.settings.ui.is_hidden = not PM.settings.ui.is_hidden; PM.call_optional(PM.toggle_ui_update, "UI module (toggle_ui_update)")
 			local t_txt = PM.settings.ui.is_hidden and PM.L("LABEL_HIDDEN_CAPS") or PM.L("LABEL_VISIBLE_CAPS")
@@ -329,11 +335,11 @@ function PM.init(eventCode, addOnName)
 	end
 	SLASH_COMMANDS["/pmemunrestrict"] = SLASH_COMMANDS["/pmemfree"]
 
-	if PM._modules.ui then
+	if PM_modules.ui then
 		SLASH_COMMANDS["/pmemlock"] = function()
 			PM.settings.ui.is_locked = not PM.settings.ui.is_locked
-			if PM.ui_refs.ui_window then
-				PM.ui_refs.ui_window:SetMovable(not PM.settings.ui.is_locked)
+			if PM_ui_refs.ui_window then
+				PM_ui_refs.ui_window:SetMovable(not PM.settings.ui.is_locked)
 			end
 			local t_txt = PM.settings.ui.is_locked and PM.L("LABEL_LOCKED") or PM.L("LABEL_UNLOCKED")
 			PM.log_msg(PM.L("CHAT_UI_LOCK_STATE", t_txt), true, "ui")
@@ -341,16 +347,16 @@ function PM.init(eventCode, addOnName)
 		SLASH_COMMANDS["/pmemuilock"] = SLASH_COMMANDS["/pmemlock"]
 
 		SLASH_COMMANDS["/pmemresetui"] = function()
-			PM.settings.ui.left = PM.defaults.ui.left
-			PM.settings.ui.top = PM.defaults.ui.top
-			PM.settings.ui_menu.left = PM.defaults.ui_menu.left
-			PM.settings.ui_menu.top = PM.defaults.ui_menu.top
+			PM.settings.ui.left = PM_defaults.ui.left
+			PM.settings.ui.top = PM_defaults.ui.top
+			PM.settings.ui_menu.left = PM_defaults.ui_menu.left
+			PM.settings.ui_menu.top = PM_defaults.ui_menu.top
 			PM.call_optional(PM.update_ui_anchor, "UI module (update_ui_anchor)"); PM.log_msg(PM.L("CHAT_UI_POSITION_RESET"), true, "ui")
 		end
 		SLASH_COMMANDS["/pmemuireset"] = SLASH_COMMANDS["/pmemresetui"]
 	end
 
-	if PM._modules.menu then
+	if PM_modules.menu then
 		SLASH_COMMANDS["/pmemwipe"] = function() PM.call_optional(PM.delete_all_learned_data, "Menu module (delete_all_learned_data)") end
 		SLASH_COMMANDS["/pmemdeletealllearned"] = SLASH_COMMANDS["/pmemwipe"]
 	end
@@ -443,7 +449,7 @@ function PM.init(eventCode, addOnName)
 			PM.log_msg(PM.L("CHAT_AUTOLOOP_PAUSED"), true, "stop", 90)
 		else
 			PM.log_msg(PM.L("CHAT_AUTOLOOP_RESUMED"), true, "activation", 90)
-			if PM.settings.active_id then PM.call_optional(PM.run_loop, "Loop module (run_loop)", PM.state.loop_token) end
+			if PM.settings.active_id then PM.call_optional(PM.run_loop, "Loop module (run_loop)", PM_state.loop_token) end
 		end
 	end
 	SLASH_COMMANDS["/pmemtogglepause"] = SLASH_COMMANDS["/pmempause"]
@@ -455,7 +461,7 @@ function PM.init(eventCode, addOnName)
 	end
 	SLASH_COMMANDS["/pmemloopincombat"] = SLASH_COMMANDS["/pmemcombat"]
 
-	if PM._modules.migration then
+	if PM_modules.migration then
 		SLASH_COMMANDS["/pmemacct"] = function()
 			PM.char_saved.use_account_settings = not PM.char_saved.use_account_settings
 			PM.call_optional(PM.update_settings_reference, "update_settings_reference")
@@ -465,7 +471,7 @@ function PM.init(eventCode, addOnName)
 		SLASH_COMMANDS["/pmemuseaccountsettings"] = SLASH_COMMANDS["/pmemacct"]
 	end
 
-	if PM._modules.menu then
+	if PM_modules.menu then
 		SLASH_COMMANDS["/pmemwipefav"] = function() PM.call_optional(PM.delete_all_favorites, "Menu module (delete_all_favorites)") end
 		SLASH_COMMANDS["/pmemdeleteallfavorites"] = SLASH_COMMANDS["/pmemwipefav"]
 	end
@@ -473,7 +479,7 @@ function PM.init(eventCode, addOnName)
 	SLASH_COMMANDS["/pmemreset"] = function() PM.reset_to_defaults() end
 	SLASH_COMMANDS["/pmemresetdefaults"] = SLASH_COMMANDS["/pmemreset"]
 
-	if PM._modules.ui then
+	if PM_modules.ui then
 		SLASH_COMMANDS["/pmemhudscale"] = function(raw_arg)
 			local n_val = tonumber(raw_arg)
 			if n_val and n_val >= 0.5 and n_val <= 2.0 then
@@ -546,7 +552,7 @@ function PM.init(eventCode, addOnName)
 		end
 		SLASH_COMMANDS["/pmemstopspinning"] = SLASH_COMMANDS["/pmemnospin"]
 
-		if PM._modules.sync then
+		if PM_modules.sync then
 			SLASH_COMMANDS["/pmsyncon"] = function()
 				PM.settings.sync_module.is_enabled = not PM.settings.sync_module.is_enabled
 				PM.toggle_sync_listener()
@@ -564,13 +570,13 @@ function PM.init(eventCode, addOnName)
 		end
 	end
 
-	if PM._modules.sync then
+	if PM_modules.sync then
 		SLASH_COMMANDS["/pmsyncstop"] = function()
 			StartChatInput("PM STOP", CHAT_CHANNEL_PARTY)
 			if PM.settings then
-				PM.settings.active_id = nil; PM.state.loop_token = (PM.state.loop_token or 0) + 1
+				PM.settings.active_id = nil; PM_state.loop_token = (PM_state.loop_token or 0) + 1
 			end
-			PM.state.next_fire_time = 0
+			PM_state.next_fire_time = 0
 		end
 		SLASH_COMMANDS["/permmementosyncstop"] = SLASH_COMMANDS["/pmsyncstop"]
 
@@ -586,7 +592,7 @@ function PM.init(eventCode, addOnName)
 	end
 end
 
-function PM.on_player_activated()
+function on_player_activated()
 	PM.check_sync_zone_protection()
 
 	if PM.acct_saved and PM.acct_saved.recentScans and #PM.acct_saved.recentScans > 0 then
@@ -626,7 +632,7 @@ function PM.on_player_activated()
 	end
 
 	if PM.settings and PM.settings.active_id and not PM.settings.is_paused then
-		local tkn = PM.state.loop_token
+		local tkn = PM_state.loop_token
 		zo_callLater(function()
 			if PM.settings.active_id then PM.call_optional(PM.run_loop, "Loop module (run_loop)", tkn) end
 		end, w_ms)
