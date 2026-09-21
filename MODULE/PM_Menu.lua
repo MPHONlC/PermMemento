@@ -8,6 +8,7 @@ local PM_defaults = PM.defaults
 local PM_modules = PM._modules
 local PM_state = PM.state
 local PM_ui_refs = PM.ui_refs
+local session_bugs = {}
 local build_delay_trigger_options
 
 function PM.update_profile_list()
@@ -270,12 +271,12 @@ function PM.dev_simulate_error()
 end
 
 function PM.dismiss_captured_error()
-	PM.settings.captured_bugs = nil
+	ZO_ClearNumericallyIndexedTable(session_bugs)
 	PM.show_bug_report_box()
 end
 
 function PM.wipe_all_bugs()
-	PM.settings.captured_bugs = nil
+	ZO_ClearNumericallyIndexedTable(session_bugs)
 	if PM_ui_refs.copy_box then PM_ui_refs.copy_box:Hide() end
 end
 
@@ -283,6 +284,7 @@ function PM.show_copy_text_box(plain_text)
 	local is_dev = (GetDisplayName() == "@APHONlC")
 	PM_ui_refs.copy_box = PM_ui_refs.copy_box or LibAPH.CreateCopyTextBox({
 		name = "PMCopyBox",
+		pastebin = true,
 		maxInputChars = LibAPH.BUG_REPORT_MAX_CHARS,
 		closeText = PM.L("BTN_CLOSE"),
 		titleText = PM.L("BUG_REPORT_COPY_TITLE"),
@@ -294,9 +296,10 @@ function PM.show_copy_text_box(plain_text)
 end
 
 function PM.hook_error_capture()
+	if PM.acct_saved then PM.acct_saved.captured_bugs = nil end
+	if PM.char_saved then PM.char_saved.captured_bugs = nil end
 	LibAPH.HookErrorCapture(PM.name, function(text)
-		PM.settings.captured_bugs = PM.settings.captured_bugs or {}
-		local is_new = LibAPH.RecordCapturedBug(PM.settings.captured_bugs, text)
+		local is_new = LibAPH.RecordCapturedBug(session_bugs, text)
 		if is_new or (PM_ui_refs.copy_box and not PM_ui_refs.copy_box.window:IsHidden()) then
 			PM.show_bug_report_box()
 		end
@@ -361,7 +364,7 @@ function PM.show_bug_report_box()
 	LibAPH.LoadLocalization("SI_PM_", PM.Lang, "en", "en")
 
 	local bug_lines = {}
-	for _, bug in ipairs(PM.settings.captured_bugs or {}) do
+	for _, bug in ipairs(session_bugs) do
 		local line = bug.text
 		if bug.count > 1 then
 			line = line .. PM.L("BUG_REPORT_SEEN_COUNT", bug.count)
