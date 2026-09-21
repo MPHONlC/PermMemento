@@ -116,7 +116,6 @@ PMCore.Lang.de = {
 	BTN_CLEAR_ALL_FAVORITES = "Alle Favoriten Löschen",
 
 	HEADER_PROFILE_MANAGER = "Profil-Manager",
-	DESC_PROFILE_DISABLED = "Der Profil-Manager ist DEAKTIVIERT, solange 'Kontoweite Einstellungen Verwenden' aktiv ist.",
 	DESC_PROFILE_HELP = "Erstelle, lade oder lösche charakterspezifische Einstellungsprofile.",
 	EDIT_NEW_PROFILE_NAME = "Neuer Profilname",
 	BTN_SAVE_NEW_PROFILE = "ALS NEUES PROFIL SPEICHERN",
@@ -247,7 +246,6 @@ PMCore.Lang.de = {
 	LABEL_RESURRECTING = "Wiederbelebung",
 	LABEL_REVIVING = "Wiederbelebung läuft",
 	LABEL_BLOCKING = "Blockieren",
-	LABEL_SPRINTING = "Sprinten",
 	LABEL_SWIMMING = "Schwimmen",
 	LABEL_MOUNTED = "Beritten",
 	LABEL_SNEAKING = "Schleichen",
@@ -336,7 +334,6 @@ PMCore.Lang.de = {
 	BTN_APPLY_LANGUAGE = "Ausgewählte Sprache Anwenden",
 
 	CURRENT_PROFILE_LABEL = "Aktuelles Aktives Profil:",
-	ACTIVE_PROFILE_ACCOUNT_WIDE = "Kontoweite Einstellungen Verwenden",
 	INSTALL_DATE_UNKNOWN = "Unbekannt",
 	FIELD_INSTALLED_SINCE = "Installiert Seit:",
 	FIELD_VERSION_HISTORY = "Versionsverlauf:",

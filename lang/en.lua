@@ -128,7 +128,6 @@ PMCore.Lang.en = {
 
 	-- Settings Menu: Profiles
 	HEADER_PROFILE_MANAGER = "Profile Manager",
-	DESC_PROFILE_DISABLED = "Profile Manager is DISABLED while 'Use Account-Wide Settings' is active.",
 	DESC_PROFILE_HELP = "Create, load, or delete character-specific settings profiles.",
 	EDIT_NEW_PROFILE_NAME = "New Profile Name",
 	BTN_SAVE_NEW_PROFILE = "SAVE AS NEW PROFILE",
@@ -268,7 +267,6 @@ PMCore.Lang.en = {
 	LABEL_RESURRECTING = "Resurrecting",
 	LABEL_REVIVING = "Reviving",
 	LABEL_BLOCKING = "Blocking",
-	LABEL_SPRINTING = "Sprinting",
 	LABEL_SWIMMING = "Swimming",
 	LABEL_MOUNTED = "Mounted",
 	LABEL_SNEAKING = "Sneaking",
@@ -361,7 +359,6 @@ PMCore.Lang.en = {
 
 	-- Profile Manager submenu
 	CURRENT_PROFILE_LABEL = "Current Active Profile:",
-	ACTIVE_PROFILE_ACCOUNT_WIDE = "Account-Wide Settings",
 
 	-- Client Information panel
 	INSTALL_DATE_UNKNOWN = "Unknown",
