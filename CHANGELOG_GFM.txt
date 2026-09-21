@@ -1,4 +1,4 @@
-### Version 0.8.8 <sub>*(09/11/2026)*</sub>
+### Version 0.8.8 <sub>*(09/22/2026)*</sub>
 
 #### New Features & Improvements
 * Added a <kbd>Setup Wizard</kbd> on first install to ask your preferences.

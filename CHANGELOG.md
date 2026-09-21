@@ -1,7 +1,7 @@
 PermMemento - Changelog
 =========================
 
-Version: 0.8.8 (2026-09-11)
+Version: 0.8.8 (2026-09-22)
 ---------------------------
 
 New Features & Improvements

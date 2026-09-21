@@ -1,6 +1,6 @@
 [SIZE="3"][b][COLOR="#4CAF50"]Changelog[/COLOR][/b][/SIZE]
 
-[b][COLOR="Orange"]Version 0.8.8 [COLOR="Gray"][i](09/11/2026)[/i][/COLOR][/COLOR][/b]
+[b][COLOR="Orange"]Version 0.8.8 [COLOR="Gray"][i](09/22/2026)[/i][/COLOR][/COLOR][/b]
 
 [SIZE="2"][b][COLOR="RoyalBlue"]New Features & Improvements:[/COLOR][/b][/SIZE]
 [LIST]
