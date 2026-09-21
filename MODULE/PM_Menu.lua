@@ -280,11 +280,12 @@ function PM.wipe_all_bugs()
 	if PM_ui_refs.copy_box then PM_ui_refs.copy_box:Hide() end
 end
 
-function PM.show_copy_text_box(plain_text)
+function PM.show_copy_text_box(sections, has_errors)
 	local is_dev = (GetDisplayName() == "@APHONlC")
 	PM_ui_refs.copy_box = PM_ui_refs.copy_box or LibAPH.CreateCopyTextBox({
 		name = "PMCopyBox",
 		pastebin = true,
+		sections = true,
 		maxInputChars = LibAPH.BUG_REPORT_MAX_CHARS,
 		closeText = PM.L("BTN_CLOSE"),
 		titleText = PM.L("BUG_REPORT_COPY_TITLE"),
@@ -292,7 +293,7 @@ function PM.show_copy_text_box(plain_text)
 		dismissBug = { text = "Dismiss Bug", onClick = PM.dismiss_captured_error },
 		wipeAllBugs = { text = "Wipe All Bugs", onClick = PM.wipe_all_bugs },
 	})
-	PM_ui_refs.copy_box:Show(plain_text)
+	PM_ui_refs.copy_box:ShowReport(sections, has_errors)
 end
 
 function PM.hook_error_capture()
@@ -386,16 +387,24 @@ function PM.show_bug_report_box()
 	end
 	settings_lines = settings_lines .. "\n\n" .. PM.L("HEADER_MEMENTO_DELAYS") .. ":\n" .. get_bug_report_delay_lines()
 
-	local body = LibAPH.BuildBugReportText({
+	local sections = LibAPH.BuildBugReportSections({
 		statsText = PM.get_stats_text(),
 		settingsLines = settings_lines,
 		fieldSettingsLabel = PM.L("FIELD_SETTINGS"),
 		errorSection = error_section,
-		headFieldLabels = { PM.L("FIELD_PLATFORM"), PM.L("FIELD_CURRENT_LANGUAGE") },
+		fieldLabels = {
+			platform = PM.L("FIELD_PLATFORM"),
+			language = PM.L("FIELD_CURRENT_LANGUAGE"),
+			installed = PM.L("FIELD_INSTALLED_SINCE"),
+			version_history = PM.L("FIELD_VERSION_HISTORY"),
+			library_version = PM.L("FIELD_LIBRARY_VERSION"),
+			wizard = PM.L("FIELD_WIZARD"),
+			files = PM.L("FIELD_MODULES"),
+		},
 	})
 
 	LibAPH.LoadLocalization("SI_PM_", PM.Lang, "en", PM.settings.override_language)
-	PM.show_copy_text_box(body)
+	PM.show_copy_text_box(sections, #session_bugs > 0)
 end
 
 function PM.build_general_options(b_data, is_pad)
