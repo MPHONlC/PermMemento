@@ -391,7 +391,7 @@ function PM.show_bug_report_box()
 		settingsLines = settings_lines,
 		fieldSettingsLabel = PM.L("FIELD_SETTINGS"),
 		errorSection = error_section,
-		environmentText = LibAPH.BuildEnvironmentReport(),
+		headFieldLabels = { PM.L("FIELD_PLATFORM"), PM.L("FIELD_CURRENT_LANGUAGE") },
 	})
 
 	LibAPH.LoadLocalization("SI_PM_", PM.Lang, "en", PM.settings.override_language)
