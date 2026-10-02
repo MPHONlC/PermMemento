@@ -1,4 +1,4 @@
-### Version 2026.09.29.21.48 <sub>*(09/29/2026)*</sub>
+### Version 2026.10.03.06.12 <sub>*(10/03/2026)*</sub>
 
 #### New Features & Improvements
 * Added a <kbd>Setup Wizard</kbd> on first install to ask your preferences.
