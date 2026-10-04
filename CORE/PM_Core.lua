@@ -15,7 +15,7 @@ local PM_state = PM.state
 local PM_ui_refs = PM.ui_refs
 
 PM.name = "PermMemento"
-PM.version = "2026.10.04.19.21"
+PM.version = "2026.10.04.20.19"
 PM.REQUIRED_LAM_VERSION = 43
 PM.REQUIRED_LHAS_VERSION = 20200
 

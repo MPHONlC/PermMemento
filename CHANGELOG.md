@@ -1,7 +1,7 @@
 PermMemento - Changelog
 =========================
 
-Version: 2026.10.04.19.21 (26100419)
+Version: 2026.10.04.20.19 (26100420)
 ---------------------------
 
 New Features & Improvements
