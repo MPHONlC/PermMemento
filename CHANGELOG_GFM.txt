@@ -1,0 +1,45 @@
+### Version 2026.10.04.19.21 <sub>*(10/04/2026)*</sub>
+
+#### New Features & Improvements
+* Added a <kbd>Setup Wizard</kbd> on first install to ask your preferences.
+* Added <kbd>LibHarvensAddonSettings</kbd> support for <kbd>console Settings Menu</kbd>.
+* Added a <kbd>Delay Triggers</kbd> submenu - individually enable or disable which
+  situations pause the auto-loop.
+* Added <kbd>dedicated delay-length sliders</kbd> for Death, Crafting, and Attacking.
+* Changed <kbd>Group Sync</kbd> to run over <kbd>LibGroupBroadcast</kbd>, which it now needs; <kbd>/pmsync</kbd> no
+  longer types into party chat.
+* Added a button to <kbd>delete all saved per-character profile data</kbd> (Advanced
+  Settings, only available when using account-wide settings).
+* Updated <kbd>Bug Report</kbd>.
+* Updated Versioning.
+
+#### Technical Style & Logic
+* Now depends on <kbd>LibAPH</kbd>, a shared helper library for my addons.
+* Updated <kbd>Module Manager</kbd> - Sync, Wizard, Menu, UI, and Migration can each be
+  soft-disabled independently (<kbd>/pmemunloadsync</kbd>, <kbd>/pmemunloadmenu</kbd>,
+  <kbd>/pmemunloadui</kbd>, <kbd>/pmemunloadwizard</kbd>, <kbd>/pmemunloadmigration</kbd>).
+* New <kbd>Codebase changes</kbd> and language localization support.
+* Removed a per-tick table allocation from the HUD's update handler.
+
+#### UI & Console Updates
+* The <kbd>HUD UI</kbd> auto hides and shows, if theres no active memento.
+* Updated the <kbd>HUD countdown</kbd> - now shows what's actually delaying the loop (e.g.
+  "Crafting...", "Attacking...", "Casting...") instead of a generic "Delaying..." message.
+* Added a <kbd>Library Warning Messages</kbd> toggle to enable or disable the
+  optional-library popup, screen announcement, and chat reminder (<kbd>/pmemlibwarn</kbd>).
+* Updated the optional-library <kbd>chat and screen announcement messages</kbd> to clearly
+  state whether <kbd>LibAddonMenu</kbd> or <kbd>LibHarvensAddonSettings</kbd> is missing,
+  disabled, or outdated, with the popup and screen announcement now shown only once instead
+  of on every reload.
+* Added settings-menu <kbd>submenus remembering</kbd> whether they were left open or
+  closed across a reload.
+* Added a warning icon and a confirmation to every button that resets, deletes or clears
+  something, and to Unrestricted Mode.
+* Changed Remove Selected Favorite and Delete Selected Memento to red like the other
+  dangerous buttons on console.
+
+#### Maintenance & Bug Fixes
+* Fixed <kbd>Crafting detection</kbd>.
+* Updated the default <kbd>Memento Delay</kbd> values for new installs.
+* Removed <kbd>Live statistics</kbd> in favor of <kbd>Client information</kbd> for easier
+  bug tracking.
