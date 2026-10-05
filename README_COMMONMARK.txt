@@ -110,9 +110,9 @@ It also watches for various things where you don't want a memento to be used, li
 
 ## License
 
-Copyright &#169; 2025-2026 @APHONlC. All rights reserved. See LICENSE.md
+Copyright © 2025-2026 @APHONlC. All rights reserved. See LICENSE.md
 
-This add-on is not created by, affiliated with, or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls&#174; and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.
+This add-on is not created by, affiliated with, or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.
 
 For permissions or inquiries, contact @APHONlC on ESOUI.
 
