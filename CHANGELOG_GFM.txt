@@ -1,4 +1,4 @@
-### Version 2026.10.06.13.49 <sub>*(10/06/2026)*</sub>
+### Version 2026.10.07.17.24 <sub>*(10/07/2026)*</sub>
 
 #### Group Sync
 * Players who already have a memento playing are left out of a sync instead of queuing it.
