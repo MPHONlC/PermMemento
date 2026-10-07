@@ -1,0 +1,9 @@
+addon = "PermMemento"
+
+libraries = {
+    "LibAPH",
+}
+
+globals = {
+    "PMCore",
+}
