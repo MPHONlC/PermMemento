@@ -1,0 +1,89 @@
+name: "\u2705 PermMemento Test Checklist (PC)"
+description: Run through PermMemento's PC test checklist and report results
+title: '[TEST][PC] '
+labels:
+- testing
+assignees:
+- MPHONlC
+body:
+- type: markdown
+  attributes:
+    value: Thanks for testing **PermMemento** on PC! Check off everything you actually tested and confirmed working. Anything broken or partly working, describe it in the notes field at the end instead of checking it off.
+- type: input
+  id: version
+  attributes:
+    label: Add-on version
+    placeholder: e.g. 2026.09.29.21.48
+  validations:
+    required: true
+- type: dropdown
+  id: platform
+  attributes:
+    label: Platform
+    options:
+    - PC (NA)
+    - PC (EU)
+    - PC (PTS)
+  validations:
+    required: true
+- type: checkboxes
+  id: pc_tests
+  attributes:
+    label: PC tests confirmed working
+    options:
+    - label: 'Loop: Use a supported memento (for example Almalexia''s Enchanted Lantern) once.'
+    - label: 'Stop / pause: /pmemstop, then start again, then /pmempause twice.'
+    - label: 'By name: /pmem lantern (or another part of a name). Then try a memento you do not own and a made-up name.'
+    - label: 'Commands list: Type /pmem with nothing after it, and open Commands Info in settings.'
+    - label: 'Random: With Enable Randomization & Favorites off, Activate Random Memento and /pmemrand are gone. Turn it on and /reloadui, then press Activate Random Memento and type /pmemrand (or /pmemrandom).'
+    - label: 'Random on zone and login: Toggle Randomize on Zone Change and Randomize on Login in settings and with /pmemrandzone and /pmemrandlog (aliases /pmemrandomzonechange, /pmemrandomlogin). Change zone and relog.'
+    - label: 'Select and apply: Pick a memento in Select Active Memento and press Apply Selected Memento; then pick None (stop) and press Apply again. Turn on Randomize on Zone Change and look at the dropdown.'
+    - label: 'Delays: While looping: move, attack, block, cast, sneak, swim, mount, open a menu, die and revive, teleport.'
+    - label: 'Delay triggers: Open Delay Triggers and go through each checkbox (Teleport, Dead, Casting, Attacking, Crafting, Interacting, Menu, Resurrecting, Blocking, Swimming, Mounted, Sneaking, Moving) with that one off, then do the matching action while looping.'
+    - label: 'Memento Delays: Open Memento Delays (Seconds) and move each slider: Delay After Going Idle, Menu/Interaction Delay, Delay After Casting Skill, Delay After Attacking, Delay After Exiting Combat, Delay After Death, Delay After Reviving, Delay After Teleport/ReloadUI, Delay After Crafting, Delay After Moving, Delay After Blocking, Delay After Exiting Swimming, Delay After Sneaking, Delay After Un-Mounting.'
+    - label: 'Combat: Turn Loop in Combat off and on in settings or with /pmemcombat (also /pmemloopincombat) and fight.'
+    - label: 'Learned: With Enable Learning off, /pmemscan and /pmemlist are not commands. Turn it on, then Settings > Learned Data Management > LEARN: Auto-Scan (or /pmemscan, /pmemautolearn), then /pmemlist (or /pmemlearned).'
+    - label: 'Learning mode: Turn Enable Learning Mode on in Module Manager (or /pmemlearn), turn on Unrestricted Mode, and use a memento that is not in the default list.'
+    - label: 'Learned use: With a learned memento: choose it in Learned Mementos and press ACTIVATE SELECTION; try /pmemplay <name> (alias /pmemactivatelearned) with a full and a partial name and a wrong one; press RANDOMIZED LEARNED and type /pmemrandlrn (alias /pmemrandomlearned).'
+    - label: 'Learned delete: Press Delete Selected Memento, then DELETE ALL LEARNED.'
+    - label: 'Favorites: Open Favorites Manager. Turn on Enable Randomization & Favorites (or /pmemrandfav). Pick mementos in Select Memento to Favorite and press Apply to Favorites, look at View Current Favorites, remove one with Remove Selected Favorite, then random from favorites and change zone. Finally press Clear All Favorites.'
+    - label: 'Profiles: Open Profile Manager. Save As New Profile (leave the New Profile Name empty once, then type a name), change settings, pick one in Select Profile and press Load Profile, then Delete Profile. Try Load and Delete with nothing selected.'
+    - label: 'Account-wide: Toggle Use Account-Wide Settings on one character (or /pmemacct, /pmemuseaccountsettings), log another.'
+    - label: 'Center Screen Announcements: Turn Center Screen Announcements off and on in settings and with /pmemcsa (alias /pmemtogglecsa). Activate a memento each time.'
+    - label: 'Chat Logs: Turn Chat Logs off and on in settings and with /pmemlogs (alias /pmemchatlogs). Activate a memento each time.'
+    - label: 'UI Visibility: In UI Configurations set UI Visibility on, then off, and type /pmemui (alias /pmemtoggleui).'
+    - label: 'UI Mode: Switch UI Mode between HUD and Menu, and with /pmemhud (alias /pmemuimode). Also toggle Render UI in Menus.'
+    - label: 'Scale: Move the HUD UI Scale and Menu UI Scale sliders. Type /pmemhudscale 1.5, /pmemmenuscale 1.2 (aliases /pmemsethudscale, /pmemsetmenuscale), then a bad value like /pmemhudscale 9.'
+    - label: 'Lock UI Position: Turn Lock UI Position on, or /pmemlock (alias /pmemuilock), and try to drag; turn it off and drag.'
+    - label: 'Window drag: Drag the status window in HUD mode, then switch to Menu mode and drag it in the Collections book.'
+    - label: 'Resize: Drag the window corner bigger and smaller, in HUD mode and in Menu mode.'
+    - label: 'Reset UI position: Drag the window away, then press RESET UI POSITION or type /pmemresetui (alias /pmemuireset).'
+    - label: 'Reset UI: Resize the UI and then, press the RESET UI SIZE button to reset.'
+    - label: 'Group sync: In a group with another PermMemento user: /pmsync <memento> (alias /permmementosync), then /pmsyncstop (alias /permmementosyncstop). Then /pmsync random and /pmsyncrand (alias /permmementosyncrandom). Turn Group Sync off and check /pmsync, /pmsyncrand and /pmsyncstop are no longer commands.'
+    - label: 'Sync listener: Turn Enable Party Sync Listener off and on in Module Manager, and with /pmsyncon (alias /pmemsyncenable), while a groupmate syncs.'
+    - label: 'Sync settings: Settings > Sync Settings: Select Sync Request, Send Random Sync, Send Stop Command, Randomize Sync Delay (or /pmsyncdelay, alias /pmemsyncrandomdelay) and the Sync Delay (Seconds) slider.'
+    - label: 'Sync protected zones: With the sync listener on, enter a dungeon, trial or PvP zone and leave again.'
+    - label: 'No spin: Turn on Stop Character Spinning in Menus (or /pmemnospin, alias /pmemstopspinning) and activate a memento with a menu open.'
+    - label: 'BeamMeUp: With BeamMeUp installed, teleport through it while looping.'
+    - label: 'Set delay: /pmemset list, /pmemset menu 3, /pmemset syncdelay 2, then /pmemset menu (no value), /pmemset menu -1 and /pmemset nonsense 3.'
+    - label: 'Free mode: Press UNRESTRICTED MODE in Advanced Settings and also type /pmemfree (alias /pmemunrestrict). Try activating in a blocked situation.'
+    - label: 'Wizard welcome: On a fresh install the Welcome dialog shows: press Skip. Then run /pmemwizard and press Quick Setup.'
+    - label: 'Wizard full setup: Run /pmemwizard (or press SETUP WIZARD in Advanced Settings): choose Account-Wide or This Character Only, then Full Setup, answer the on-screen status display and chat message questions, then Unload Both or Keep All.'
+    - label: 'Wizard lite mode: Run /pmemwizard and pick Lite Mode.'
+    - label: 'Module Manager: /pmemunloadui and reload, then again. Repeat with /pmemunloadmenu, /pmemunloadwizard, /pmemunloadsync and /pmemunloadmigration, and try the Module Manager buttons and Reload UI.'
+    - label: 'Bug report: Press BUG REPORT in settings and type /pmembugreport (alias /pmembug).'
+    - label: 'Mail button: Press Mail @APHONlC in settings (not shown on the EU server).'
+    - label: 'Client info: Open Client Information in settings and type /pmemclientinfo.'
+    - label: 'Wipe: /pmemwipe (alias /pmemdeletealllearned) and /pmemwipefav (alias /pmemdeleteallfavorites).'
+    - label: 'Reset: Change some settings and press RESET TO DEFAULTS in Advanced Settings; repeat with /pmemreset (alias /pmemresetdefaults).'
+    - label: 'Library Warning: Disable an optional library (LibAddonMenu-2.0 on PC, LibHarvensAddonSettings on console), then enable the Library warning checkbox.'
+    - label: 'Library warning toggle: Type /pmemlibwarn twice.'
+    - label: 'Submenu memory: Open a few submenus in PermMemento settings, close the panel, reload and reopen it.'
+    - label: 'Command aliases: Type the aliases that are not covered above: /permmemento, /permmementostop, /pmemtogglepause, /pmemtoggleui, /pmemuimode, /pmemuilock.'
+    - label: 'Dangerous buttons: Hover the warning icons next to Reset UI Position, Reset UI Size, Remove Selected Favorite, Clear All Favorites, Delete Profile, Delete Selected Memento, Delete All Learned, Reset to Defaults, Delete All Per-Character Profiles and Unrestricted Mode, then click one.'
+- type: textarea
+  id: notes
+  attributes:
+    label: Anything broken, partly working, or not tested
+    description: 'One line per issue: which test, what happened instead of Expected.'
+    placeholder: 'e.g. PC-L-04 Bug report: popup opened but API version line was blank'
